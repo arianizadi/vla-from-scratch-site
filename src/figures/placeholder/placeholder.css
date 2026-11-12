@@ -1,0 +1,181 @@
+/* ==========================================================================
+   Placeholder figures: a sketch of the figure's type, drawn in the thin and
+   dashed lines a drawing set uses for work that is not built yet. Imported
+   into the components layer by src/app/globals.css.
+
+   Every animation here runs from a start state TO the element's own style,
+   once. So the drawing at rest, the drawing without JavaScript and the
+   drawing under reduced motion are all the finished state.
+   ========================================================================== */
+
+.fig-placeholder {
+  display: grid;
+  gap: 16px;
+}
+.fig-sketch {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin-inline: auto;
+}
+/* Lines keep their weight when the sketch is scaled down for a phone. Lines
+   that draw themselves are left out: their dash pattern is the whole path. */
+.fig-sketch :not(.sk-draw) {
+  vector-effect: non-scaling-stroke;
+}
+.fig-placeholder-text {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+}
+.fig-placeholder-text p {
+  max-width: 640px;
+  margin: 0;
+}
+.fig-placeholder-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/* Line styles */
+.sk-line {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.25;
+}
+.sk-strong {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sk-phantom {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 4;
+}
+.sk-faint {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.sk-block {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.25;
+}
+.sk-solid {
+  fill: var(--border-strong);
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+.sk-dot {
+  fill: var(--text-muted);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  paint-order: stroke;
+}
+/* The highlighter: the current or selected element. */
+.sk-mark {
+  fill: var(--mark);
+  stroke: var(--text);
+  stroke-width: 1;
+}
+.sk-outline {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.sk-seq-1 {
+  fill: var(--seq-1);
+}
+.sk-seq-2 {
+  fill: var(--seq-2);
+}
+.sk-seq-3 {
+  fill: var(--seq-3);
+}
+.sk-seq-4 {
+  fill: var(--seq-4);
+}
+.sk-seq-5 {
+  fill: var(--seq-5);
+}
+.sk-draw {
+  stroke-dasharray: 1;
+}
+.sk-turn {
+  transform-box: view-box;
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+}
+.sk-grow {
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+@keyframes sk-from-offset {
+  from {
+    transform: translate(var(--fx, 0), var(--fy, 0));
+  }
+}
+@keyframes sk-from-angle {
+  from {
+    transform: rotate(var(--from, -90deg));
+  }
+}
+@keyframes sk-from-flat {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes sk-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes sk-appear {
+  from {
+    opacity: 0;
+  }
+}
+/* Once round a rectangle of --w by --h, back to where it started. */
+@keyframes sk-circuit {
+  25% {
+    transform: translate(var(--w), 0);
+  }
+  50% {
+    transform: translate(var(--w), var(--h));
+  }
+  75% {
+    transform: translate(0, var(--h));
+  }
+}
+
+/* The sketch plays once, when the plate has arrived on screen. */
+@media (prefers-reduced-motion: no-preference) {
+  .fig-sketch[data-play="true"] .sk-move {
+    animation: sk-from-offset var(--t, 2.4s) var(--ease, var(--ease-standard)) var(--d, 0s) both;
+  }
+  .fig-sketch[data-play="true"] .sk-turn {
+    animation: sk-from-angle var(--t, 2.4s) var(--ease-standard) var(--d, 0s) both;
+  }
+  .fig-sketch[data-play="true"] .sk-grow {
+    animation: sk-from-flat var(--t, 0.6s) var(--ease-standard) var(--d, 0s) both;
+  }
+  .fig-sketch[data-play="true"] .sk-draw {
+    animation: sk-draw var(--t, 1.6s) var(--ease-draw) var(--d, 0s) both;
+  }
+  .fig-sketch[data-play="true"] .sk-appear {
+    animation: sk-appear 0.4s var(--ease-standard) var(--d, 0s) both;
+  }
+  .fig-sketch[data-play="true"] .sk-circuit {
+    animation: sk-circuit var(--t, 4s) linear var(--d, 0s) both;
+  }
+}

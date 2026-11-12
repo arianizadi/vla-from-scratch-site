@@ -1,0 +1,437 @@
+/* ==========================================================================
+   Figure kit styles (DESIGN.md, sections 5, 6 and 9). Imported into the
+   components layer by src/app/globals.css. Colours come from the tokens only,
+   so every rule here works in both themes.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The plate: the frame shared by figures, Mermaid diagrams and lab charts.
+   -------------------------------------------------------------------------- */
+
+.plate {
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.plate-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.plate-number {
+  flex: none;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.plate-title {
+  min-width: 0;
+  flex: 1;
+  font-weight: 600;
+  font-stretch: 95%;
+}
+.plate-stamp {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.plate-stage {
+  position: relative;
+  min-width: 0;
+  padding: 12px;
+}
+@media (min-width: 640px) {
+  .plate-stage {
+    padding: 24px;
+  }
+}
+.plate-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.plate-status {
+  width: 100%;
+  margin: 0;
+  color: var(--text-muted);
+}
+.plate-caption {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.plate-note {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+.plate-caption > * + .plate-note {
+  margin-top: 6px;
+}
+.plate-caption code,
+.plate-stage code {
+  padding: 1px 4px;
+  border-radius: 2px;
+  background-color: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+/* A figure usually sits inside chapter prose. The prose rules for lists and
+   headings stop at the frame, so a legend or a heading inside a figure starts
+   from nothing. (Utility classes on the element still win over these.) */
+.plate.plate :is(ul, ol) {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+.plate.plate li {
+  margin-top: 0;
+  padding-left: 0;
+}
+.plate.plate :is(h2, h3, h4) {
+  margin-top: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.plate.plate :is(h3, h4) + * {
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Segmented radio group. The selected segment gets the soft accent fill and
+   an accent bar, never colour alone.
+   -------------------------------------------------------------------------- */
+
+.segments {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+.segments label {
+  display: flex;
+  flex: 1 1 auto;
+}
+.segments label + label .segment {
+  border-left: 1px solid var(--border-strong);
+}
+.segment {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-micro) var(--ease-standard);
+}
+.segment:hover {
+  color: var(--text);
+}
+.segments input:checked + .segment {
+  background-color: var(--accent-soft);
+  box-shadow: inset 0 -2px 0 var(--accent);
+  color: var(--text);
+}
+.segments input:focus-visible + .segment {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.segments input:disabled + .segment {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   A control with its label: the wrapper used by Segmented, Slider and Stepper.
+   -------------------------------------------------------------------------- */
+
+.fig-field {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  max-width: 100%;
+}
+.fig-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Slider: a native range input with its label and a live value.
+   -------------------------------------------------------------------------- */
+
+.fig-slider {
+  display: grid;
+  flex: 1 1 300px;
+  grid-template-columns: auto minmax(72px, 1fr) auto;
+  align-items: center;
+  gap: 0 12px;
+  max-width: 440px;
+  min-width: min(100%, 240px);
+}
+.fig-slider .fig-label {
+  white-space: nowrap;
+}
+.fig-slider-value {
+  min-width: var(--value-width, 3ch);
+  color: var(--text);
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+.fig-range {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.fig-range:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+/* The filled part is a hard-edged two-colour background, not a gradient. */
+.fig-range::-webkit-slider-runnable-track {
+  box-sizing: border-box;
+  height: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--accent) var(--fill, 0%), var(--surface-2) var(--fill, 0%));
+}
+.fig-range::-moz-range-track {
+  box-sizing: border-box;
+  height: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background-color: var(--surface-2);
+}
+.fig-range::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px 0 0 3px;
+  background-color: var(--accent);
+}
+.fig-range::-webkit-slider-thumb {
+  box-sizing: border-box;
+  width: 14px;
+  height: 22px;
+  margin-top: -9px;
+  border: 2px solid var(--surface);
+  border-radius: 3px;
+  background-color: var(--accent);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.fig-range::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 14px;
+  height: 22px;
+  border: 2px solid var(--surface);
+  border-radius: 3px;
+  background-color: var(--accent);
+}
+.fig-range:hover::-webkit-slider-thumb {
+  background-color: var(--accent-hover);
+}
+.fig-range:hover::-moz-range-thumb {
+  background-color: var(--accent-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Toggle: a native checkbox shown as a switch. The knob's position carries
+   the state; the fill repeats it.
+   -------------------------------------------------------------------------- */
+
+.fig-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+.fig-toggle-track {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background-color: var(--surface-2);
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard);
+}
+.fig-toggle-track::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: var(--text-muted);
+  content: "";
+  transition: transform var(--duration-micro) var(--ease-standard);
+}
+.fig-toggle input:checked + .fig-toggle-track {
+  border-color: var(--accent);
+  background-color: var(--accent);
+}
+.fig-toggle input:checked + .fig-toggle-track::after {
+  background-color: var(--on-accent);
+  transform: translateX(14px);
+}
+.fig-toggle input:focus-visible + .fig-toggle-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.fig-toggle input:disabled + .fig-toggle-track {
+  opacity: 0.5;
+}
+
+/* --------------------------------------------------------------------------
+   Stepper: Previous, the current step, Next.
+   -------------------------------------------------------------------------- */
+
+.fig-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+.fig-stepper button {
+  display: grid;
+  width: 32px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  place-items: center;
+  transition: background-color var(--duration-micro) var(--ease-standard);
+}
+.fig-stepper button:hover {
+  background-color: var(--surface-2);
+}
+.fig-stepper button[aria-disabled="true"] {
+  background: transparent;
+  color: var(--text-faint);
+  cursor: default;
+  opacity: 0.45;
+}
+.fig-stepper output {
+  display: grid;
+  min-width: var(--value-width, 5ch);
+  padding: 0 10px;
+  border-inline: 1px solid var(--border-strong);
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  place-items: center;
+}
+
+/* Play and the other small buttons keep their width when the word changes. */
+.fig-play {
+  min-width: 88px;
+  justify-content: flex-start;
+}
+
+/* Touch: 44px targets. */
+@media (pointer: coarse) {
+  .segment {
+    min-height: 44px;
+  }
+  .fig-toggle {
+    min-height: 44px;
+  }
+  .fig-range {
+    height: 44px;
+  }
+  .fig-stepper button {
+    width: 44px;
+    min-height: 42px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Charts: axis and legend text. Text wears ink, never a series colour.
+   -------------------------------------------------------------------------- */
+
+.fig-axis-text {
+  fill: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.fig-axis-label {
+  fill: var(--text-muted);
+}
+.fig-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+  list-style: none;
+}
+.fig-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.fig-legend svg {
+  flex: none;
+}

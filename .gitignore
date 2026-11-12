@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw experiment export, input of scripts/sync-data.mjs (the generated data is committed, this is not)
+.data/
+
+# npm is the package manager of record (package-lock.json); a local bun lockfile is not committed
+bun.lock
