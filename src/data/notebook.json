@@ -652,7 +652,7 @@
       "The rotary position table was computed in bfloat16 under autocast, which keeps 8 significant bits",
       "positions above 256 collapse onto even numbers, above 512 onto multiples of 4: 641 distinct positions out of 2048.",
       "In the no-history policy (426 tokens before the actions: one for the noise level, 32 for the instruction, 392 patches, one for the joint state) the 15 action-step tokens, at positions 426-440, shared 8 positions; with history (about 820) 16 shared 4",
-      "the table is computed in float32 and then cast; test added. Effect: see 'The same run before and after the fix' (one seed each; a second pair is running) and the single cube with history"
+      "the table is computed in float32 and then cast; test added. Effect: see 'The same run before and after the fix' (and the second pair of seeds in 'A second seed, with and without the fix') and the single cube with history"
     ]
   },
 

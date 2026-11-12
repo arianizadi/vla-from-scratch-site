@@ -678,6 +678,164 @@ Every token, no history, 4000 demonstrations, 0.5M samples (`vla_qwen_tokens_rea
 | 0.5M (final) | 70% / 72% | 98% / 99% | 0.95 / 0.99 | 15 / 14 mm |
 
 
+## Toward flower trimming (machine B)
+
+The ladder of `tutorial/roadmap.md` (Phase 4): each step adds one property of the final task. Same policy
+and recipe as the runs above unless stated: `dp_vit_lang_reactive`, 4000 demonstrations with random start
+poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unseen layouts per
+evaluation, final checkpoint, trained / averaged weights where both are given. "Closed at the named
+object" is the share of first closes nearest the named object.
+
+**In progress:** look-alikes for 10M samples (`dp_vit_lang_reactive_lookalike4k_rs_recover_10m`); the stem grasp
+with other seeds (`..._stem4k_rs_recover_seed43`) and for 10M samples (`..._stem4k_rs_recover_10m`); the cut
+with demonstrations that come in from the outer edge (`dp_vit_lang_reactive_cut4k_rs_recover_outer`).
+
+### Step 1: a target that keeps moving (`--disturb drift`)
+
+The named object slides on a winding path at a fixed speed whenever the gripper is open (it turns away
+from the edge of the area and from the other objects). The demonstrations of
+`dp_vit_lang_reactive_pt4k_rs_recover_drift` (dataset `pick_target_4k_rs_recover_drift`): 1237 of the
+4000 slide while the expert follows the object, each at its own speed drawn between 1 and 3 cm/s (`--drift_cm_s 2`: 0.5 to 1.5 times it); 789 are moved during the reach and 672 at the
+grasp; 1302 are undisturbed.
+
+| Who | 1 cm/s | 2 cm/s | 4 cm/s |
+|---|---|---|---|
+| expert, one plan per episode | 86/100 | 47/100 | 14/100 |
+| expert, follows the object (shifts its plan by moves up to 4 cm, plans again beyond) | 98/100 | 99/100 | 97/100 |
+| policy trained on clean demonstrations (`dp_vit_lang_reactive_pt4k_posfix`) | 94/100 | 62/100 | 10/100 |
+| policy trained on random starts and recoveries (`..._pt4k_rs_recover_posfix`) | 94/100 | 78/100 | 27/100 |
+| policy trained with sliding objects as well (`..._pt4k_rs_recover_drift`) | 96/100 | 88/100 | 70/100 |
+
+The sliding demonstrations cost nothing elsewhere. The same policy on the battery of the table "How each
+policy copes outside the conditions it was trained in": standard 89/100 / 93/100, second set of layouts
+92/100, random start 89/100, moved at step 10 / 20 / 30 94/100, 89/97, 90/100, moved at the grasp
+94/100 (99 retried), random start and moved at step 20 90/97, random start and moved at the grasp 87/99;
+2 flow steps 99/100; cameras frozen on the first frame 0/100; expert drives 10 / 25 steps toward another
+object 90/100 / 91/100. Averaged weights, checkpoints 1 to 11: 15, 69, 76, 83, 89, 95, 88, 93, 87, 96, 93.
+
+### Step 2: look-alikes (`pick_lookalike`)
+
+Three cubes of one shape drawn from red, orange, pink and dark red; only the colour word of the
+instruction tells them apart. The expert takes the named cube in 100/100 (one plan, and planning again).
+
+| Policy | Look-alikes | Closed at the named cube |
+|---|---|---|
+| clean demonstrations, never shown look-alikes | 22/100 | 34% |
+| random starts and recoveries, never shown look-alikes | 24/100 | 33% |
+| trained on look-alikes (`dp_vit_lang_reactive_lookalike4k_rs_recover`, seed 42) | 35/100 / 28/100 | 43% |
+| the same, other seeds (`..._seed43`: `--data.seed 43 --hparams.seed 43`) | 89/100 / 93/100 | |
+| the same, a third pair of seeds (`..._seed44`) | 88/100 / 91/100 | |
+| the same as seed 42 for 10M samples (`..._10m`) | 81/100 / 81/100 after 7 of 11 checkpoints (about 6.4M samples), still rising | |
+| trained on the clutter scenes of step 3, which include the same cubes | 86/100 | 100% |
+| trained on the clutter scenes without the leaves (`dp_vit_lang_reactive_mixed4k_rs_recover`; on its own task 96/100 / 93/100) | 97/100 | |
+
+Look-alikes are learnable from look-alike scenes alone, but when the policy starts to tell them apart
+depends on the seeds. Averaged weights per checkpoint (about 0.45M samples apart; wrong cube lifted in
+brackets):
+
+| Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| seed 42 | 28 (59) | 34 (65) | 30 (67) | 38 (68) | 54 (58) | 25 (67) | 22 (67) | 36 (56) | 33 (57) | 37 (52) | 28 (59) |
+| seed 43 | 24 (52) | 83 (1) | 92 (0) | 93 (0) | 83 (0) | 87 (0) | 89 (0) | 92 (0) | 83 (0) | 90 (0) | 93 (0) |
+| seed 44 | 24 (60) | 36 (64) | 30 (65) | 56 (44) | 88 (3) | 83 (0) | 90 (1) | 91 (0) | 91 (0) | 91 (0) | 91 (0) | |
+| clutter, no leaves (its own task) | 9 (29) | 68 (1) | 84 (0) | 90 (0) | 88 (0) | 95 (0) | 95 (0) | 94 (0) | 91 (0) | 91 (0) | 93 (0) |
+| clutter with leaves (its own task) | 6 (17) | 75 (0) | 81 (0) | 87 (0) | 85 (0) | 83 (0) | 84 (0) | 82 (0) | 82 (0) | 88 (0) | 86 (0) |
+
+The switch is sudden, as on `pick_target` (notes: "Looking at the scene arrives late, and all at once"):
+from a wrong cube in about 60% of episodes to none within one checkpoint. With seed 43 it comes after
+about 0.9M samples, with seed 44 after about 2M, with seed 42 not within 5M. In the two runs whose scenes
+also hold other shapes it came by the second checkpoint. Seed 42 with twice the samples does learn,
+slowly (81/100 after about 6.4M samples, a wrong cube still in 23%). A look-alike run that has not switched by the
+end of its budget looks exactly like one that cannot learn the task; a second seed is what tells them
+apart.
+
+What carries over: the policy trained on clutter without leaves picks the named look-alike in 97/100
+and, never having seen a leaf, 74/100 on clutter with leaves; the look-alike policy with seed 43 (93/100
+on its own task) manages 42/100 on clutter, with a wrong object lifted in 34%.
+
+### Step 3: clutter and occlusion (`pick_clutter`)
+
+Four objects from seven (the four shapes of `pick_target` and the three look-alike cubes) and three
+upright leaves, each standing between an object and the front camera; the leaves are seen, not touched.
+The expert takes the named object in 100/100.
+
+| Policy | Clutter | Closed at the named object |
+|---|---|---|
+| random starts and recoveries, never shown clutter | 35/100 | 51% |
+| trained on look-alikes (step 2) | 17/100 | 30% |
+| trained with sliding objects (step 1) | 46/100 | 54% |
+| trained on clutter (`dp_vit_lang_reactive_clutter4k_rs_recover`) | 87/100 / 86/100 | 100% |
+
+The clutter policy, averaged weights, checkpoints 1 to 11: 6, 75, 81, 87, 85, 83, 84, 82, 82, 88, 86.
+Under the battery: moved at step 20 86/100, moved at the grasp 78/100, random start 78/100; sliding
+(not in its demonstrations) at 1 cm/s 82/100, at 4 cm/s 42/100. On the plain three-shape task 87/100, on
+the look-alikes 86/100.
+
+### Step 4: a stem to grasp from the side (`grasp_stem`)
+
+Three flowers drawn from four (red, orange, pink and purple heads on green stems in heavy bases); the instruction is "grasp
+the stem of the ... flower". Success: the gripper is commanded shut with the named stem between the
+fingers and inside the fingertips' depth, a finger touching it, the gripper's centre inside the band
+7-11 cm above the table and the stem upright, for 10 control steps in a row. The expert (horizontal
+gripper, coming in across the table from the side with more room) succeeds in 88/100; in 10 it stalls
+before reaching the stem and never closes, in 2 it closes and fails.
+
+| Policy | Grasp the stem |
+|---|---|
+| random starts and recoveries on `pick_target`, never shown stems | 0/100 |
+| trained on stems (`dp_vit_lang_reactive_stem4k_rs_recover`) | 4/100 / 6/100 |
+
+Over its checkpoints 1 to 11 the stem policy never passes 10/100 (averaged weights: 0, 1, 0, 3, 5, 5, 2, 4, 5, 3, 6).
+Where it fails (checkpoint 9, averaged weights; 30 layouts rolled out with every control
+step recorded): in 16 it never closes within 3 cm of the named stem; in 13 the stem is held by the test
+above at some step, but the hold lasts 3-9 steps before a finger loses the stem; 1 succeeds. Over the
+closed steps within 3 cm of the named stem, no finger touches it 56% of the time, the stem is outside the
+fingertips' depth 32% of the time, outside the jaws sideways 20%, the gripper outside the band 20%. The
+first close is nearest the named stem in 60% of episodes (chance 33%): the flowers' heads are themselves
+look-alikes (red, orange, pink). The evaluation now also reports `caught_rate`, the share of episodes in
+which the named object was held (stems) or lifted at any step: for the final stem policy, 52/100 caught
+and 6/100 held for 10 steps. Executing 4 actions per chunk instead of 8 does not help (1/100, caught 40/100).
+
+Other seeds and more samples have not changed it so far: `..._stem4k_rs_recover_seed43` and the
+10M-sample run are at 0-5/100 (seed 43 at 4/100 after 9 of 11 checkpoints, 10M at 4/100 after 6 of 11). Where it goes wrong shows when the expert drives the first K control steps
+toward the named stem and the policy takes over (final checkpoint, averaged weights):
+
+| Expert drives | Grasp the stem (10 steps) | Caught at some step | First close nearest the named stem | Cut the named stem (3 steps) |
+|---|---|---|---|---|
+| nothing | 6/100 | 52/100 | 60% | 9/100 (19 other stems cut) |
+| 20 steps (1 s; the expert's close comes at about step 60) | 7/100 | 83/100 | 88% | |
+| 35 steps | 10/100 | 83/100 | 90% | 58/100 (1 other) |
+| 50 steps | 10/100 | 84/100 | 92% | 66/100 (1 other) |
+
+One second of the expert is enough to make the policy catch the named stem most of the time, so the
+first failure is at the very start: committing to a stem and a side. The expert takes the side whose
+path in passes farthest from the other stems, so in a given layout either side is about as likely, and
+the two sides need opposite turns of the wrist from the first step. A second failure is holding still:
+even started well it keeps the stem for 10 steps in only a tenth of the episodes, though for 3 steps (a
+cut) in about 60%.
+
+`collect.py --expert_side preferred` makes the side follow from where the stem stands: in from the outer
+edge of the table toward its middle, the other side only when that path passes within 4 cm of another
+stem. The expert cuts 90/100 that way (92/100 with the clearance rule). A first version, always the side
+away from the front camera, cut only 73/100: it failed on stems right of the robot's middle line (20 of
+36).
+
+### Step 5: a cut (`cut_stem`)
+
+The same scene; the instruction is "cut the stem of the ... flower". Each flower is built as a base and
+a top part (upper stem and head) held by a weld; when the test of step 4 holds on a stem for 3 control
+steps in a row, the stem is cut at the gripper's height (clipped to the band) and the top part falls.
+Cutting the named stem is a success; cutting any other ends the episode as a failure.
+
+| Who | Cut the named stem | Cut another stem |
+|---|---|---|
+| expert (one plan, and planning again) | 92/100 | 0/100 |
+| the stem policy of step 4, never shown a cut | 9/100 | 19/100 |
+| trained on cuts (`dp_vit_lang_reactive_cut4k_rs_recover`) | 0/100 / 0/100 | 0/100 / 3/100 |
+
+The policy trained on cuts does worse than the stem policy it was meant to improve on: 0-7/100 over
+its checkpoints. The first-steps problem of step 4 applies unchanged; see the expert-side change above.
+
 ## Throughput
 
 | Model | Machine A (RTX 4090) | Machine B (L40S) |
