@@ -12,6 +12,7 @@ export const styles = {
   controls: "lab-controls",
   facetEmpty: "lab-facetEmpty",
   facts: "lab-facts",
+  film: "lab-film",
   groupStart: "lab-groupStart",
   hatched: "lab-hatched",
   headingRow: "lab-headingRow",

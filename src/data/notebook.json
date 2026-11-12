@@ -847,5 +847,491 @@
       "text": "Policy inference per chunk: 20-65 ms for the 36M policy (`dp_vit`), about 190 ms for the Qwen VLA (machine A).",
       "quotes": ["Policy inference per chunk: 20-65 ms for the 36M policy (`dp_vit`), about 190 ms for the Qwen VLA (machine A)."]
     }
+  },
+
+  "flower": {
+    "section": "Toward flower trimming (machine B)",
+    "about": "The five steps toward flower trimming. None of these runs is in the experiment export: every value is copied from the notebook. Counts are [successes, episodes]; two counts in a cell are the trained and the averaged weights.",
+    "recipe": {
+      "policy": "dp_vit_lang_reactive",
+      "demos": 4000,
+      "samplesM": 5,
+      "layouts": 100,
+      "quotes": ["Same policy and recipe as the runs above unless stated: `dp_vit_lang_reactive`, 4000 demonstrations with random start poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unseen layouts per evaluation, final checkpoint, trained / averaged weights where both are given."]
+    },
+    "inProgress": {
+      "quotes": ["**In progress:** look-alikes for 10M samples (`dp_vit_lang_reactive_lookalike4k_rs_recover_10m`); the stem grasp with other seeds (`..._stem4k_rs_recover_seed43`) and for 10M samples (`..._stem4k_rs_recover_10m`); the cut with demonstrations that come in from the outer edge (`dp_vit_lang_reactive_cut4k_rs_recover_outer`)."],
+      "runs": [
+        { "step": "lookalike", "words": "look-alikes for 10M samples", "run": "dp_vit_lang_reactive_lookalike4k_rs_recover_10m" },
+        { "step": "stem", "words": "the stem grasp with other seeds", "run": "..._stem4k_rs_recover_seed43" },
+        { "step": "stem", "words": "the stem grasp for 10M samples", "run": "..._stem4k_rs_recover_10m" },
+        { "step": "cut", "words": "the cut with demonstrations that come in from the outer edge", "run": "dp_vit_lang_reactive_cut4k_rs_recover_outer" }
+      ]
+    },
+
+    "drift": {
+      "section": "Step 1: a target that keeps moving (`--disturb drift`)",
+      "run": "dp_vit_lang_reactive_pt4k_rs_recover_drift",
+      "dataset": "pick_target_4k_rs_recover_drift",
+      "demonstrations": {
+        "sliding": 1237,
+        "total": 4000,
+        "speedCmS": [1, 3],
+        "duringReach": 789,
+        "atGrasp": 672,
+        "undisturbed": 1302,
+        "quotes": ["The demonstrations of `dp_vit_lang_reactive_pt4k_rs_recover_drift` (dataset `pick_target_4k_rs_recover_drift`): 1237 of the 4000 slide while the expert follows the object, each at its own speed drawn between 1 and 3 cm/s (`--drift_cm_s 2`: 0.5 to 1.5 times it); 789 are moved during the reach and 672 at the grasp; 1302 are undisturbed."]
+      },
+      "speedsCmS": [1, 2, 4],
+      "quotes": ["| Who | 1 cm/s | 2 cm/s | 4 cm/s |"],
+      "rows": [
+        {
+          "id": "expert-one-plan",
+          "words": "expert, one plan per episode",
+          "expert": true,
+          "counts": [[86, 100], [47, 100], [14, 100]],
+          "quotes": ["| expert, one plan per episode | 86/100 | 47/100 | 14/100 |"]
+        },
+        {
+          "id": "expert-follows",
+          "words": "expert, follows the object",
+          "detail": "shifts its plan by moves up to 4 cm, plans again beyond",
+          "detailCm": 4,
+          "expert": true,
+          "counts": [[98, 100], [99, 100], [97, 100]],
+          "quotes": ["| expert, follows the object (shifts its plan by moves up to 4 cm, plans again beyond) | 98/100 | 99/100 | 97/100 |"]
+        },
+        {
+          "id": "clean",
+          "words": "policy trained on clean demonstrations",
+          "run": "dp_vit_lang_reactive_pt4k_posfix",
+          "counts": [[94, 100], [62, 100], [10, 100]],
+          "quotes": ["| policy trained on clean demonstrations (`dp_vit_lang_reactive_pt4k_posfix`) | 94/100 | 62/100 | 10/100 |"]
+        },
+        {
+          "id": "random-start-recoveries",
+          "words": "policy trained on random starts and recoveries",
+          "run": "..._pt4k_rs_recover_posfix",
+          "counts": [[94, 100], [78, 100], [27, 100]],
+          "quotes": ["| policy trained on random starts and recoveries (`..._pt4k_rs_recover_posfix`) | 94/100 | 78/100 | 27/100 |"]
+        },
+        {
+          "id": "sliding",
+          "words": "policy trained with sliding objects as well",
+          "run": "..._pt4k_rs_recover_drift",
+          "counts": [[96, 100], [88, 100], [70, 100]],
+          "quotes": ["| policy trained with sliding objects as well (`..._pt4k_rs_recover_drift`) | 96/100 | 88/100 | 70/100 |"]
+        }
+      ],
+      "conditions": {
+        "quotes": ["The sliding demonstrations cost nothing elsewhere. The same policy on the battery of the table \"How each policy copes outside the conditions it was trained in\": standard 89/100 / 93/100, second set of layouts 92/100, random start 89/100, moved at step 10 / 20 / 30 94/100, 89/97, 90/100, moved at the grasp 94/100 (99 retried), random start and moved at step 20 90/97, random start and moved at the grasp 87/99; 2 flow steps 99/100; cameras frozen on the first frame 0/100; expert drives 10 / 25 steps toward another object 90/100 / 91/100."],
+        "rows": [
+          { "words": "standard", "counts": [[89, 100], [93, 100]] },
+          { "words": "second set of layouts", "counts": [[92, 100]] },
+          { "words": "random start", "counts": [[89, 100]] },
+          { "words": "moved at step 10", "counts": [[94, 100]] },
+          { "words": "moved at step 20", "counts": [[89, 97]] },
+          { "words": "moved at step 30", "counts": [[90, 100]] },
+          { "words": "moved at the grasp", "counts": [[94, 100]], "retried": 99 },
+          { "words": "random start and moved at step 20", "counts": [[90, 97]] },
+          { "words": "random start and moved at the grasp", "counts": [[87, 99]] },
+          { "words": "2 flow steps", "counts": [[99, 100]] },
+          { "words": "cameras frozen on the first frame", "counts": [[0, 100]] },
+          { "words": "expert drives 10 steps toward another object", "counts": [[90, 100]] },
+          { "words": "expert drives 25 steps toward another object", "counts": [[91, 100]] }
+        ]
+      },
+      "checkpoints": {
+        "values": [15, 69, 76, 83, 89, 95, 88, 93, 87, 96, 93],
+        "quotes": ["Averaged weights, checkpoints 1 to 11: 15, 69, 76, 83, 89, 95, 88, 93, 87, 96, 93."]
+      }
+    },
+
+    "lookalike": {
+      "section": "Step 2: look-alikes (`pick_lookalike`)",
+      "expert": {
+        "counts": [[100, 100]],
+        "quotes": ["The expert takes the named cube in 100/100 (one plan, and planning again)."]
+      },
+      "rows": [
+        {
+          "id": "clean",
+          "words": "clean demonstrations, never shown look-alikes",
+          "counts": [[22, 100]],
+          "named": 34,
+          "quotes": ["| clean demonstrations, never shown look-alikes | 22/100 | 34% |"]
+        },
+        {
+          "id": "random-start-recoveries",
+          "words": "random starts and recoveries, never shown look-alikes",
+          "counts": [[24, 100]],
+          "named": 33,
+          "quotes": ["| random starts and recoveries, never shown look-alikes | 24/100 | 33% |"]
+        },
+        {
+          "id": "seed-42",
+          "words": "trained on look-alikes, seed 42",
+          "run": "dp_vit_lang_reactive_lookalike4k_rs_recover",
+          "counts": [[35, 100], [28, 100]],
+          "named": 43,
+          "quotes": ["| trained on look-alikes (`dp_vit_lang_reactive_lookalike4k_rs_recover`, seed 42) | 35/100 / 28/100 | 43% |"]
+        },
+        {
+          "id": "seed-43",
+          "words": "the same, other seeds",
+          "run": "..._seed43",
+          "detail": "`--data.seed 43 --hparams.seed 43`",
+          "counts": [[89, 100], [93, 100]],
+          "named": null,
+          "quotes": ["| the same, other seeds (`..._seed43`: `--data.seed 43 --hparams.seed 43`) | 89/100 / 93/100 | |"]
+        },
+        {
+          "id": "seed-44",
+          "words": "the same, a third pair of seeds",
+          "run": "..._seed44",
+          "counts": [[88, 100], [91, 100]],
+          "named": null,
+          "quotes": ["| the same, a third pair of seeds (`..._seed44`) | 88/100 / 91/100 | |"]
+        },
+        {
+          "id": "seed-42-10m",
+          "words": "the same as seed 42 for 10M samples",
+          "run": "..._10m",
+          "counts": [],
+          "named": null,
+          "partial": { "counts": [[81, 100], [81, 100]], "checkpoint": 7, "checkpoints": 11, "samplesAboutM": 6.4, "note": "still rising" },
+          "quotes": ["| the same as seed 42 for 10M samples (`..._10m`) | 81/100 / 81/100 after 7 of 11 checkpoints (about 6.4M samples), still rising | |"]
+        },
+        {
+          "id": "clutter",
+          "words": "trained on the clutter scenes of step 3, which include the same cubes",
+          "counts": [[86, 100]],
+          "named": 100,
+          "quotes": ["| trained on the clutter scenes of step 3, which include the same cubes | 86/100 | 100% |"]
+        },
+        {
+          "id": "clutter-no-leaves",
+          "words": "trained on the clutter scenes without the leaves",
+          "run": "dp_vit_lang_reactive_mixed4k_rs_recover",
+          "ownTask": [[96, 100], [93, 100]],
+          "counts": [[97, 100]],
+          "named": null,
+          "quotes": ["| trained on the clutter scenes without the leaves (`dp_vit_lang_reactive_mixed4k_rs_recover`; on its own task 96/100 / 93/100) | 97/100 | |"]
+        }
+      ],
+      "checkpoints": {
+        "spacingAboutM": 0.45,
+        "quotes": ["Averaged weights per checkpoint (about 0.45M samples apart; wrong cube lifted in brackets):"],
+        "rows": [
+          {
+            "words": "seed 42",
+            "values": [[28, 59], [34, 65], [30, 67], [38, 68], [54, 58], [25, 67], [22, 67], [36, 56], [33, 57], [37, 52], [28, 59]],
+            "quotes": ["| seed 42 | 28 (59) | 34 (65) | 30 (67) | 38 (68) | 54 (58) | 25 (67) | 22 (67) | 36 (56) | 33 (57) | 37 (52) | 28 (59) |"]
+          },
+          {
+            "words": "seed 43",
+            "values": [[24, 52], [83, 1], [92, 0], [93, 0], [83, 0], [87, 0], [89, 0], [92, 0], [83, 0], [90, 0], [93, 0]],
+            "quotes": ["| seed 43 | 24 (52) | 83 (1) | 92 (0) | 93 (0) | 83 (0) | 87 (0) | 89 (0) | 92 (0) | 83 (0) | 90 (0) | 93 (0) |"]
+          },
+          {
+            "words": "seed 44",
+            "values": [[24, 60], [36, 64], [30, 65], [56, 44], [88, 3], [83, 0], [90, 1], [91, 0], [91, 0], [91, 0], [91, 0]],
+            "quotes": ["| seed 44 | 24 (60) | 36 (64) | 30 (65) | 56 (44) | 88 (3) | 83 (0) | 90 (1) | 91 (0) | 91 (0) | 91 (0) | 91 (0) |"]
+          },
+          {
+            "words": "clutter, no leaves (its own task)",
+            "values": [[9, 29], [68, 1], [84, 0], [90, 0], [88, 0], [95, 0], [95, 0], [94, 0], [91, 0], [91, 0], [93, 0]],
+            "quotes": ["| clutter, no leaves (its own task) | 9 (29) | 68 (1) | 84 (0) | 90 (0) | 88 (0) | 95 (0) | 95 (0) | 94 (0) | 91 (0) | 91 (0) | 93 (0) |"]
+          },
+          {
+            "words": "clutter with leaves (its own task)",
+            "values": [[6, 17], [75, 0], [81, 0], [87, 0], [85, 0], [83, 0], [84, 0], [82, 0], [82, 0], [88, 0], [86, 0]],
+            "quotes": ["| clutter with leaves (its own task) | 6 (17) | 75 (0) | 81 (0) | 87 (0) | 85 (0) | 83 (0) | 84 (0) | 82 (0) | 82 (0) | 88 (0) | 86 (0) |"]
+          }
+        ]
+      },
+      "switch": {
+        "wrongAboutPercent": 60,
+        "switchedAt": [
+          { "seed": 43, "samplesAboutM": 0.9 },
+          { "seed": 44, "samplesAboutM": 2 }
+        ],
+        "notWithin": { "seed": 42, "samplesM": 5 },
+        "longer": { "counts": [[81, 100]], "samplesAboutM": 6.4, "wrongPercent": 23 },
+        "quotes": [
+          "The switch is sudden, as on `pick_target` (notes: \"Looking at the scene arrives late, and all at once\"): from a wrong cube in about 60% of episodes to none within one checkpoint.",
+          "With seed 43 it comes after about 0.9M samples, with seed 44 after about 2M, with seed 42 not within 5M.",
+          "In the two runs whose scenes also hold other shapes it came by the second checkpoint.",
+          "Seed 42 with twice the samples does learn, slowly (81/100 after about 6.4M samples, a wrong cube still in 23%).",
+          "A look-alike run that has not switched by the end of its budget looks exactly like one that cannot learn the task; a second seed is what tells them apart."
+        ]
+      },
+      "carryOver": {
+        "noLeaves": { "lookalike": [97, 100], "withLeaves": [74, 100] },
+        "seed43": { "ownTask": [93, 100], "clutter": [42, 100], "wrongPercent": 34 },
+        "quotes": ["What carries over: the policy trained on clutter without leaves picks the named look-alike in 97/100 and, never having seen a leaf, 74/100 on clutter with leaves; the look-alike policy with seed 43 (93/100 on its own task) manages 42/100 on clutter, with a wrong object lifted in 34%."]
+      }
+    },
+
+    "clutter": {
+      "section": "Step 3: clutter and occlusion (`pick_clutter`)",
+      "expert": {
+        "counts": [[100, 100]],
+        "quotes": ["The expert takes the named object in 100/100."]
+      },
+      "rows": [
+        {
+          "id": "random-start-recoveries",
+          "words": "random starts and recoveries, never shown clutter",
+          "counts": [[35, 100]],
+          "named": 51,
+          "quotes": ["| random starts and recoveries, never shown clutter | 35/100 | 51% |"]
+        },
+        {
+          "id": "lookalike",
+          "words": "trained on look-alikes (step 2)",
+          "counts": [[17, 100]],
+          "named": 30,
+          "quotes": ["| trained on look-alikes (step 2) | 17/100 | 30% |"]
+        },
+        {
+          "id": "sliding",
+          "words": "trained with sliding objects (step 1)",
+          "counts": [[46, 100]],
+          "named": 54,
+          "quotes": ["| trained with sliding objects (step 1) | 46/100 | 54% |"]
+        },
+        {
+          "id": "clutter",
+          "words": "trained on clutter",
+          "run": "dp_vit_lang_reactive_clutter4k_rs_recover",
+          "counts": [[87, 100], [86, 100]],
+          "named": 100,
+          "quotes": ["| trained on clutter (`dp_vit_lang_reactive_clutter4k_rs_recover`) | 87/100 / 86/100 | 100% |"]
+        }
+      ],
+      "checkpoints": {
+        "values": [6, 75, 81, 87, 85, 83, 84, 82, 82, 88, 86],
+        "quotes": ["The clutter policy, averaged weights, checkpoints 1 to 11: 6, 75, 81, 87, 85, 83, 84, 82, 82, 88, 86."]
+      },
+      "conditions": {
+        "quotes": [
+          "Under the battery: moved at step 20 86/100, moved at the grasp 78/100, random start 78/100; sliding (not in its demonstrations) at 1 cm/s 82/100, at 4 cm/s 42/100.",
+          "On the plain three-shape task 87/100, on the look-alikes 86/100."
+        ],
+        "rows": [
+          { "words": "moved at step 20", "counts": [[86, 100]] },
+          { "words": "moved at the grasp", "counts": [[78, 100]] },
+          { "words": "random start", "counts": [[78, 100]] },
+          { "words": "sliding at 1 cm/s (not in its demonstrations)", "counts": [[82, 100]] },
+          { "words": "sliding at 4 cm/s (not in its demonstrations)", "counts": [[42, 100]] },
+          { "words": "the plain three-shape task", "counts": [[87, 100]] },
+          { "words": "the look-alikes", "counts": [[86, 100]] }
+        ]
+      }
+    },
+
+    "stem": {
+      "section": "Step 4: a stem to grasp from the side (`grasp_stem`)",
+      "success": {
+        "bandCm": [7, 11],
+        "holdSteps": 10,
+        "quotes": ["Success: the gripper is commanded shut with the named stem between the fingers and inside the fingertips' depth, a finger touching it, the gripper's centre inside the band 7-11 cm above the table and the stem upright, for 10 control steps in a row."]
+      },
+      "expert": {
+        "counts": [[88, 100]],
+        "stalls": 10,
+        "closesAndFails": 2,
+        "quotes": ["The expert (horizontal gripper, coming in across the table from the side with more room) succeeds in 88/100; in 10 it stalls before reaching the stem and never closes, in 2 it closes and fails."]
+      },
+      "rows": [
+        {
+          "id": "pick-target",
+          "words": "random starts and recoveries on `pick_target`, never shown stems",
+          "counts": [[0, 100]],
+          "quotes": ["| random starts and recoveries on `pick_target`, never shown stems | 0/100 |"]
+        },
+        {
+          "id": "stem",
+          "words": "trained on stems",
+          "run": "dp_vit_lang_reactive_stem4k_rs_recover",
+          "counts": [[4, 100], [6, 100]],
+          "quotes": ["| trained on stems (`dp_vit_lang_reactive_stem4k_rs_recover`) | 4/100 / 6/100 |"]
+        },
+        {
+          "id": "stem-seed-43",
+          "words": "the same, other seeds",
+          "run": "..._stem4k_rs_recover_seed43",
+          "counts": [],
+          "partial": { "counts": [[4, 100]], "checkpoint": 9, "checkpoints": 11 },
+          "quotes": ["Other seeds and more samples have not changed it so far: `..._stem4k_rs_recover_seed43` and the 10M-sample run are at 0-5/100 (seed 43 at 4/100 after 9 of 11 checkpoints, 10M at 4/100 after 6 of 11)."]
+        },
+        {
+          "id": "stem-10m",
+          "words": "the same for 10M samples",
+          "run": "..._stem4k_rs_recover_10m",
+          "counts": [],
+          "partial": { "counts": [[4, 100]], "checkpoint": 6, "checkpoints": 11 },
+          "quotes": [
+            "Other seeds and more samples have not changed it so far: `..._stem4k_rs_recover_seed43` and the 10M-sample run are at 0-5/100 (seed 43 at 4/100 after 9 of 11 checkpoints, 10M at 4/100 after 6 of 11).",
+            "the stem grasp with other seeds (`..._stem4k_rs_recover_seed43`) and for 10M samples (`..._stem4k_rs_recover_10m`)"
+          ]
+        }
+      ],
+      "checkpoints": {
+        "neverPasses": [10, 100],
+        "values": [0, 1, 0, 3, 5, 5, 2, 4, 5, 3, 6],
+        "quotes": ["Over its checkpoints 1 to 11 the stem policy never passes 10/100 (averaged weights: 0, 1, 0, 3, 5, 5, 2, 4, 5, 3, 6)."]
+      },
+      "failures": {
+        "checkpoint": 9,
+        "layouts": 30,
+        "withinCm": 3,
+        "neverCloses": 16,
+        "heldThenLost": 13,
+        "heldSteps": [3, 9],
+        "succeeds": 1,
+        "closedSteps": { "noFinger": 56, "outsideDepth": 32, "outsideSideways": 20, "outsideBand": 20 },
+        "firstCloseNamed": 60,
+        "chance": 33,
+        "quotes": [
+          "Where it fails (checkpoint 9, averaged weights; 30 layouts rolled out with every control step recorded): in 16 it never closes within 3 cm of the named stem; in 13 the stem is held by the test above at some step, but the hold lasts 3-9 steps before a finger loses the stem; 1 succeeds.",
+          "Over the closed steps within 3 cm of the named stem, no finger touches it 56% of the time, the stem is outside the fingertips' depth 32% of the time, outside the jaws sideways 20%, the gripper outside the band 20%.",
+          "The first close is nearest the named stem in 60% of episodes (chance 33%): the flowers' heads are themselves look-alikes (red, orange, pink)."
+        ]
+      },
+      "caught": {
+        "caught": [52, 100],
+        "held": [6, 100],
+        "holdSteps": 10,
+        "fewerActions": { "executed": 4, "insteadOf": 8, "counts": [[1, 100]], "caught": [40, 100] },
+        "quotes": [
+          "The evaluation now also reports `caught_rate`, the share of episodes in which the named object was held (stems) or lifted at any step: for the final stem policy, 52/100 caught and 6/100 held for 10 steps.",
+          "Executing 4 actions per chunk instead of 8 does not help (1/100, caught 40/100)."
+        ]
+      },
+      "expertDrives": {
+        "graspSteps": 10,
+        "cutSteps": 3,
+        "quotes": [
+          "Where it goes wrong shows when the expert drives the first K control steps toward the named stem and the policy takes over (final checkpoint, averaged weights):",
+          "| Expert drives | Grasp the stem (10 steps) | Caught at some step | First close nearest the named stem | Cut the named stem (3 steps) |"
+        ],
+        "rows": [
+          {
+            "id": "nothing",
+            "words": "nothing",
+            "grasp": [6, 100],
+            "caught": [52, 100],
+            "firstCloseNamed": 60,
+            "cut": [9, 100],
+            "otherCut": 19,
+            "quotes": ["| nothing | 6/100 | 52/100 | 60% | 9/100 (19 other stems cut) |"]
+          },
+          {
+            "id": "20-steps",
+            "words": "20 steps",
+            "detail": "1 s; the expert's close comes at about step 60",
+            "grasp": [7, 100],
+            "caught": [83, 100],
+            "firstCloseNamed": 88,
+            "cut": null,
+            "otherCut": null,
+            "quotes": ["| 20 steps (1 s; the expert's close comes at about step 60) | 7/100 | 83/100 | 88% | |"]
+          },
+          {
+            "id": "35-steps",
+            "words": "35 steps",
+            "grasp": [10, 100],
+            "caught": [83, 100],
+            "firstCloseNamed": 90,
+            "cut": [58, 100],
+            "otherCut": 1,
+            "quotes": ["| 35 steps | 10/100 | 83/100 | 90% | 58/100 (1 other) |"]
+          },
+          {
+            "id": "50-steps",
+            "words": "50 steps",
+            "grasp": [10, 100],
+            "caught": [84, 100],
+            "firstCloseNamed": 92,
+            "cut": [66, 100],
+            "otherCut": 1,
+            "quotes": ["| 50 steps | 10/100 | 84/100 | 92% | 66/100 (1 other) |"]
+          }
+        ]
+      },
+      "diagnosis": {
+        "holdSteps": 10,
+        "cutSteps": 3,
+        "cutAboutPercent": 60,
+        "quotes": [
+          "One second of the expert is enough to make the policy catch the named stem most of the time, so the first failure is at the very start: committing to a stem and a side.",
+          "The expert takes the side whose path in passes farthest from the other stems, so in a given layout either side is about as likely, and the two sides need opposite turns of the wrist from the first step.",
+          "A second failure is holding still: even started well it keeps the stem for 10 steps in only a tenth of the episodes, though for 3 steps (a cut) in about 60%."
+        ]
+      },
+      "expertSide": {
+        "command": "collect.py --expert_side preferred",
+        "clearanceCm": 4,
+        "cut": [90, 100],
+        "withClearance": [92, 100],
+        "firstVersion": [73, 100],
+        "firstVersionFailedRight": [20, 36],
+        "quotes": [
+          "`collect.py --expert_side preferred` makes the side follow from where the stem stands: in from the outer edge of the table toward its middle, the other side only when that path passes within 4 cm of another stem.",
+          "The expert cuts 90/100 that way (92/100 with the clearance rule).",
+          "A first version, always the side away from the front camera, cut only 73/100: it failed on stems right of the robot's middle line (20 of 36)."
+        ]
+      }
+    },
+
+    "cut": {
+      "section": "Step 5: a cut (`cut_stem`)",
+      "holdSteps": 3,
+      "quotes": [
+        "Each flower is built as a base and a top part (upper stem and head) held by a weld; when the test of step 4 holds on a stem for 3 control steps in a row, the stem is cut at the gripper's height (clipped to the band) and the top part falls.",
+        "Cutting the named stem is a success; cutting any other ends the episode as a failure."
+      ],
+      "rows": [
+        {
+          "id": "expert",
+          "words": "expert (one plan, and planning again)",
+          "expert": true,
+          "named": [[92, 100]],
+          "other": [[0, 100]],
+          "quotes": ["| expert (one plan, and planning again) | 92/100 | 0/100 |"]
+        },
+        {
+          "id": "stem",
+          "words": "the stem policy of step 4, never shown a cut",
+          "named": [[9, 100]],
+          "other": [[19, 100]],
+          "quotes": ["| the stem policy of step 4, never shown a cut | 9/100 | 19/100 |"]
+        },
+        {
+          "id": "cut",
+          "words": "trained on cuts",
+          "run": "dp_vit_lang_reactive_cut4k_rs_recover",
+          "named": [[0, 100], [0, 100]],
+          "other": [[0, 100], [3, 100]],
+          "quotes": ["| trained on cuts (`dp_vit_lang_reactive_cut4k_rs_recover`) | 0/100 / 0/100 | 0/100 / 3/100 |"]
+        },
+        {
+          "id": "cut-outer",
+          "words": "trained on cuts, with demonstrations that come in from the outer edge",
+          "run": "dp_vit_lang_reactive_cut4k_rs_recover_outer",
+          "named": [],
+          "other": [],
+          "inProgress": true,
+          "quotes": ["the cut with demonstrations that come in from the outer edge (`dp_vit_lang_reactive_cut4k_rs_recover_outer`)"]
+        }
+      ],
+      "overCheckpoints": {
+        "range": [0, 7],
+        "episodes": 100,
+        "quotes": ["The policy trained on cuts does worse than the stem policy it was meant to improve on: 0-7/100 over its checkpoints."]
+      }
+    }
   }
 }

@@ -11,9 +11,10 @@ export const SECTIONS = {
   demonstrations: { id: "demonstrations", number: 6, title: "What the demonstrations contain" },
   outside: { id: "outside-the-training-conditions", number: 7, title: "Outside the conditions it was trained in" },
   backbones: { id: "backbones", number: 8, title: "Backbones and a second seed" },
-  sampler: { id: "sampler", number: 9, title: "Sampler settings" },
-  tolerance: { id: "grasp-tolerance", number: 10, title: "Grasp tolerance" },
-  records: { id: "datasets-runs-bugs", number: 11, title: "Datasets, runs in progress, bugs" },
+  flower: { id: "toward-flower-trimming", number: 9, title: "Toward flower trimming" },
+  sampler: { id: "sampler", number: 10, title: "Sampler settings" },
+  tolerance: { id: "grasp-tolerance", number: 11, title: "Grasp tolerance" },
+  records: { id: "datasets-runs-bugs", number: 12, title: "Datasets, runs in progress, bugs" },
 } as const satisfies Record<string, SectionInfo>;
 
 export const SECTION_LIST: SectionInfo[] = Object.values(SECTIONS);

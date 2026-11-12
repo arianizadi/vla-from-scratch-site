@@ -203,3 +203,173 @@ export const inferenceNotes = data.inference;
 
 /** Training throughput on the two machines, as written. */
 export const throughput = data.throughput;
+
+// ---------------------------------------------------------------- toward flower trimming
+
+/** Successes out of episodes, which JSON holds as [successes, episodes]. */
+const countOf = (value: number[]): Count => ({ successes: value[0], episodes: value[1] });
+const countsOf = (values: number[][]): Count[] => values.map(countOf);
+
+/** A run still training: what the notebook reports so far, after some of its checkpoints. */
+export interface FlowerPartial {
+  counts: Count[];
+  checkpoint: number;
+  checkpoints: number;
+  samplesAboutM?: number;
+  note?: string;
+}
+
+/**
+ * One row of a step's table. `counts` holds one count, or the trained and the
+ * averaged weights' counts; in step 1 it holds one count per speed. A row with
+ * `partial` or `inProgress` is a run still training.
+ */
+export interface FlowerRow {
+  id: string;
+  /** The row's words, as the notebook writes them without the run's name. */
+  words: string;
+  /** The run's name as the notebook writes it ("..._seed43" where it shortens it). */
+  run?: string;
+  detail?: string;
+  expert?: boolean;
+  counts: Count[];
+  /** First closes nearest the named object, in percent; null where the notebook leaves the cell empty. */
+  named?: number | null;
+  /** The same policy on the task it was trained on. */
+  ownTask?: Count[];
+  partial?: FlowerPartial;
+  inProgress?: boolean;
+}
+
+/** A condition of the battery the notebook lists in a sentence: one count, or trained / averaged. */
+export interface FlowerCondition {
+  words: string;
+  counts: Count[];
+  retried?: number;
+}
+
+const rowsOf = (
+  rows: { id: string; words: string; run?: string; detail?: string; expert?: boolean; counts: number[][]; named?: number | null; ownTask?: number[][]; partial?: { counts: number[][]; checkpoint: number; checkpoints: number; samplesAboutM?: number; note?: string } }[],
+): FlowerRow[] =>
+  rows.map((row) => ({
+    ...row,
+    counts: countsOf(row.counts),
+    ownTask: row.ownTask ? countsOf(row.ownTask) : undefined,
+    partial: row.partial ? { ...row.partial, counts: countsOf(row.partial.counts) } : undefined,
+  }));
+
+const conditionsOf = (rows: { words: string; counts: number[][]; retried?: number }[]): FlowerCondition[] =>
+  rows.map((row) => ({ ...row, counts: countsOf(row.counts) }));
+
+const { drift, lookalike, clutter, stem, cut } = data.flower;
+
+/**
+ * The five steps toward flower trimming (machine B). None of these runs is in
+ * the experiment export: every value is copied from the notebook. Each step
+ * keeps the notebook heading it comes from (`section`).
+ */
+export const flowerTrimming = {
+  section: data.flower.section,
+  recipe: data.flower.recipe,
+  inProgress: data.flower.inProgress.runs,
+  drift: {
+    section: drift.section,
+    run: drift.run,
+    dataset: drift.dataset,
+    demonstrations: drift.demonstrations,
+    speedsCmS: drift.speedsCmS,
+    rows: rowsOf(drift.rows),
+    conditions: conditionsOf(drift.conditions.rows),
+    checkpoints: drift.checkpoints.values,
+  },
+  lookalike: {
+    section: lookalike.section,
+    expert: countsOf(lookalike.expert.counts),
+    rows: rowsOf(lookalike.rows),
+    checkpoints: {
+      spacingAboutM: lookalike.checkpoints.spacingAboutM,
+      rows: lookalike.checkpoints.rows.map((row) => ({
+        words: row.words,
+        values: row.values.map(([success, wrong]) => ({ success, wrong })),
+      })),
+    },
+    switch: {
+      ...lookalike.switch,
+      longer: { ...lookalike.switch.longer, counts: countsOf(lookalike.switch.longer.counts) },
+    },
+    carryOver: {
+      noLeaves: { lookalike: countOf(lookalike.carryOver.noLeaves.lookalike), withLeaves: countOf(lookalike.carryOver.noLeaves.withLeaves) },
+      seed43: {
+        ownTask: countOf(lookalike.carryOver.seed43.ownTask),
+        clutter: countOf(lookalike.carryOver.seed43.clutter),
+        wrongPercent: lookalike.carryOver.seed43.wrongPercent,
+      },
+    },
+  },
+  clutter: {
+    section: clutter.section,
+    expert: countsOf(clutter.expert.counts),
+    rows: rowsOf(clutter.rows),
+    checkpoints: clutter.checkpoints.values,
+    conditions: conditionsOf(clutter.conditions.rows),
+  },
+  stem: {
+    section: stem.section,
+    success: stem.success,
+    expert: { counts: countsOf(stem.expert.counts), stalls: stem.expert.stalls, closesAndFails: stem.expert.closesAndFails },
+    rows: rowsOf(stem.rows),
+    checkpoints: { values: stem.checkpoints.values, neverPasses: countOf(stem.checkpoints.neverPasses) },
+    failures: stem.failures,
+    caught: {
+      caught: countOf(stem.caught.caught),
+      held: countOf(stem.caught.held),
+      holdSteps: stem.caught.holdSteps,
+      fewerActions: {
+        executed: stem.caught.fewerActions.executed,
+        insteadOf: stem.caught.fewerActions.insteadOf,
+        counts: countsOf(stem.caught.fewerActions.counts),
+        caught: countOf(stem.caught.fewerActions.caught),
+      },
+    },
+    expertDrives: {
+      graspSteps: stem.expertDrives.graspSteps,
+      cutSteps: stem.expertDrives.cutSteps,
+      rows: stem.expertDrives.rows.map((row) => ({
+        id: row.id,
+        words: row.words,
+        detail: row.detail,
+        grasp: countOf(row.grasp),
+        caught: countOf(row.caught),
+        firstCloseNamed: row.firstCloseNamed,
+        cut: row.cut ? countOf(row.cut) : null,
+        otherCut: row.otherCut,
+      })),
+    },
+    diagnosis: stem.diagnosis,
+    expertSide: {
+      command: stem.expertSide.command,
+      clearanceCm: stem.expertSide.clearanceCm,
+      cut: countOf(stem.expertSide.cut),
+      withClearance: countOf(stem.expertSide.withClearance),
+      firstVersion: countOf(stem.expertSide.firstVersion),
+      firstVersionFailedRight: countOf(stem.expertSide.firstVersionFailedRight),
+    },
+  },
+  cut: {
+    section: cut.section,
+    holdSteps: cut.holdSteps,
+    rows: cut.rows.map((row) => ({
+      id: row.id,
+      words: row.words,
+      run: row.run,
+      expert: row.expert,
+      named: countsOf(row.named),
+      other: countsOf(row.other),
+      inProgress: row.inProgress,
+    })),
+    overCheckpoints: cut.overCheckpoints,
+  },
+};
+
+/** The flower steps in the notebook's order, for the headings and their anchors. */
+export const flowerSteps = [drift.section, lookalike.section, clutter.section, stem.section, cut.section];

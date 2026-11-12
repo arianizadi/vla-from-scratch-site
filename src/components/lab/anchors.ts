@@ -17,6 +17,8 @@ import {
   disturbanceNotes,
   expertElsewhere,
   firstRound,
+  flowerSteps,
+  flowerTrimming,
   inferenceNotes,
   notebookOnly,
   pickCube,
@@ -38,6 +40,8 @@ const TAKEN = new Set<string>([
   "the-scripted-expert",
   "final-checkpoints",
   "datasets",
+  // The flower steps' subheadings take the notebook's slugs as their own ids.
+  ...flowerSteps.map((heading) => slug(heading)),
 ]);
 
 const sectionsOf = (predicate: (entry: Run) => boolean) =>
@@ -66,6 +70,7 @@ function build(): Map<SectionId, string[]> {
       [comparisonRows("demonstrations")?.section, ...sectionsOf((entry) => entry.group.family === "demonstrations")],
     ],
     [SECTIONS.tolerance.id, [tolerance("B").section, tolerance("A").section]],
+    [SECTIONS.flower.id, [flowerTrimming.section]],
     [SECTIONS.records.id, [notebookOnly.datasets.section, positionTable.section, "Runs in progress when this was written"]],
     [
       SECTIONS.history.id,

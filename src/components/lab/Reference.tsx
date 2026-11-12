@@ -13,6 +13,7 @@ import { awaitedRuns, evaluationDefaults, run, unfinishedRuns } from "@/data/run
 import { tolerance } from "@/data/tolerance";
 import type { Count, Machine } from "@/data/types";
 import type { ChapterFor } from "./BeforeFix";
+import { flowerRunsInProgress } from "./Flower";
 import { recipeOf } from "./RunStatusTable";
 import { SECTIONS } from "./sections";
 import { CodeText, InProgressBadge, LabSection, laterMachinesSentence, RateTrack, RowLink, SubHead, TableBox, TableNote } from "./shared";
@@ -412,6 +413,15 @@ export function RecordsSection({ chapter }: { chapter: ChapterFor }) {
             </tbody>
           </TableBox>
         </>
+      ) : flowerRunsInProgress > 0 ? (
+        <p className={styles.prose}>
+          No run of the experiment export is in progress. The runs toward flower trimming that are still training are
+          listed in{" "}
+          <Link href={`#${SECTIONS.flower.id}`} className="text-link">
+            section {SECTIONS.flower.number}
+          </Link>
+          .
+        </p>
       ) : (
         <p className={styles.prose}>No run is in progress: every run on this page is reported.</p>
       )}

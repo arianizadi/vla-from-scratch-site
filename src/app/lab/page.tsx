@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { BackbonesSection, DemonstrationsSection, OutsideSection, PositionFixSection } from "@/components/lab/AfterFix";
 import { DependsOnSection, HeadlineSection, HistorySection, TaskSection, type ChapterFor } from "@/components/lab/BeforeFix";
+import { FlowerSection, flowerRunsInProgress } from "@/components/lab/Flower";
 import { LabContents, LabSidebar } from "@/components/lab/LabNav";
 import { RecordsSection, SamplerSection, ToleranceSection } from "@/components/lab/Reference";
-import { SECTION_LIST } from "@/components/lab/sections";
+import { SECTIONS, SECTION_LIST } from "@/components/lab/sections";
 import { laterMachinesSentence } from "@/components/lab/shared";
 import styles from "@/components/lab/styles";
 import "@/components/lab/lab.css";
@@ -48,13 +49,19 @@ export default function LabPage() {
             <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
               Every number the chapters cite, measured in the tutorial&rsquo;s repository and set out in the order the
               notebook keeps: the task, the policies before and after a bug in their position table, what they look at,
-              and how they cope when the scene changes. Read it top to bottom once, then use it as a reference.
+              how they cope when the scene changes, and the first steps toward trimming a flower. Read it top to bottom
+              once, then use it as a reference.
             </p>
             <p className="mt-4 text-14 text-ink-muted">
               Data exported <time dateTime={exportedAt}>{dataDate(exportedAt)}</time>.{" "}
               {running > 0
                 ? `${running} run${running === 1 ? " is" : "s are"} still in progress and shown without a value. `
-                : "No run is in progress. "}
+                : flowerRunsInProgress > 0
+                  ? ""
+                  : "No run is in progress. "}
+              {flowerRunsInProgress > 0
+                ? `${flowerRunsInProgress} run${flowerRunsInProgress === 1 ? "" : "s"} toward flower trimming ${flowerRunsInProgress === 1 ? "is" : "are"} still in progress, marked in section ${SECTIONS.flower.number}. `
+                : null}
               Source:{" "}
               <a href={repoUrl("tutorial/lab-notebook.md")} className="text-link">
                 the lab notebook in the repository
@@ -82,7 +89,10 @@ export default function LabPage() {
               <li>
                 Hardware: {MACHINES.A.label} and {MACHINES.B.label}. {laterMachinesSentence()}
               </li>
-              <li>A run still training has no value: its row is hatched and marked in progress.</li>
+              <li>
+                A run still training has no final value: its row is hatched and marked in progress, with what it has
+                reported so far where the notebook gives that.
+              </li>
             </ul>
           </section>
 
@@ -94,6 +104,7 @@ export default function LabPage() {
           <DemonstrationsSection chapter={chapter} />
           <OutsideSection chapter={chapter} />
           <BackbonesSection chapter={chapter} />
+          <FlowerSection chapter={chapter} />
           <SamplerSection chapter={chapter} />
           <ToleranceSection chapter={chapter} />
           <RecordsSection chapter={chapter} />

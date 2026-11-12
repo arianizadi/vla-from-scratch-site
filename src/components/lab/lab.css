@@ -184,6 +184,10 @@
   font-size: 0.88em;
   font-variant-ligatures: none;
 }
+/* A run's name in running text may be longer than a phone is wide. */
+.lab-prose code {
+  overflow-wrap: anywhere;
+}
 .lab-related {
   display: flex;
   flex-wrap: wrap;
@@ -217,6 +221,17 @@
   font-size: 0.8125rem;
   font-stretch: 88%;
   line-height: 1.125rem;
+}
+
+/* A film of a policy at work, in a chapter image's frame (.image-figure):
+   the browser's own controls, and a box of the film's shape reserved before
+   anything loads. */
+.lab-film video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-2);
 }
 
 /* ------------------------------------------------------------------- tables */
