@@ -261,6 +261,36 @@ const rowsOf = (
 const conditionsOf = (rows: { words: string; counts: number[][]; retried?: number }[]): FlowerCondition[] =>
   rows.map((row) => ({ ...row, counts: countsOf(row.counts) }));
 
+/**
+ * One row of a cut table: the named stem cut, another stem cut, and, where the
+ * notebook gives it, the share of first closes nearest the named stem (one
+ * value, or trained / averaged). An empty list is a cell the notebook leaves empty.
+ */
+export interface FlowerCutRow {
+  id: string;
+  words: string;
+  run?: string;
+  /** The task it was evaluated on, where the table names one (`cut_one`, `cut_stem`). */
+  task?: string;
+  expert?: boolean;
+  named: Count[];
+  other: Count[];
+  firstCloseNamed: number[];
+  /** The notebook sets the cell in bold. */
+  best?: boolean;
+  inProgress?: boolean;
+}
+
+const cutRowsOf = (
+  rows: { id: string; words: string; run?: string; task?: string; expert?: boolean; named: number[][]; other: number[][]; firstCloseNamed?: number[]; best?: boolean; inProgress?: boolean }[],
+): FlowerCutRow[] =>
+  rows.map((row) => ({
+    ...row,
+    named: countsOf(row.named),
+    other: countsOf(row.other),
+    firstCloseNamed: row.firstCloseNamed ?? [],
+  }));
+
 const { drift, lookalike, clutter, stem, cut } = data.flower;
 
 /**
@@ -346,6 +376,15 @@ export const flowerTrimming = {
       })),
     },
     diagnosis: stem.diagnosis,
+    moreRuns: {
+      seed43NeverAbove: stem.moreRuns.seed43NeverAbove,
+      tenM: {
+        checkpoints: stem.moreRuns.tenM.checkpoints,
+        caughtAboutPercent: stem.moreRuns.tenM.caughtAboutPercent,
+        otherHeldPercent: pair(stem.moreRuns.tenM.otherHeldPercent),
+        firstCloseNamed: pair(stem.moreRuns.tenM.firstCloseNamed),
+      },
+    },
     expertSide: {
       command: stem.expertSide.command,
       clearanceCm: stem.expertSide.clearanceCm,
@@ -358,16 +397,36 @@ export const flowerTrimming = {
   cut: {
     section: cut.section,
     holdSteps: cut.holdSteps,
-    rows: cut.rows.map((row) => ({
-      id: row.id,
-      words: row.words,
-      run: row.run,
-      expert: row.expert,
-      named: countsOf(row.named),
-      other: countsOf(row.other),
-      inProgress: row.inProgress,
-    })),
+    rows: cutRowsOf(cut.rows),
     overCheckpoints: cut.overCheckpoints,
+    diagnosis: {
+      ...cut.diagnosis,
+      closesPercent: pair(cut.diagnosis.closesPercent),
+      firstCloseNamed: pair(cut.diagnosis.firstCloseNamed),
+      caughtPercent: pair(cut.diagnosis.caughtPercent),
+      shutFrames: pair(cut.diagnosis.shutFrames),
+      stemShutFrames: pair(cut.diagnosis.stemShutFrames),
+    },
+    tail: {
+      command: cut.tail.command,
+      shutFrames: pair(cut.tail.shutFrames),
+      cutOneExpert: countOf(cut.tail.cutOneExpert),
+    },
+    tailRows: cutRowsOf(cut.tailRows.rows),
+    tailCheckpoints: cut.tailCheckpoints.rows.map((row) => ({
+      words: row.words,
+      values: row.values.map(([cutCount, other]) => ({ cut: cutCount, other: other ?? null })),
+    })),
+    conclusion: {
+      cutOne: countOf(cut.conclusion.cutOne),
+      firstCheckpoint: cut.conclusion.firstCheckpoint,
+      firstCheckpointSamplesAboutM: cut.conclusion.firstCheckpointSamplesAboutM,
+      caught: cut.conclusion.caught,
+      cut: cut.conclusion.cut,
+      firstCloseNamed: pair(cut.conclusion.firstCloseNamed),
+      otherCutPercent: pair(cut.conclusion.otherCutPercent),
+    },
+    film: { name: cut.film.name, recorded: cut.film.recorded, cut: cut.film.cut, shown: cut.film.shown },
   },
 };
 

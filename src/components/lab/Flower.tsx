@@ -317,7 +317,7 @@ function LookalikeStep() {
         success="Look-alikes"
         named="Closed at the named cube"
       />
-      <TableNote>A dash: the notebook leaves the cell empty. A hatched cell: a run still training, with what it has reported so far.</TableNote>
+      <TableNote>A dash: the notebook leaves the cell empty.</TableNote>
 
       <p className={`${styles.prose} ${styles.blockGap}`}>
         Look-alikes are learnable from look-alike scenes alone, but when the policy starts to tell them apart depends on
@@ -333,8 +333,8 @@ function LookalikeStep() {
       />
       <TableNote>
         Averaged weights, out of {flowerTrimming.recipe.layouts} layouts; in brackets, the episodes in which a wrong cube
-        was lifted. Checkpoints are about {step.checkpoints.spacingAboutM}M samples apart. The two clutter rows are the
-        policies of step 3, each on its own task.
+        was lifted. Checkpoints are about {step.checkpoints.spacingAboutM}M samples apart, except in the 10M-sample row.
+        The two clutter rows are the policies of step 3, each on its own task.
       </TableNote>
       <div className={`${styles.prose} ${styles.blockGap}`}>
         <p>
@@ -346,10 +346,9 @@ function LookalikeStep() {
           {first.seed} it comes after about {first.samplesAboutM}M samples, with seed {second.seed} after about{" "}
           {second.samplesAboutM}M, with seed {change.notWithin.seed} not within {change.notWithin.samplesM}M. In the two
           runs whose scenes also hold other shapes it came by the second checkpoint. Seed {change.notWithin.seed} with
-          twice the samples does learn, slowly ({counts(change.longer.counts)} after about {change.longer.samplesAboutM}M
-          samples, a wrong cube still in {change.longer.wrongPercent}%), and is still training. A look-alike run that has
-          not switched by the end of its budget looks exactly like one that cannot learn the task; a second seed is what
-          tells them apart.
+          twice the samples does learn, but gradually rather than all at once: {counts(change.longer.counts)} at the end,
+          a wrong cube still lifted in {change.longer.wrongPercent}%. A look-alike run that has not switched by the end of
+          its budget looks exactly like one that cannot learn the task; a second seed is what tells them apart.
         </p>
         <p>
           What carries over: the policy trained on clutter without leaves picks the named look-alike in{" "}
@@ -401,7 +400,7 @@ function ClutterStep() {
 
 function StemStep() {
   const step = flowerTrimming.stem;
-  const { success, expert, failures, caught, expertDrives, diagnosis, expertSide } = step;
+  const { success, expert, failures, caught, expertDrives, diagnosis, expertSide, moreRuns } = step;
   const closed = failures.closedSteps;
   return (
     <>
@@ -417,12 +416,17 @@ function StemStep() {
       </p>
       <PolicyTable label="Grasping the named stem" idPrefix="flower-stem" rows={step.rows} success="Grasp the stem" />
       <CheckpointStrip
-        label="The stem policy, by checkpoint"
-        rows={[{ id: "flower-stem-checkpoints", words: "averaged weights", cells: step.checkpoints.values.map(String) }]}
+        label="The stem policies, by checkpoint"
+        rows={[
+          { id: "flower-stem-checkpoints", words: "trained on stems", cells: step.checkpoints.values.map(String) },
+          { id: "flower-stem-checkpoints-10m", words: "the same for 10M samples", cells: moreRuns.tenM.checkpoints.map(String) },
+        ]}
       />
       <TableNote>
-        Successes out of {flowerTrimming.recipe.layouts} layouts: over its checkpoints the stem policy never passes{" "}
-        {count(step.checkpoints.neverPasses)}. A hatched cell: a run still training, with what it has reported so far.
+        Successes out of {flowerTrimming.recipe.layouts} layouts; the strip is the averaged weights. Over its checkpoints
+        the stem policy trained on {flowerTrimming.recipe.samplesM}M samples never passes{" "}
+        {count(step.checkpoints.neverPasses)}; with other seeds it never passes {moreRuns.seed43NeverAbove}/
+        {flowerTrimming.recipe.layouts}.
       </TableNote>
 
       <div className={`${styles.prose} ${styles.blockGap}`}>
@@ -443,6 +447,14 @@ function StemStep() {
           for {caught.holdSteps} steps. Executing {caught.fewerActions.executed} actions per chunk instead of{" "}
           {caught.fewerActions.insteadOf} does not help ({counts(caught.fewerActions.counts)}, caught{" "}
           {count(caught.fewerActions.caught)}).
+        </p>
+        <p>
+          Other seeds do not change it, and twice the samples help slowly. The 10M-sample policy closes in almost every
+          episode and catches the named stem in about {moreRuns.tenM.caughtAboutPercent}%, but in another{" "}
+          {moreRuns.tenM.otherHeldPercent[0]}-{moreRuns.tenM.otherHeldPercent[1]}% it holds another stem, and its first
+          close is nearest the named stem in only {moreRuns.tenM.firstCloseNamed[0]}-{moreRuns.tenM.firstCloseNamed[1]}%:
+          the problem of {stepName("lookalike").toLowerCase()}, telling look-alikes apart, is back, and not solved by 10M
+          samples here.
         </p>
         <p>Where it goes wrong shows when the expert drives the first control steps toward the named stem and the policy then takes over.</p>
       </div>
@@ -515,6 +527,7 @@ function StemStep() {
 
 function CutStep() {
   const step = flowerTrimming.cut;
+  const { diagnosis, tail, conclusion, film } = step;
   const [low, high] = step.overCheckpoints.range;
   return (
     <>
@@ -556,12 +569,107 @@ function CutStep() {
           })}
         </tbody>
       </TableBox>
-      <TableNote>Two counts: trained / averaged weights. A hatched row: a run still training, with no value yet.</TableNote>
+      <TableNote>Two counts: trained / averaged weights.</TableNote>
+      <div className={`${styles.prose} ${styles.blockGap}`}>
+        <p>
+          The policies trained on cuts do worse than the stem policy they were meant to improve on: {low}-{high}/
+          {step.overCheckpoints.episodes} over their checkpoints with either side rule. The outer-edge one closes its
+          gripper in {diagnosis.closesPercent[0]}-{diagnosis.closesPercent[1]}% of episodes, its first close is nearest
+          the named stem in {diagnosis.firstCloseNamed[0]}-{diagnosis.firstCloseNamed[1]}% (the stem policy:{" "}
+          {diagnosis.stemPolicyFirstCloseNamed}%), yet the named stem is caught at any step in only{" "}
+          {diagnosis.caughtPercent[0]}-{diagnosis.caughtPercent[1]}%.
+        </p>
+        <p>
+          Rolled out step by step ({diagnosis.layouts} layouts, final checkpoint, averaged weights): in{" "}
+          {diagnosis.closedSteps} closed control steps within {diagnosis.withinCm} cm of the named stem, the stem lies
+          between the jaws and inside the band, but no finger touches it in {diagnosis.noFingerPercent}% of them. The
+          gripper is commanded shut for about three steps and then opened again, before the fingers (about{" "}
+          {diagnosis.fingerSteps} steps from open to the stem) arrive. The demonstrations explain it: a cut ends the
+          episode {diagnosis.cutEndsAfterSteps} steps after the jaws reach the stem, so the shut gripper appears in only
+          the last {diagnosis.shutFrames[0]}-{diagnosis.shutFrames[1]} frames of each one (the stem demonstrations hold
+          it for {diagnosis.stemShutFrames[0]}-{diagnosis.stemShutFrames[1]}), and in no frame does the scene show a shut
+          gripper still waiting for a stem.
+        </p>
+        <p>
+          <code>{tail.command}</code> keeps recording N frames after each success with the robot holding its last
+          command, so every cut demonstration ends with the jaws shut for {tail.shutFrames[0]}-{tail.shutFrames[1]}{" "}
+          frames. To separate cutting from choosing the stem, <code>cut_one</code> is the same cut with a single flower
+          (the expert cuts {count(tail.cutOneExpert)} with either side rule). All the demonstrations below come in from
+          the outer edge.
+        </p>
+      </div>
+
+      <TableBox label="Cutting with the jaws held shut past the cut, and with one flower">
+        <thead>
+          <tr>
+            <th scope="col">Policy</th>
+            <th scope="col">Task</th>
+            <th scope="col" className="num">
+              Cut the named stem
+            </th>
+            <th scope="col" className="num">
+              Cut another stem
+            </th>
+            <th scope="col" className="num">
+              First close nearest the named stem
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {step.tailRows.map((row) => {
+            const id = `flower-cut-tail-${row.id}`;
+            return (
+              <tr key={row.id} id={id}>
+                <RowHead id={id} row={row} />
+                <td>
+                  <code className={styles.inlineCode}>{row.task}</code>
+                </td>
+                <td className="num">{row.best ? <strong>{counts(row.named)}</strong> : counts(row.named)}</td>
+                <td className="num">{counts(row.other)}</td>
+                <td className="num">
+                  {row.firstCloseNamed.length > 0 ? row.firstCloseNamed.map(percent).join(" / ") : MISSING}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableBox>
+      <TableNote>
+        Final checkpoint. Two values: trained / averaged weights. A dash: the notebook leaves the cell empty; with one
+        flower there is no other stem.
+      </TableNote>
+
+      <Film name={film.name} title="A cut with one flower: the policy trained with the jaws held shut past the cut">
+        The one-flower policy trained with the jaws held shut past the cut, final checkpoint, averaged weights, on layouts
+        it never saw: {film.shown} of {film.recorded} recorded episodes, all {film.cut} cut. The learned policy drives
+        until the cut; then a script opens the jaws and draws the arm back, so that the cut-off top can be seen to fall.
+      </Film>
+
+      <CheckpointStrip
+        label="Cutting by checkpoint: the named stem cut, and another stem cut in brackets"
+        rows={step.tailCheckpoints.map((row) => ({
+          id: `flower-cut-checkpoints-${slug(row.words)}`,
+          words: row.words,
+          cells: row.values.map((value) => (value.other === null ? String(value.cut) : `${value.cut} (${value.other})`)),
+        }))}
+      />
+      <TableNote>
+        Averaged weights, out of {flowerTrimming.recipe.layouts} layouts; in brackets, the episodes in which another stem
+        was cut. The one-flower rows are on <code className={styles.inlineCode}>cut_one</code>, the three-flower rows on{" "}
+        <code className={styles.inlineCode}>cut_stem</code>.
+      </TableNote>
+
       <p className={`${styles.prose} ${styles.blockGap}`}>
-        The policy trained on cuts does worse than the stem policy it was meant to improve on: {low}-{high}/
-        {step.overCheckpoints.episodes} over its checkpoints. The first-steps problem of {stepName("stem").toLowerCase()}{" "}
-        applies unchanged. The run trained on demonstrations that come in from the outer edge, as the changed expert
-        does, is still training.
+        Ten frames of a held gripper are the whole difference between a policy that never cuts and one that cuts{" "}
+        {conclusion.cutOne.successes} times in {conclusion.cutOne.episodes}, from its first checkpoint on (
+        {conclusion.firstCheckpoint} after about {conclusion.firstCheckpointSamplesAboutM}M samples). With three flowers
+        the cutting itself is solved too: once the named stem is between the jaws it is cut almost every time (caught{" "}
+        {conclusion.caught}, cut {conclusion.cut}). What is left is choosing the stem: the first close is nearest the named
+        stem in {conclusion.firstCloseNamed[0]}-{conclusion.firstCloseNamed[1]}% of episodes, which is chance with three
+        flowers, and another stem is cut in {conclusion.otherCutPercent[0]}-{conclusion.otherCutPercent[1]}%. The
+        instruction&rsquo;s colour word is not used at all: the problem of {stepName("lookalike").toLowerCase()} in a
+        scene where it did not solve itself (red, orange and pink heads are look-alikes; purple is the only colour far
+        from the others).
       </p>
     </>
   );
@@ -574,7 +682,7 @@ export function FlowerSection({ chapter }: { chapter: ChapterFor }) {
   return (
     <LabSection
       {...SECTIONS.flower}
-      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, grasping a stem and cutting it not yet."
+      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, and so can cutting a single flower's stem; choosing the named stem among three flowers, to grasp or to cut, not yet."
       chapters={[chapter("110-toward-real-tasks"), chapter("103-case-self-correction")]}
       notes={[7, 11]}
     >

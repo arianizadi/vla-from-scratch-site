@@ -860,12 +860,10 @@
       "quotes": ["Same policy and recipe as the runs above unless stated: `dp_vit_lang_reactive`, 4000 demonstrations with random start poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unseen layouts per evaluation, final checkpoint, trained / averaged weights where both are given."]
     },
     "inProgress": {
-      "quotes": ["**In progress:** look-alikes for 10M samples (`dp_vit_lang_reactive_lookalike4k_rs_recover_10m`); the stem grasp with other seeds (`..._stem4k_rs_recover_seed43`) and for 10M samples (`..._stem4k_rs_recover_10m`); the cut with demonstrations that come in from the outer edge (`dp_vit_lang_reactive_cut4k_rs_recover_outer`)."],
+      "quotes": ["**In progress:** the three-flower cut with the jaws held shut after the cut, for 10M samples, from 4000 and from 16000 demonstrations (`..._cut4k_rs_recover_outer_tail10_10m`, `..._cut16k_rs_recover_outer_tail10_10m`)."],
       "runs": [
-        { "step": "lookalike", "words": "look-alikes for 10M samples", "run": "dp_vit_lang_reactive_lookalike4k_rs_recover_10m" },
-        { "step": "stem", "words": "the stem grasp with other seeds", "run": "..._stem4k_rs_recover_seed43" },
-        { "step": "stem", "words": "the stem grasp for 10M samples", "run": "..._stem4k_rs_recover_10m" },
-        { "step": "cut", "words": "the cut with demonstrations that come in from the outer edge", "run": "dp_vit_lang_reactive_cut4k_rs_recover_outer" }
+        { "step": "cut", "words": "the three-flower cut with the jaws held shut after the cut, for 10M samples, from 4000 demonstrations", "run": "..._cut4k_rs_recover_outer_tail10_10m" },
+        { "step": "cut", "words": "the three-flower cut with the jaws held shut after the cut, for 10M samples, from 16000 demonstrations", "run": "..._cut16k_rs_recover_outer_tail10_10m" }
       ]
     },
 
@@ -997,10 +995,9 @@
           "id": "seed-42-10m",
           "words": "the same as seed 42 for 10M samples",
           "run": "..._10m",
-          "counts": [],
-          "named": null,
-          "partial": { "counts": [[81, 100], [81, 100]], "checkpoint": 7, "checkpoints": 11, "samplesAboutM": 6.4, "note": "still rising" },
-          "quotes": ["| the same as seed 42 for 10M samples (`..._10m`) | 81/100 / 81/100 after 7 of 11 checkpoints (about 6.4M samples), still rising | |"]
+          "counts": [[80, 100], [89, 100]],
+          "named": 85,
+          "quotes": ["| the same as seed 42 for 10M samples (`..._10m`) | 80/100 / 89/100 | 85% |"]
         },
         {
           "id": "clutter",
@@ -1039,6 +1036,11 @@
             "quotes": ["| seed 44 | 24 (60) | 36 (64) | 30 (65) | 56 (44) | 88 (3) | 83 (0) | 90 (1) | 91 (0) | 91 (0) | 91 (0) | 91 (0) |"]
           },
           {
+            "words": "seed 42, 10M samples (checkpoints 0.9M apart)",
+            "values": [[32, 62], [31, 63], [17, 37], [48, 56], [55, 48], [59, 47], [81, 23], [84, 21], [88, 17], [80, 19], [89, 15]],
+            "quotes": ["| seed 42, 10M samples (checkpoints 0.9M apart) | 32 (62) | 31 (63) | 17 (37) | 48 (56) | 55 (48) | 59 (47) | 81 (23) | 84 (21) | 88 (17) | 80 (19) | 89 (15) |"]
+          },
+          {
             "words": "clutter, no leaves (its own task)",
             "values": [[9, 29], [68, 1], [84, 0], [90, 0], [88, 0], [95, 0], [95, 0], [94, 0], [91, 0], [91, 0], [93, 0]],
             "quotes": ["| clutter, no leaves (its own task) | 9 (29) | 68 (1) | 84 (0) | 90 (0) | 88 (0) | 95 (0) | 95 (0) | 94 (0) | 91 (0) | 91 (0) | 93 (0) |"]
@@ -1057,12 +1059,12 @@
           { "seed": 44, "samplesAboutM": 2 }
         ],
         "notWithin": { "seed": 42, "samplesM": 5 },
-        "longer": { "counts": [[81, 100]], "samplesAboutM": 6.4, "wrongPercent": 23 },
+        "longer": { "counts": [[89, 100]], "wrongPercent": 15 },
         "quotes": [
           "The switch is sudden, as on `pick_target` (notes: \"Looking at the scene arrives late, and all at once\"): from a wrong cube in about 60% of episodes to none within one checkpoint.",
           "With seed 43 it comes after about 0.9M samples, with seed 44 after about 2M, with seed 42 not within 5M.",
           "In the two runs whose scenes also hold other shapes it came by the second checkpoint.",
-          "Seed 42 with twice the samples does learn, slowly (81/100 after about 6.4M samples, a wrong cube still in 23%).",
+          "Seed 42 with twice the samples does learn, but gradually rather than all at once: 89/100 at the end, a wrong cube still lifted in 15%.",
           "A look-alike run that has not switched by the end of its budget looks exactly like one that cannot learn the task; a second seed is what tells them apart."
         ]
       },
@@ -1162,22 +1164,31 @@
           "id": "stem-seed-43",
           "words": "the same, other seeds",
           "run": "..._stem4k_rs_recover_seed43",
-          "counts": [],
-          "partial": { "counts": [[4, 100]], "checkpoint": 9, "checkpoints": 11 },
-          "quotes": ["Other seeds and more samples have not changed it so far: `..._stem4k_rs_recover_seed43` and the 10M-sample run are at 0-5/100 (seed 43 at 4/100 after 9 of 11 checkpoints, 10M at 4/100 after 6 of 11)."]
+          "counts": [[2, 100], [3, 100]],
+          "quotes": ["Other seeds do not change it: `..._stem4k_rs_recover_seed43` ends at 2/100 / 3/100 (never above 4)."]
         },
         {
           "id": "stem-10m",
           "words": "the same for 10M samples",
           "run": "..._stem4k_rs_recover_10m",
-          "counts": [],
-          "partial": { "counts": [[4, 100]], "checkpoint": 6, "checkpoints": 11 },
-          "quotes": [
-            "Other seeds and more samples have not changed it so far: `..._stem4k_rs_recover_seed43` and the 10M-sample run are at 0-5/100 (seed 43 at 4/100 after 9 of 11 checkpoints, 10M at 4/100 after 6 of 11).",
-            "the stem grasp with other seeds (`..._stem4k_rs_recover_seed43`) and for 10M samples (`..._stem4k_rs_recover_10m`)"
-          ]
+          "counts": [[14, 100], [12, 100]],
+          "quotes": ["Twice the samples help slowly (`..._stem4k_rs_recover_10m`, averaged weights per checkpoint: 0, 0, 4, 5, 7, 4, 10, 5, 13, 8, 12; final 14/100 / 12/100)."]
         }
       ],
+      "moreRuns": {
+        "seed43NeverAbove": 4,
+        "tenM": {
+          "checkpoints": [0, 0, 4, 5, 7, 4, 10, 5, 13, 8, 12],
+          "caughtAboutPercent": 40,
+          "otherHeldPercent": [40, 47],
+          "firstCloseNamed": [41, 46]
+        },
+        "quotes": [
+          "Other seeds do not change it: `..._stem4k_rs_recover_seed43` ends at 2/100 / 3/100 (never above 4).",
+          "Twice the samples help slowly (`..._stem4k_rs_recover_10m`, averaged weights per checkpoint: 0, 0, 4, 5, 7, 4, 10, 5, 13, 8, 12; final 14/100 / 12/100).",
+          "It closes in almost every episode and catches the named stem in about 40%, but in another 40-47% it holds another stem, and its first close is nearest the named stem in only 41-46%: the step-2 problem (telling look-alikes apart) is back, and not solved by 10M samples here."
+        ]
+      },
       "checkpoints": {
         "neverPasses": [10, 100],
         "values": [0, 1, 0, 3, 5, 5, 2, 4, 5, 3, 6],
@@ -1319,18 +1330,150 @@
         },
         {
           "id": "cut-outer",
-          "words": "trained on cuts, with demonstrations that come in from the outer edge",
-          "run": "dp_vit_lang_reactive_cut4k_rs_recover_outer",
-          "named": [],
-          "other": [],
-          "inProgress": true,
-          "quotes": ["the cut with demonstrations that come in from the outer edge (`dp_vit_lang_reactive_cut4k_rs_recover_outer`)"]
+          "words": "trained on cuts coming in from the outer edge",
+          "run": "..._cut4k_rs_recover_outer",
+          "named": [[3, 100], [2, 100]],
+          "other": [[2, 100], [2, 100]],
+          "quotes": ["| trained on cuts coming in from the outer edge (`..._cut4k_rs_recover_outer`) | 3/100 / 2/100 | 2/100 / 2/100 |"]
         }
       ],
       "overCheckpoints": {
         "range": [0, 7],
         "episodes": 100,
-        "quotes": ["The policy trained on cuts does worse than the stem policy it was meant to improve on: 0-7/100 over its checkpoints."]
+        "quotes": ["The policies trained on cuts do worse than the stem policy they were meant to improve on: 0-7/100 over their checkpoints with either side rule."]
+      },
+      "diagnosis": {
+        "closesPercent": [80, 91],
+        "firstCloseNamed": [59, 72],
+        "stemPolicyFirstCloseNamed": 60,
+        "caughtPercent": [5, 6],
+        "layouts": 30,
+        "closedSteps": 96,
+        "withinCm": 3,
+        "noFingerPercent": 98,
+        "fingerSteps": 4,
+        "cutEndsAfterSteps": 3,
+        "shutFrames": [6, 7],
+        "stemShutFrames": [13, 14],
+        "quotes": [
+          "The outer-edge one closes its gripper in 80-91% of episodes, its first close is nearest the named stem in 59-72% (the stem policy: 60%), yet the named stem is caught at any step in only 5-6%.",
+          "Rolled out step by step (30 layouts, final checkpoint, averaged weights): in 96 closed control steps within 3 cm of the named stem, the stem lies between the jaws and inside the band, but no finger touches it in 98% of them.",
+          "The gripper is commanded shut for about three steps and then opened again, before the fingers (about 4 steps from open to the stem) arrive.",
+          "The demonstrations explain it: a cut ends the episode 3 steps after the jaws reach the stem, so the shut gripper appears in only the last 6-7 frames of each one (the stem demonstrations hold it for 13-14), and in no frame does the scene show a shut gripper still waiting for a stem."
+        ]
+      },
+      "tail": {
+        "command": "collect.py --tail_steps N",
+        "shutFrames": [16, 17],
+        "cutOneExpert": [100, 100],
+        "quotes": [
+          "`collect.py --tail_steps N` keeps recording N frames after each success with the robot holding its last command, so every cut demonstration ends with the jaws shut for 16-17 frames.",
+          "To separate cutting from choosing the stem, `cut_one` is the same cut with a single flower (the expert cuts 100/100 with either side rule).",
+          "Final checkpoint, trained / averaged weights; all demonstrations come in from the outer edge:"
+        ]
+      },
+      "tailRows": {
+        "quotes": ["| Policy | Task | Cut the named stem | Cut another stem | First close nearest the named stem |"],
+        "rows": [
+          {
+            "id": "one-flower",
+            "words": "one flower",
+            "run": "dp_vit_lang_reactive_cutone4k_rs_recover_outer",
+            "task": "cut_one",
+            "named": [[0, 100], [1, 100]],
+            "other": [],
+            "firstCloseNamed": [],
+            "quotes": ["| one flower (`dp_vit_lang_reactive_cutone4k_rs_recover_outer`) | `cut_one` | 0/100 / 1/100 | | |"]
+          },
+          {
+            "id": "one-flower-seed-43",
+            "words": "the same, other seeds",
+            "run": "..._seed43",
+            "task": "cut_one",
+            "named": [[0, 100], [0, 100]],
+            "other": [],
+            "firstCloseNamed": [],
+            "quotes": ["| the same, other seeds (`..._seed43`) | `cut_one` | 0/100 / 0/100 | | |"]
+          },
+          {
+            "id": "one-flower-tail",
+            "words": "one flower, jaws held shut 10 frames past the cut",
+            "run": "..._cutone4k_rs_recover_outer_tail10",
+            "task": "cut_one",
+            "named": [[98, 100], [97, 100]],
+            "other": [],
+            "firstCloseNamed": [],
+            "best": true,
+            "quotes": ["| one flower, jaws held shut 10 frames past the cut (`..._cutone4k_rs_recover_outer_tail10`) | `cut_one` | **98/100 / 97/100** | | |"]
+          },
+          {
+            "id": "three-flowers-tail",
+            "words": "three flowers, the same tail",
+            "run": "..._cut4k_rs_recover_outer_tail10",
+            "task": "cut_stem",
+            "named": [[23, 100], [22, 100]],
+            "other": [[51, 100], [50, 100]],
+            "firstCloseNamed": [26, 30],
+            "quotes": ["| three flowers, the same tail (`..._cut4k_rs_recover_outer_tail10`) | `cut_stem` | 23/100 / 22/100 | 51/100 / 50/100 | 26% / 30% |"]
+          },
+          {
+            "id": "three-flowers-tail-seed-43",
+            "words": "the same, other seeds",
+            "run": "..._cut4k_rs_recover_outer_tail10_seed43",
+            "task": "cut_stem",
+            "named": [[21, 100], [20, 100]],
+            "other": [[28, 100], [31, 100]],
+            "firstCloseNamed": [33, 31],
+            "quotes": ["| the same, other seeds (`..._cut4k_rs_recover_outer_tail10_seed43`) | `cut_stem` | 21/100 / 20/100 | 28/100 / 31/100 | 33% / 31% |"]
+          }
+        ]
+      },
+      "tailCheckpoints": {
+        "quotes": ["Averaged weights per checkpoint, cut (another stem cut in brackets):"],
+        "rows": [
+          {
+            "words": "one flower, no tail",
+            "values": [[0], [0], [0], [0], [0], [0], [0], [1], [0], [0], [1]],
+            "quotes": ["| one flower, no tail | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 1 |"]
+          },
+          {
+            "words": "one flower, tail",
+            "values": [[36], [80], [87], [92], [92], [99], [97], [100], [99], [95], [97]],
+            "quotes": ["| one flower, tail | 36 | 80 | 87 | 92 | 92 | 99 | 97 | 100 | 99 | 95 | 97 |"]
+          },
+          {
+            "words": "three flowers, tail",
+            "values": [[14, 18], [21, 30], [22, 29], [15, 45], [27, 44], [18, 47], [23, 54], [20, 47], [24, 46], [25, 49], [22, 50]],
+            "quotes": ["| three flowers, tail | 14 (18) | 21 (30) | 22 (29) | 15 (45) | 27 (44) | 18 (47) | 23 (54) | 20 (47) | 24 (46) | 25 (49) | 22 (50) |"]
+          },
+          {
+            "words": "three flowers, tail, seed 43",
+            "values": [[7, 14], [13, 32], [11, 33], [24, 30], [16, 34], [16, 33], [18, 38], [25, 29], [22, 33], [20, 24], [20, 31]],
+            "quotes": ["| three flowers, tail, seed 43 | 7 (14) | 13 (32) | 11 (33) | 24 (30) | 16 (34) | 16 (33) | 18 (38) | 25 (29) | 22 (33) | 20 (24) | 20 (31) |"]
+          }
+        ]
+      },
+      "conclusion": {
+        "cutOne": [97, 100],
+        "firstCheckpoint": 36,
+        "firstCheckpointSamplesAboutM": 0.45,
+        "caught": 24,
+        "cut": 22,
+        "firstCloseNamed": [26, 33],
+        "otherCutPercent": [31, 50],
+        "quotes": [
+          "Ten frames of a held gripper are the whole difference between a policy that never cuts and one that cuts 97 times in 100, from its first checkpoint on (36 after about 0.45M samples).",
+          "With three flowers the cutting itself is solved too: once the named stem is between the jaws it is cut almost every time (caught 24, cut 22).",
+          "What is left is choosing the stem: the first close is nearest the named stem in 26-33% of episodes, which is chance with three flowers, and another stem is cut in 31-50%.",
+          "The instruction's colour word is not used at all, the step-2 problem in a scene where it did not solve itself (red, orange and pink heads are look-alikes; purple is the only colour far from the others)."
+        ]
+      },
+      "film": {
+        "name": "flower-step5a-cut-one-stem",
+        "recorded": 22,
+        "cut": 22,
+        "shown": 5,
+        "quotes": ["A video of the one-flower policy, final checkpoint, averaged weights, 22 episodes recorded, 22 cut, 5 shown: `flower-step5a-cut-one-stem.mp4` (after each cut a script opens the jaws and draws the arm back so that the top can be seen to fall)."]
       }
     }
   }
