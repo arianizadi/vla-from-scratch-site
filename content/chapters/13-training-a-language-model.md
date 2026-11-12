@@ -12,7 +12,7 @@ Training a language model means adjusting its weights until, given the start of 
 high probability to the token that really comes next. Here that is stage 1 of the from-scratch
 path: a 91.4M-parameter transformer trained on web text, whose weights initialise the language half
 of the stage-2 vision-language model, the backbone of the stage-3 robot policy. The same loop
-(`vla_foundry/main.py`, `vla_foundry/train.py`) trains the policy; see
+(`vla_foundry/main.py`, `vla_foundry/train.py`) trains every policy in this tutorial; see
 [80-the-training-loop.md](80-the-training-loop.md).
 
 ## The idea
@@ -48,18 +48,21 @@ A batch is a stack of sequences processed together. With the stage-1 config:
 | targets | `[32, 256]` | tokens 1 to 256: the inputs shifted by one |
 | logits | `[32, 256, 49280]` | one score per vocabulary entry, per position |
 
-One step scores up to 32 x 256 = 8,192 predictions; targets that are padding are left out of the
-mean.
+One batch gives up to 32 x 256 = 8,192 scored predictions; targets that are padding are left out
+of the mean.
 
-### Samples, steps, epochs
+### Samples, optimiser steps, epochs
 
-This framework budgets training in samples. A sample is one sequence, here one document cut to 257
-tokens; stage 1 gets 500,000 (`total_train_samples`). A step is one optimiser update on one batch:
-500,000 // 32 = 15,625 steps. An epoch is one pass over the dataset: 500,000 / 61,000 is about 8.2
-passes, each over the same first 257 tokens of every document. `num_checkpoints` divides the budget
-into windows; the weights are saved after each.
+This framework budgets training in samples. A sample is one training example drawn by the data
+loader: here one document cut to 257 tokens; for a policy, one window (the observations at one
+frame plus the actions that follow). Stage 1 gets 500,000 (`total_train_samples`). An optimiser
+step is one update of the weights from one batch: 500,000 // 32 = 15,625 of them. Every "step" in
+this chapter is an optimiser step. An epoch is one pass over the dataset: 500,000 / 61,000 is
+about 8.2 passes, each over the same last 257 tokens of every document (the tokenizer truncates on
+the left). `num_checkpoints` divides the budget into checkpoint intervals; after each, a checkpoint
+is saved: the weights, the optimiser state and the position in the data.
 
-### One step
+### One optimiser step
 
 ```mermaid
 flowchart LR
@@ -75,7 +78,7 @@ flowchart LR
 
 <!-- interactive: training-step -->
 *Figure: one optimisation step: forward to logits, one loss value, backward to a gradient for every
-weight, and an update that moves each weight a small distance against its gradient.*
+weight, and an update against each gradient.*
 
 ### The optimiser: AdamW
 
@@ -83,17 +86,15 @@ The gradient says, for each weight, which direction raises the loss; plain gradi
 subtracts it times a learning rate. Background: Adam (Kingma, 2014) keeps two running averages per
 weight, of the gradient and of its square, and divides the first by the square root of the second,
 so a weight moves by at most about the learning rate per step whatever the scale of its gradient,
-and by less when its gradient keeps changing sign from batch to batch. AdamW (Loshchilov, 2017)
-adds weight decay, a small pull of every weight towards zero, applied to the weights directly
-instead of through the gradient.
+and by less when its gradient keeps changing sign. AdamW (Loshchilov, 2017) adds weight decay, a
+small pull of every weight towards zero, applied to the weights directly instead of through the
+gradient.
 
 `create_optimizer` (`vla_foundry/optimizer.py`) builds `torch.optim.AdamW` with learning rate
 `3e-4`, betas `(0.9, 0.95)` (the fraction of each running average kept per step: the gradient
-average remembers about 10 steps, the squared-gradient average about 20), epsilon `1e-8` (a
-constant added to the denominator so it cannot be zero) and weight decay `0.01`. Parameters whose
-name ends in `.bias` or contains `norm` go into a group with weight decay 0. Background: this is
-common practice; decay is meant to keep the large weight matrices small, and pulling a bias or a
-normalisation gain towards zero changes what the layer computes without that benefit.
+average remembers about 10 steps, the squared one about 20), epsilon `1e-8` (a constant added to
+the denominator so it cannot be zero) and weight decay `0.01`. Parameters whose name ends in
+`.bias` or contains `norm` get no weight decay (background: common practice).
 
 ### Learning rate: warm-up, then cosine decay
 
@@ -111,23 +112,21 @@ For stage 1, $\eta = 3\times10^{-4}$, $W = 200$ and $S = 15{,}625$:
 | 7,912 (halfway through the decay) | 0.00015 |
 | 15,624 | about 0 |
 
-Background: the Transformer paper (Vaswani, 2017) raised the learning rate linearly over its first
-4,000 steps and then lowered it in proportion to the inverse square root of the step. The cosine
-shape comes from SGDR (Loshchilov, 2016), which restarts the cosine periodically; the schedule here
-is a single cosine with no restart. The usual reasoning: Adam's averages are unreliable in the
-first steps, so early updates are kept small; small late updates let the weights settle.
+Background: the linear warm-up follows the Transformer paper (Vaswani, 2017) and the cosine shape
+SGDR (Loshchilov, 2016); here it is a single cosine with no restart. The usual reasoning: Adam's
+averages are unreliable at first, so early updates are kept small; small late updates let
+the weights settle.
 
 ### Gradient clipping
 
-`grad_clip_norm: 1.0` makes the loop call `torch.nn.utils.clip_grad_norm_` before the update. It
-measures the length (L2 norm) of all gradients taken as one vector and, if that exceeds 1.0, scales
-every gradient down by the same factor. Direction is kept. Background: proposed for recurrent
-networks by Pascanu (2012).
+`hparams.grad_clip_norm: 1.0` makes the loop call `torch.nn.utils.clip_grad_norm_` before the
+update. It measures the length (L2 norm) of all gradients taken as one vector and, if that exceeds
+1.0, scales every gradient down by the same factor, keeping the direction. Background: proposed for
+recurrent networks by Pascanu (2012).
 
-Reasoning, for Adam specifically: a single update is already bounded near the learning rate, so
-clipping limits how much one outlier batch enters the two running averages. Unclipped, a gradient
-a hundred times the usual size would dominate the first average for tens of steps and the second,
-where it enters squared, for longer, shrinking the normal updates that follow.
+Reasoning, for Adam: a single update is already bounded near the learning rate, so clipping limits
+how far one outlier batch distorts the running averages, which would otherwise shrink the updates
+of the tens of steps that follow.
 
 ### Mixed precision and float32 logits
 
@@ -136,27 +135,25 @@ and keeping the numerically sensitive parts in 32 bits. Background: bfloat16 (bf
 floating-point format with the exponent range of float32 and 8 significant bits instead of 24. It
 halves memory and it is coarse: between 4 and 8 neighbouring bf16 values are 0.03125 apart.
 
-`precision: amp_bf16` does two things here. `main.py` moves the model to the GPU with the dtype
+`hparams.precision: amp_bf16` does two things. `main.py` moves the model to the GPU with the dtype
 from `get_model_precision` (`vla_foundry/distributed.py`), `torch.bfloat16`, so the weights are
 stored in bf16: 91.4M x 2 bytes = 183 MB. And `train_one_checkpoint` runs the forward pass and the
 loss inside the context from `get_autocast` (`vla_foundry/precision.py`),
-`torch.amp.autocast(dtype=torch.bfloat16)`. Autocast is PyTorch's switch for mixed precision: inside
-the context, operations on its 16-bit list (matrix products, convolutions) run in bf16 and those on
+`torch.amp.autocast(dtype=torch.bfloat16)`. Autocast is PyTorch's switch for mixed precision:
+inside it, operations on its 16-bit list (matrix products, convolutions) run in bf16 and those on
 its float32 list in float32.
 
 That resolution is enough for hidden activations and too coarse for a mean over up to 8,192
 log-probabilities: a loss near 4.1 stored in bf16 could read 4.094 or 4.125 and nothing in between.
-`cast_output_to_float32: true` makes `Transformer.forward` return `output.float()`, so everything
-that reads the logits gets float32, inside autocast or not. Two limits on what that buys:
+`model.cast_output_to_float32: true` makes `Transformer.forward` return `output.float()`, so
+everything that reads the logits gets float32, inside autocast or not. Two limits:
 
 - The cast comes after the bf16 output layer (`self.output(x)` in
   `vla_foundry/models/transformer.py`), so the logit values are still rounded to 8 significant
   bits; only the arithmetic after them is float32.
-- Background, from the [PyTorch AMP documentation](https://docs.pytorch.org/docs/stable/amp.html):
-  on CUDA, autocast already runs `cross_entropy`, `log_softmax` and `softmax` in float32, so by
-  that list (not tested here) the loss would be float32 without the flag too. The flag matters for
-  operations outside the list, such as the `torch.logsumexp` of the optional z-loss penalty (off
-  here, see "In this repository"), and for code outside autocast.
+- Background ([PyTorch AMP documentation](https://docs.pytorch.org/docs/stable/amp.html)): on
+  CUDA, autocast already runs `cross_entropy`, `log_softmax` and `softmax` in float32 (not tested
+  here); the flag matters for code outside autocast and operations not on that list.
 
 ### Memory arithmetic
 
@@ -169,10 +166,10 @@ The logits dominate memory. One tensor of shape `[batch, 256, 49280]`:
 
 A hidden activation `[128, 256, 512]` in bf16 is 34 MB. Reasoning: besides the bf16 logits and
 their float32 copy, the loss needs the log-probabilities and the backward pass the gradient with
-respect to the logits, both float32 and the same shape. If all four are alive at once at batch 128
-they add up to 22.6 GB (3.23 + 3 x 6.46), before the weights, the optimiser state and any
-temporary, on a 24 GB card. Which tensors coexist at the peak was not profiled; the lab notebook
-records only the out-of-memory failure and the 6.5 GB per float32 tensor.
+respect to the logits, both float32 and the same shape. All four at batch 128 are 22.6 GB
+(3.23 + 3 x 6.46), before the weights and the optimiser state, on machine A (one RTX 4090, 24 GB).
+The peak was not profiled; the lab notebook records only the out-of-memory failure at batch 128
+and the 6.5 GB per float32 tensor.
 
 ### Reading the loss
 
@@ -182,48 +179,49 @@ for perplexity, the size of a uniform choice that would be equally uncertain.
 | Loss (nats) | Bits per token | Perplexity | What it is |
 |---|---|---|---|
 | 10.8 | 15.6 | 49,280 | uniform guess over the vocabulary (arithmetic) |
-| 6.3 | 9.1 | 545 | start-of-run value recorded in the lab notebook (machine A); the step it was read at is not recorded |
+| 6.3 | 9.1 | 545 | start of the run, machine A; the step it was read at is not recorded |
 | 4.1 | 5.9 | 60 | final value, machine A |
 
-Each log line is a mean over about 20 steps, and the first covers iterations 0 to 20, inside the
-warm-up, so expect it near 10.8, not 6.3. Reasoning: token frequencies are far from uniform, so
-learning them alone, ignoring context, already takes the loss well below 10.8. To see where 6.3
-falls: `grep "Train Checkpoint" experiments/pickup/custom_llm.train.log | head -8`.
+Each log line averages about 20 steps; the first covers steps 0 to 20, inside the warm-up, so expect it near or above 10.8, not 6.3. To see where 6.3 falls:
+`grep "Train Checkpoint" experiments/pickup/custom_llm.train.log | head -15`.
 
-A low loss says the model predicts its training targets well and nothing more. The clearest case
-here is the robot policies of later chapters: the same loop logs their loss, then the simulator
-tests them (closed-loop success: the fraction of test episodes in which the robot completes the
-task).
+A low loss says the model predicts its training targets well and nothing more. The robot policies
+of later chapters show it: the same loop logs their loss, and the simulator tests them (closed-loop
+success: the fraction of test episodes in which the robot completes the task).
 
 <!-- interactive: loss-vs-success -->
-*Figure: loss beside closed-loop success of the same checkpoints (lab notebook, machine A). The
-pretrained-backbone policy (`vla_qwen`) on the pick-the-named-object task (`pick_target`): loss
-0.087, 0.066, 0.039, success 0/50, 1/50, 6/50. The from-scratch policy (`vla_custom`): loss near
-0.03, success 0/100. See [91-loss-is-not-success.md](91-loss-is-not-success.md).*
+*Figure: loss beside closed-loop success of the same checkpoints (lab notebook, machine A) on the
+pick-the-named-object task (`pick_target`), 1500 demonstrations. The pretrained-backbone policy
+(`vla_qwen`) after 100k, 200k and 300k samples: loss 0.087, 0.066, 0.039, success 0/50, 1/50, 6/50.
+The from-scratch policy (`vla_custom`) after 1.0M samples: loss near 0.03, success 0/100. See
+[91-loss-is-not-success.md](91-loss-is-not-success.md).*
+
+Later, on machine B (L40S GPUs, 128 CPU cores), a smaller policy, `dp_vit_lang_reactive`, trained
+on 4000 demonstrations before the position fix ("Where it goes wrong"), scored 0% / 1% at 1M
+samples and 83% / 85% at 5M (trained weights / their running average, EMA; lab notebook). With the
+position table fixed, the same recipe ends at 93% (trained weights). See
+[101-case-pick-target.md](101-case-pick-target.md).
 
 ## In this repository
 
-Budget, windows and saving are in `main` ([`vla_foundry/main.py`](../../vla_foundry/main.py)); the
-step is `train_one_checkpoint` ([`vla_foundry/train.py`](../../vla_foundry/train.py)); defaults are
-in `HyperParams` ([`vla_foundry/params/hyper_params.py`](../../vla_foundry/params/hyper_params.py)).
-
-Details:
+Budget, checkpoint intervals and saving are in `main`
+([`vla_foundry/main.py`](../../vla_foundry/main.py)); the step is `train_one_checkpoint`
+([`vla_foundry/train.py`](../../vla_foundry/train.py)); defaults are in `HyperParams`
+([`vla_foundry/params/hyper_params.py`](../../vla_foundry/params/hyper_params.py)).
 
 - `batch_tokenize` (`vla_foundry/data/pipelines/text_untokenized.py`) pads or truncates to
   `seq_len + 1 = 257` tokens; `sample_chunk` (`vla_foundry/data/sampler.py`) returns
   `input_ids[:, 0:256]` and `input_ids[:, 1:257]`.
 - `TransformerBatchHandler` (`vla_foundry/models/batch_handlers.py`) builds a mask where the
   target equals the tokenizer's pad id; `CrossEntropyLossWithZLoss.forward`
-  (`vla_foundry/losses.py`) sets those targets to `ignore_index` (-100). The z-loss term is off,
-  because `z_loss_coefficient` defaults to 0.0. When on, it adds the coefficient times the mean
-  squared `logsumexp` of the logits, a penalty that keeps the softmax normaliser near 1.
+  (`vla_foundry/losses.py`) sets those targets to `ignore_index` (-100). Its z-loss term, a
+  penalty on the squared `logsumexp` of the logits, is off: `z_loss_coefficient` defaults to 0.0.
 - `main.py` computes `samples_per_checkpoint = total_train_samples // num_checkpoints`, but
-  `get_datastring_input` (`vla_foundry/data/dataloader.py`) selects whole shards (the tar files of
-  up to 4,096 documents the data are stored in) and trims the list to a multiple of the data-loader
-  worker count. With 8 workers (`data.num_workers`), the 31 shards needed for 125,000 samples
-  become 24, at most 98,304 samples. The `while not done_training` loop opens windows until
-  `global_step` reaches `total_steps`, so `--num_checkpoints 4` yields at least six checkpoint
-  files; `latest` in `custom_path.sh` picks the highest-numbered one for stage 2.
+  `get_datastring_input` (`vla_foundry/data/dataloader.py`) selects whole shards (tar files of up
+  to 4,096 documents), trimmed to a multiple of the 8 data-loader workers (`data.num_workers`): the
+  31 shards needed for 125,000 samples become 24, at most 98,304 samples. The
+  `while not done_training` loop runs until `global_step` reaches `total_steps`, so `--num_checkpoints 4` yields at least six checkpoints; `latest` in
+  `custom_path.sh` hands the highest-numbered `checkpoint_N.pt` to stage 2.
 
 The config is [`sim/pickup/configs/custom_llm.yaml`](../../sim/pickup/configs/custom_llm.yaml):
 
@@ -232,10 +230,8 @@ The config is [`sim/pickup/configs/custom_llm.yaml`](../../sim/pickup/configs/cu
 | `model` include | `transformer_100m.yaml` | 12 layers, 8 heads, width 512, untied embeddings (the input embedding table and the output matrix are separate weights, 49,280 x 512 = 25.2M each, `weight_tying: false`) |
 | `model.vocab_size` | 49280 | matches the SmolVLM2 tokenizer used in stages 2 and 3 |
 | `data.seq_len` | 256 | tokens per sample |
-| `data.num_workers` | 8 | data-loader workers; shard lists are trimmed to a multiple of this |
 | `hparams.global_batch_size`, `per_gpu_batch_size` | 32, 32 | one forward pass of 32 per update; no gradient accumulation (summing the gradients of several forward passes before one update) |
 | `hparams.lr`, `warmup` | 3e-4, 200 | peak rate, warm-up steps |
-| `model.cast_output_to_float32`, `hparams.precision`, `hparams.grad_clip_norm` | true, amp_bf16, 1.0 | see above |
 
 The config holds no budget. `sim/pickup/scripts/custom_path.sh` passes `--total_train_samples`
 (default 500000, or `PICKUP_LLM_SAMPLES`) and `--num_checkpoints` (default 4, or
@@ -254,61 +250,80 @@ tail -f experiments/pickup/custom_llm.train.log                   # in another t
 field of up to 100,000 lines, and writes tar shards of 4,096 documents plus `manifest.jsonl` to
 `data/custom/dclm`. If the manifest exists it does nothing.
 
-The run writes `experiments/pickup/custom_llm/` (`config.yaml`, `out.log`,
-`checkpoints/checkpoint_N.pt` and `optimizer_N.pt`). Arguments after `llm` go to `main.py`. Every
-20 steps `Metrics` logs:
+The run writes `experiments/pickup/custom_llm/`: `config.yaml`, `out.log` and, per checkpoint,
+`checkpoints/checkpoint_N.pt` (weights and position in the data) and `optimizer_N.pt`. Arguments
+after `llm` go to `main.py`. Every 20 steps `Metrics` (`vla_foundry/meters.py`) logs:
 
 ```text
-Train Checkpoint: <window> [<samples>/<samples in window> (<%>)] Loss: <mean since last line> Data (t): <s> Batch (t): <s>, <samples/s>/s, <samples/s>/s/gpu LR: <rate>
+Train Checkpoint: <interval> [<samples>/<samples in interval> (<%>)] Loss: <mean since last line> Data (t): <s> Batch (t): <s>, <samples/s>/s, <samples/s>/s/gpu LR: <rate>
 ```
 
 ## What we measured
 
 From the lab notebook:
 
-| | Machine A (RTX 4090, 24 GB) | Machine B (L40S) |
+| | Machine A (one RTX 4090, 24 GB) | Machine B (L40S GPUs, 128 CPU cores) |
 |---|---|---|
 | Throughput, batch 32, 256 tokens | 550 samples/s | 520-545 samples/s |
 | Loss | 6.3 -> 4.1 | final loss 4.15 |
 
-On machine A the 500k samples took about 15 min and the output was grammatical English. Batch 128
-ran out of memory (6.5 GB per float32 logits tensor, as above). By arithmetic, 550 samples/s is 17
-steps/s or 140,800 token positions per second.
+On machine A the 500k samples took about 15 min and the output was grammatical English. By
+arithmetic, 550 samples/s is 17 steps/s or 140,800 token positions per second.
 
 What this shows: the loop works.
 
 What it does not show: the loss is a training loss on documents seen about eight times. No
-validation set is configured (`total_val_samples` is unset), no held-out text was scored, no
-grammar test was run, and nothing measured whether the model states facts, answers questions or
-follows instructions. Judge it by what it generates ([14-generation.md](14-generation.md)) and by
-what is built on it.
+validation set is configured (`total_val_samples` is unset) and no held-out text was scored. Judge
+the model by what it generates ([14-generation.md](14-generation.md)) and by what is built on it.
 
-What it was good for: the stage-2 VLM built on it listed the objects of 300 held-out scenes in
-left-to-right order 85% of the time (256/300), but the stage-3 policy scored 0/100 with that VLM
-and 1/100 with a randomly initialised one
-([62-the-from-scratch-path.md](62-the-from-scratch-path.md)).
+What was built on it: the stage-2 VLM initialised from it listed the objects of 300 held-out
+scenes in left-to-right order 85% of the time (256/300) on machine A and 83% (249/300) on machine
+B. The first stage-3 policies scored 0/100 with that VLM and 1/100 with a randomly initialised
+one, which settles nothing: both passed one vector from the VLM to the action head (the part that
+outputs actions), had history (the previous frame, state and action as inputs) and stopped at 1M
+samples on 1500 demonstrations. With every token passed to the action head, no history, 4000
+demonstrations and 3M samples (stage 2 retrained after the position fix), the two end close:
+86% / 87% with the pretrained backbone and 75% / 85% with a randomly initialised one (trained /
+averaged weights). The pretrained one starts to look after
+0.25M samples, the other after about 1.0M: pretraining mainly bought an earlier start
+([62-the-from-scratch-path.md](62-the-from-scratch-path.md); notes: "Pretraining a backbone:
+mainly an earlier start").
 
 ## Where it goes wrong
 
-- **Out of memory after raising the batch.** Stage 1 ran out of memory at batch 128 (lab
-  notebook) because of the `[batch, 256, 49280]` tensors above. Keep the forward pass at 32 and
-  accumulate instead: `--hparams.global_batch_size 128 --hparams.per_gpu_batch_size 32` gives
-  `HyperParams.accum_freq = 4`: four forward and backward passes of 32 before one update. Steps
-  drop to 500,000 // 128 = 3,906, so 200 warm-up steps cover four times as many samples.
-- **Loss that stays near 10.8, or turns into `nan`.** Not observed in the runs recorded here; this
-  is reasoning. A loss stuck near 10.8 means the weights are not moving: check that the `LR:` field
-  of the log line rises over the first 200 steps. A loss that falls, then jumps or prints `nan`,
-  points at a peak rate too high for the model: rerun with
-  `sim/pickup/scripts/custom_path.sh llm --hparams.lr 1e-4`.
+- **Out of memory after raising the batch.** Batch 128 did not fit ("Memory arithmetic"). Keep
+  the forward pass at 32 and accumulate instead:
+  `--hparams.global_batch_size 128 --hparams.per_gpu_batch_size 32` gives
+  `HyperParams.accum_freq = 4`. Steps drop to 500,000 // 128 = 3,906, so 200 warm-up steps cover
+  four times as many samples.
 - **`warmup` changes meaning below 1.** `_parse_steps_or_fraction` reads a value below 1 as a
   fraction of total steps and anything else as a step count: `--hparams.warmup 0.05` is
   int(0.05 x 15,625) = 781 steps, `--hparams.warmup 1` is one step, not the whole run. Check the
-  `LR:` field in the first log lines.
+  `LR:` field of the first log lines; it should rise through the warm-up.
+- **A budget that ends too early.** $S$ in the schedule is the run's own budget, so a short run is
+  not the beginning of a long one: with a third of the samples it ends its decay where the longer
+  run still has about three quarters of its peak rate. Lab notebook, machine B:
+  `dp_vit_lang_reactive` on 1500 demonstrations ended a 1M-sample budget at 3% / 5% success, which
+  read as a design that does not work; with a 3M budget on the same data it scored 1% / 0% at 0.9M
+  samples, 21% / 18% at 1.5M and 64% / 62% at the end. See
+  [71-how-much-data-and-training.md](71-how-much-data-and-training.md).
 - **Updates smaller than the weights can store.** The weights are bf16 and AdamW updates them in
-  place. Arithmetic on the format: a weight near 0.04 sits on a grid of 0.00024, the size of the
-  peak learning rate, and an update below half the grid spacing leaves it unchanged, as late in the
-  decay. The effect on the final loss was not measured here. Background: this is the problem the
-  float32 master copy in Micikevicius (2017) and Kalamkar (2019) exists to avoid.
+  place. A weight near 0.04 sits on a grid of 0.00024, the size of the peak learning rate, so an
+  update below half that spacing, as late in the decay, leaves it unchanged. The effect on the
+  final loss was not measured here. Background: the float32 master copy in Micikevicius (2017) and
+  Kalamkar (2019) exists to avoid this.
+- **A constant computed inside autocast.** bf16 holds whole numbers exactly up to 256, then only
+  even ones, and above 512 only multiples of 4. The table of rotary position angles
+  ([12-positions.md](12-positions.md)) was computed under autocast: 641 distinct positions out of
+  2048 (lab notebook), and no error, because training and serving built the same table. Stage 1,
+  with 256-token sequences, lost none. The stage-2 VLM (320 tokens) and the patch-token and
+  from-scratch policies were affected (the Qwen policy's 20-token action head was not). With the
+  table fixed the policy starts to look earlier and ends higher: 93% against 83% in the run above,
+  96% / 96% against 90% / 89% in two runs with other seeds that differ in the table alone (lab
+  notebook, "After the position fix"). `RotaryEmbedding._update_cos_sin_tables`
+  (`vla_foundry/positional_embedding.py`) now computes
+  the angles in float32 with autocast off, and `positional_embedding_type: rotary_legacy_autocast`
+  rebuilds the old table for checkpoints trained before the fix.
 - **The run hangs.** A dead data-loader worker leaves the trainer waiting at 0% GPU (lab
   notebook). The `llm` stage calls `main.py` directly, not `train_resilient.sh`; see
   [81-surviving-long-runs.md](81-surviving-long-runs.md).
@@ -328,11 +343,10 @@ and 1/100 with a randomly initialised one
 - Micikevicius, [Mixed Precision Training](https://arxiv.org/abs/1710.03740) (2017): half-precision
   training that keeps a single-precision copy of the weights for the update.
 - Kalamkar, [A Study of BFLOAT16 for Deep Learning Training](https://arxiv.org/abs/1905.12322)
-  (2019): bf16 activations, gradients and forward-pass weights matching float32 results across five
-  domains, with the update still done on a float32 copy of the weights, which this repository does
-  not keep.
-- Li, [DataComp-LM](https://arxiv.org/abs/2406.11794) (2024): the benchmark and the filtered Common
-  Crawl corpus, DCLM-Baseline, that stage 1 takes one shard from.
+  (2019): bf16 training that matches float32 across five domains, with the update done on a
+  float32 copy of the weights, which this repository does not keep.
+- Li, [DataComp-LM](https://arxiv.org/abs/2406.11794) (2024): the filtered Common Crawl corpus,
+  DCLM-Baseline, that stage 1 takes one shard from.
 
 ## Check yourself
 
@@ -362,4 +376,15 @@ and 1/100 with a randomly initialised one
    ```bash
    grep "Train Checkpoint" experiments/pickup/custom_llm.train.log | tail -3
    python3 -c "import math; print(4.15 / math.log(2), math.exp(4.15))"
+   ```
+
+4. Cast the positions 0 to 2047 to bf16 and count the distinct values. Explain the count, and why
+   a 256-token sequence loses none:
+
+   ```bash
+   .venv/bin/python -c "
+   import torch
+   p = torch.arange(2048, dtype=torch.float32).to(torch.bfloat16)
+   print(p[255:260].float().tolist(), p.unique().numel())
+   "
    ```

@@ -32,13 +32,13 @@ Everything up to the colon is fixed for a given camera (`robot arm over a table`
 ordered pairs when one object is out of view. Which one is right is written only in the image. A
 test of vision has to score that part.
 
-Three checks follow.
+Three checks follow; an **example** is one held-out image with its caption.
 
 | Check | Question | Needs |
 |---|---|---|
 | Behavioural | Served as it will be used, does the model give answers that exist only in the image? | generation and a computed ground truth, on held-out inputs |
-| Counterfactual input | Does the output depend on the image? | two forward passes per sample (right image, mismatched image), no generation |
-| Same sample, both paths | Do training and inference hand the model the same tensors? | the two preprocessing paths, no model |
+| Counterfactual input | Does the output depend on the image? | two forward passes per example (right image, mismatched image), no generation |
+| Same example, both paths | Do training and inference hand the model the same tensors? | the two preprocessing paths, no model |
 
 The behavioural check says whether there is a problem. The other two say where it is.
 
@@ -63,13 +63,13 @@ output with a known answer. Five properties make the score of
    the same function to every training caption. The check then cuts the string after the colon,
    leaving `<|im_start|>User:<image>robot arm over a table. from left to right:`
    ([Generating Text](14-generation.md)).
-5. **Decoding is greedy**: the highest-scoring token is taken at every step. `top_k=1` masks every
-   logit below the largest one, so the draw inside `VLM.generate` (a `torch.multinomial` call,
-   because `temperature` keeps its default 1.0) returns that token. The one exception is an exact
-   tie for the maximum, which the bfloat16 logits of the script's `torch.autocast` make possible:
-   tied tokens all survive the filter, the draw picks among them, and the script sets no seed.
+5. **Decoding is greedy**: the highest-scoring token is taken at every generation step. `top_k=1`
+   masks every logit below the largest one, so the random draw that `VLM.generate` makes at its
+   default temperature of 1.0 returns that token. The one exception is an exact tie for the
+   maximum, which the bfloat16 logits of the script's `torch.autocast` make possible: the draw
+   then picks among the tied tokens, and the script sets no seed.
 
-One sample goes through these shapes. The JPEG is opened with PIL and the processor returns
+One example goes through these shapes. The JPEG is opened with PIL and the processor returns
 `pixel_values` of shape `[1, 3, 224, 224]` and `input_ids` of shape `[1, T]`, in which the single
 `<image>` has been expanded to 256 placeholder ids, copies of the `<image>` token id that mark where
 image embeddings go. Inside `VLM.forward` the ViT and projector turn the image into
@@ -92,28 +92,28 @@ the next token from the true tokens before it. The cross-entropy of those predic
 quantity the training loop minimises ([Training a VLM](31-training-a-vlm.md)). No text is
 generated, so prompt cutting, decoding settings and string matching cannot affect the result.
 
-For a set of held-out samples, compute two numbers:
+For a set of held-out examples, compute two numbers:
 
 - $L_\text{right}$: the mean loss on each caption with its own image.
-- $L_\text{mismatched}$: the mean loss on each caption with the image of another sample.
+- $L_\text{mismatched}$: the mean loss on each caption with the image of another example.
 
 If the model reads its images, the mismatched image contradicts the caption and
 $L_\text{mismatched}$ is clearly larger. If the two are about equal, the image is not helping the
 model predict the caption along the path you used to feed it. Judge the gap against the losses
-themselves: in the case below, 0.04 on a loss of about 1.9, with the mismatched image scoring
-slightly lower, counts as none; 1.08 on a loss of 0.10 counts as clear.
+themselves: in the case below, 1.93 against 1.89, with the mismatched image scoring slightly
+lower, counts as none; 0.10 against 1.18 counts as clear.
 
-### 3. The same sample through both paths
+### 3. The same example through both paths
 
 Background: the code that computes a model's inputs may differ between training and serving, and
-a difference in what the two compute is called training/serving skew (Breck 2017, below). In this
-repository training decodes JPEG bytes with `fast_image_decoder` in
+a difference in what the two compute is a **train/inference skew** (training/serving skew in
+Breck 2017, below). In this repository training decodes JPEG bytes with `fast_image_decoder` in
 [`decode_and_augment.py`](../../vla_foundry/data/augmentations/decode_and_augment.py), which calls
 torchvision's `decode_image` and returns uint8 tensors laid out `[3, H, W]`, and
 `ImageCaptionPipeline` pads the text to `seq_len + 1` = 321 tokens. The check opens the same kind
 of file with PIL and sends one unpadded prompt.
 
-The third check takes one sample, runs it through both paths, and compares what comes out: the
+The third check takes one example, runs it through both paths, and compares what comes out: the
 shape, type, minimum and maximum of `pixel_values`, and the decoded `input_ids`.
 
 ### Reading the three together
@@ -126,13 +126,13 @@ flowchart TD
     A -->|fails| B["Counterfactual check,<br/>inference path"]
     B -->|clear gap| C["Image is used:<br/>inspect prompt, decoding, scoring"]
     B -->|no gap| D["Counterfactual check,<br/>training path"]
-    D -->|no gap| E["Never learned to use images:<br/>data, placeholder count, projector, budget"]
-    D -->|clear gap| F["Train/inference skew:<br/>same sample through both paths"]
+    D -->|no gap| E["Has not learned to use images:<br/>data, placeholder count, projector, budget"]
+    D -->|clear gap| F["Train/inference skew:<br/>same example through both paths"]
 ```
 
-The flowchart orders the checks by what each result implies, not by cost. The both-paths comparison
-needs no model and is the cheapest of the three, so it can be run first and kept as a unit test. In
-the case below a white pixel came out, by arithmetic, as 1 on one path and 509 on the other.
+The both-paths comparison needs no model and is the cheapest of the three, so it can be run first
+and kept as a unit test. A fault that training and inference share passes all three ("Where it
+goes wrong").
 
 ## In this repository
 
@@ -159,18 +159,16 @@ Run the scaling test, which needs neither a GPU nor a tokenizer download:
 .venv/bin/python -m pytest tests/essential/models/test_simple_vlm_processor_scaling.py -q
 ```
 
-It builds one random 8 x 8 uint8 image, passes it to `_process_image` as a numpy array, a PIL image
-and a `[3, H, W]` tensor, and asserts that the numpy result lies within [-1, 1] and that the PIL and
-tensor results match it (`torch.testing.assert_close`). This pins the scaling step only. No test in
-the repository runs one sample through `ImageCaptionPipeline` and through `vlm_check.py` and
-compares the results, so the differences in JPEG decoder (torchvision against PIL) and padding (321
-tokens against none) are not covered.
+It passes one random 8 x 8 uint8 image to `_process_image` as a numpy array, a PIL image and a
+`[3, H, W]` tensor, and asserts that the numpy result lies within [-1, 1] and that the other two
+match it. This pins the scaling step only: no test in the repository runs one example through
+`ImageCaptionPipeline` and through `vlm_check.py`, so the differences in JPEG decoder (torchvision
+against PIL) and padding (321 tokens against none) are not covered.
 
 There is no script for the counterfactual check; the lab notebook records its result. The sketch
 below reuses the setup of `vlm_check.py` and excludes image-placeholder targets from the loss, as
-`VLMBatchHandler.prepare_inputs_and_targets` does in training. It is not a file in the repository
-and has not been executed; it was checked by reading against `VLM.forward` and
-`SimpleVLMProcessor.__call__`.
+`VLMBatchHandler.prepare_inputs_and_targets` does in training. It has not been executed, only read
+against `VLM.forward` and `SimpleVLMProcessor.__call__`.
 
 ```python
 # continues sim/pickup/vlm_check.py after `proc` is built
@@ -182,7 +180,7 @@ with tarfile.open(sorted(glob.glob(f"{a.shards}/*.tar"))[0]) as tar:
 keys = sorted(n[:-4] for n in files if n.endswith(".txt"))[:64]
 texts = [apply_chat_template(proc, 1, files[k + ".txt"].decode()) for k in keys]
 pils = [Image.open(io.BytesIO(files[k + ".jpg"])).convert("RGB") for k in keys]
-# uint8 [3, H, W], the type and layout training's decoder returns
+# uint8 [3, H, W], the type and axis order training's decoder returns
 tensors = [torch.from_numpy(np.array(p)).permute(2, 0, 1) for p in pils]
 
 def mean_loss(images):
@@ -202,12 +200,12 @@ for name, images in (("PIL", pils), ("uint8 tensor", tensors)):
     print(name, "right", mean_loss(images), "mismatched", mean_loss(images[2:] + images[:2]))
 ```
 
-To reproduce the old training path for a checkpoint trained before the fix, feed `t.float()` for
-each tensor `t`: a float tensor is not divided by 255.
+To reproduce the old training path for a model trained before the pixel-range fix ("What we
+measured"), feed `t.float()` for each tensor `t`: a float tensor is not divided by 255.
 
 ## What we measured
 
-All numbers are from the [lab notebook](../lab-notebook.md), on machine A (one 24 GB RTX 4090)
+All numbers are from the [lab notebook](../lab-notebook.md), on machine A (one RTX 4090, 24 GB)
 unless noted. The model is stage 2 of the from-scratch path: 96.5M parameters, trained on 40,000
 captioned sim renders for 400k samples.
 
@@ -216,13 +214,11 @@ notebook's bug table rounds this to "captioning 0%". By arithmetic 70/300 is 23%
 that naming one of four labels at random would give. That comparison is an interpretation: how
 often each object is leftmost in the held-out set was not measured.
 
-**First suspect: the prompt.** A prompt in a format the model was not trained on can produce this
-kind of failure, and it is the cheapest thing to inspect. `vlm_check.py` builds its prompt with
-`apply_chat_template`, as the training pipeline does, which removes the chat template as a
-difference but not the cut after the colon or the missing padding. What clears the prompt is the
-next test, which generates no text and so involves no cut, and the fact that the check as it stands
-scores 256/300 on a model trained with the fixed processor. The notebook records no score for a
-prompt written by hand.
+**First suspect: the prompt.** A prompt in a format the model was not trained on can fail this
+way. `vlm_check.py` builds its prompt with `apply_chat_template`, as training does, which leaves
+the cut after the colon and the missing padding as differences. The next test, which generates no
+text, clears the prompt, as does the unchanged check's 256/300 on a model trained with the fixed
+processor.
 
 **The decisive test.** The teacher-forced loss on the true caption was computed with the right
 image and with a mismatched one, feeding the images two ways:
@@ -232,61 +228,92 @@ image and with a mismatched one, feeding the images two ways:
 | PIL images, as the check feeds them | 1.93 | 1.89 |
 | unscaled uint8 tensors, as training fed them | 0.10 | 1.18 |
 
-On the inference path the image made no difference. On the training path the right image brought
-the loss to 0.10 and a wrong one raised it to 1.18. This is the last branch of the flowchart: the
-model had learned to use images, and at inference it was shown something else. The fault had to be
-in the code between the image file and `pixel_values`.
+On the inference path the image made no difference; on the training path it did. This is the last
+branch of the flowchart: the model had learned to use images, and at inference it was shown
+something else. The fault had to be in the code between the image file and `pixel_values`.
 
 **Root cause.** `SimpleVLMProcessor` scaled PIL and numpy images to [0, 1] and left uint8 tensors at
-0 to 255. Both then went through the same normalisation, `(img - 0.5) / 0.5`. By arithmetic, a
-white pixel became 1 from a PIL image and (255 - 0.5) / 0.5 = 509 from a tensor. The ViT was
-trained on -1 to 509 and tested on [-1, 1], which by arithmetic covers 2 of those 510 units, about
-0.4% of that range. A reading consistent with the equal losses, though not measured here, is that
-every inference image looked to the ViT like a nearly uniform dark frame, so right and mismatched
-images were indistinguishable.
+0 to 255. By arithmetic a white pixel reached the ViT as 509 in training and as 1 in the check, so
+the check's inputs covered 2 of the 510 units the model was trained on.
+[Train and Inference Must See the Same Thing](93-train-inference-skew.md) tells this bug in full.
 
-**Fix and test.** The tensor branch of `_process_image` now divides uint8 tensors by 255, and
-`test_simple_vlm_processor_scaling.py` holds the three input types to one output. With the fixed
-processor the stage-2 model lists the objects in left-to-right order on 256 of the first 300
-held-out `from left to right:` captions (85%; the notebook calls these 300 held-out scenes, and
-each scene can contribute a front and a wrist image) and names the leftmost object on 285/300
-(95%); its training loss is 0.058. Repeated on machine B, the same stages gave 249/300 (83%) and
-279/300 (93%) with the same final loss of 0.058. Each is one training seed, and the notebook treats
-differences of a few percent between single runs as noise. A checkpoint trained before the fix was
-fitted to inputs up to 509 and keeps failing the check; stage 2 has to be trained again.
+**After the fix.** The tensor branch of `_process_image` now divides uint8 tensors by 255, and
+stage 2 has to be trained again: weights fitted to inputs up to 509 keep failing the check.
+Trained with the fixed processor, the stage-2 model lists the objects in left-to-right order on
+256 of the first 300 held-out `from left to right:` captions (85%) and names the leftmost object on
+285/300 (95%); its training loss is 0.058. On machine B (L40S GPUs, 128 CPU cores) the same stages
+gave 249/300 (83%) and 279/300 (93%), loss 0.058. Neither model had the position-table fix ("Where
+it goes wrong"); retrained with it on machine B, same data and budget, stage 2 gives 267/300 (89%)
+and 286/300 (95%), loss 0.059. Each is one training seed, and the notebook treats differences of a
+few percent between single runs as noise.
 
-What this does not show: which errors make up the remaining 44 captions, how the model does on the
-other caption forms, or that a policy built on the model uses what it learned. The notebook lists
-the stage-3 policy built on stage 2 at 0/100 on `pick_target`, and the same architecture with a
-randomly initialised VLM at 1/100
+What this does not show: which errors make up the remaining 44 captions of the machine A model,
+how the model does on the other caption forms, or that a policy built on the model uses what it
+learned. In the first round the stage-3 policy built on stage 2 scored 0/100 on `pick_target`, and
+the same architecture with a randomly initialised VLM 1/100
 ([The From-Scratch Path](62-the-from-scratch-path.md),
-[Loss Is Not Success](91-loss-is-not-success.md)).
+[Loss Is Not Success](91-loss-is-not-success.md)). The [field notes](../notes.md) ("Pretraining a
+backbone: mainly an earlier start") say that pair told nothing about pretraining: with one vector
+handed to the action head (the network that generates the actions;
+[50](50-what-the-action-head-sees.md)), history as inputs ([52](52-history-and-shortcuts.md)) and
+1.0M samples on 1500 demonstrations ([71](71-how-much-data-and-training.md)), neither policy could
+have found the object. Rerun on machine B with every token handed to the action head, no history,
+4000 demonstrations and 3M samples, the policy on the caption-pretrained backbone (stage 2
+retrained with the fix) ends at 86% / 87% and the one on a randomly initialised backbone at
+75% / 85% (trained / averaged weights). The pretrained one starts to look after 0.25M samples, the
+other after about 1.0M; chapter 102, still to come, compares the two.
+
+**The same questions, asked of a policy.** For a policy the behavioural measure is the **slope** of
+where the gripper first closed against where the named object was (`sim/pickup/summarize.py`
+prints it): 1 if it closes where the object is, 0 if the place does not depend on the scene. The
+counterfactual input is the frozen-camera probe, `eval.py --stale_images`, which keeps sending the
+first frame's images. On machine B, `dp_vit_lang_reactive` (4000 demonstrations, 5.0M samples,
+averaged (EMA) weights) has a slope of 0.98 and succeeds on 85/100 unseen layouts. With frozen
+images it succeeds on 1/100, yet it still closes at the named object in 99% of episodes, 17 mm
+away (median) against 7 mm with live images: the first look
+decides where it goes, and later frames matter only for the last centimetres
+([95-what-a-policy-looks-at.md](95-what-a-policy-looks-at.md)). A check that passes shows that an
+input is used, not when. A check that fails may be early: the same run had a slope of 0.11 / 0.14
+after 1.0M samples and 0.81 / 0.96 after 2.0M (trained / averaged weights;
+[71-how-much-data-and-training.md](71-how-much-data-and-training.md)), so check every checkpoint
+before judging a design.
 
 ## Where it goes wrong
 
 **The check shares the training path.** What you see: the check passes and the deployed model
-ignores images. Why: a check that loads its samples through the training pipeline repeats
+ignores images. Why: a check that loads its examples through the training pipeline repeats
 training's mistakes; here it would have fed unscaled tensors, where the loss with the right image
 was 0.10. What to do: feed the check the way the served model is fed
 ([Train and Inference Must See the Same Thing](93-train-inference-skew.md)).
 
-**A float image in 0 to 255.** The fix and the test cover uint8 input. `_process_image` treats a
-float tensor or a float numpy array as already scaled, so a float image with values up to 255 still
-comes out with a maximum of 509. How to check: print `pixel_values.min()` and `.max()` where your
-code calls the processor (exercise 3).
+**A fault that training and inference share.** All three checks pass, because an error made
+identically on both paths shows in none of them while the model can still learn the task. Here the
+language model's table of rotary position angles was computed in bfloat16 under autocast, and
+positions above 256 collapsed onto even numbers (641 distinct positions out of 2048 in all;
+notebook, bug table; [Telling Tokens Where They Are](12-positions.md)). A stage-2 caption starts
+at position 259, so neighbouring caption tokens shared a rotation on both paths. A test of the
+component itself does find it (`tests/essential/models/test_rotary_precision.py`). The table is
+now computed in float32; the stage-2 VLM retrained with it scores 267/300 against 249/300 before
+(machine B, one seed each; "What we measured"). Check a model trained before that fix with
+`positional_embedding_type: rotary_legacy_autocast` under `transformer` in its `config_model.yaml`, or the check itself gives old weights a table they were not trained on
+([Generating Text](14-generation.md)).
+
+**A float image in 0 to 255.** The pixel-range fix and its test cover uint8 input.
+`_process_image` treats a float tensor or a float numpy array as already scaled, so a float image
+with values up to 255 still comes out with a maximum of 509. How to check: print
+`pixel_values.min()` and `.max()` where your code calls the processor (exercise 3).
 
 **The mismatched image has the same answer.** Two scenes can share a caption, for example two
 single-object captions that place the red cube in the same region, and swapping those images
-changes nothing even for a working model. Average over tens of samples and take the substitute
+changes nothing even for a working model. Average over tens of examples and take the substitute
 from another scene, not from the other camera of the same scene.
 
 **The check's processor disagrees with the config.** `vlm_check.py` constructs
 `SimpleVLMProcessor()` with its default 224-pixel size and sets `proc.image_seq_length = 256` by
 hand, matching `data.image_size` and `data.img_num_tokens` in
-[`custom_vlm.yaml`](../../sim/pickup/configs/custom_vlm.yaml). If the ViT changes so that an image
-no longer yields 256 tokens (another `patch_size`, for example), the assertion in `VLM.forward`
-that counts placeholder ids against image tokens fails. Edit the two lines that build `proc` when
-the config changes.
+[`custom_vlm.yaml`](../../sim/pickup/configs/custom_vlm.yaml). If an image no longer yields 256
+tokens (another `patch_size`, for example), the assertion in `VLM.forward` that counts placeholder
+ids against image tokens fails. Edit the two lines that build `proc` when the config changes.
 
 **Exact match fails for reasons that are not vision.** The comparison is string equality after
 cutting at the first period. A list cut short by `max_new_tokens=28`, a missing article or an extra
@@ -307,16 +334,15 @@ Background: none of the following was measured here.
   inputs set to zero; the counterfactual check applies that idea to one input.
 - Breck, [The ML Test Score](https://research.google/pubs/pub46555/) (IEEE Big Data, 2017). A rubric
   of 28 tests and monitoring needs for production machine-learning systems. One of them (Monitor 3)
-  checks that training and serving features compute the same values; the paper says a difference is
-  sometimes called training/serving skew.
+  checks that training and serving features compute the same values.
 
 ## Check yourself
 
 1. Run `sim/pickup/scripts/custom_path.sh check`. For each wrong prediction among the six printed
    pairs, say whether an object is wrong, the order is wrong, or the string differs for another
    reason.
-2. Fill in the table from "The decisive test" for two other faults: a model that never learned to
-   use images, and one that uses images but is prompted in the wrong format.
+2. Fill in the table from "The decisive test" for two other faults: a model that has not learned
+   to use images, and one that uses images but is prompted in the wrong format.
 3. Run this and explain the third line of output:
 
    ```bash

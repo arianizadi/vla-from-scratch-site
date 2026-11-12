@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Evidence } from "@/components/landing/Evidence";
+import { FieldNotes } from "@/components/landing/FieldNotes";
+import { Findings } from "@/components/landing/Findings";
 import { Hero } from "@/components/landing/Hero";
 import { PartsOverview } from "@/components/landing/PartsOverview";
-import { StatementKey } from "@/components/landing/StatementKey";
+import { QuickStart } from "@/components/landing/QuickStart";
 import { StatusNote } from "@/components/landing/StatusNote";
 import { listChapters, listParts } from "@/lib/content";
 
@@ -14,11 +15,12 @@ export default function HomePage() {
   const chapters = listChapters();
   return (
     <main id="main" tabIndex={-1} className="pb-8 outline-none">
-      <Hero firstChapter={chapters[0]} />
+      <Hero chapters={chapters} />
       <StatusNote chapters={chapters} />
-      <Evidence />
-      <StatementKey />
       <PartsOverview parts={listParts()} />
+      <Findings chapters={chapters} />
+      <FieldNotes />
+      <QuickStart firstRun={chapters.find((chapter) => chapter.slug === "01-setup-and-first-run")} />
     </main>
   );
 }

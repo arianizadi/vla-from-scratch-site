@@ -1,0 +1,542 @@
+/* ==========================================================================
+   pooled-vs-tokens: a camera frame, the tokens its patches become, and the
+   one vector those tokens are averaged into. Colours come from the design
+   tokens only, so both themes follow. A schematic plate: modality hues only
+   (vision for the cube's pixels, action for the action head), text in ink.
+
+   Layout. Every part is a cell of one grid, so the drawings, the readouts and
+   the action heads line up across the columns. The grid follows the width of
+   the figure, not of the window:
+
+     under 560px   the frame on top, the two representations side by side
+     from 560px    frame | tokens | pooled vector, read from left to right
+   ========================================================================== */
+
+.pvt-root {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.pvt-layout {
+  --gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "frameHead frameHead"
+    "frame     frame"
+    "frameDim  frameDim"
+    "key       key"
+    "tokHead   poolHead"
+    "tok       pool"
+    "tokRead   poolRead"
+    "tokGoes   poolGoes"
+    "measured  measured";
+  column-gap: var(--gap);
+  align-items: start;
+}
+
+.pvt-frame-head {
+  grid-area: frameHead;
+}
+.pvt-frame {
+  grid-area: frame;
+}
+.pvt-frame-dim {
+  grid-area: frameDim;
+}
+.pvt-tok-head {
+  grid-area: tokHead;
+}
+.pvt-tok {
+  grid-area: tok;
+}
+.pvt-pool-head {
+  grid-area: poolHead;
+}
+.pvt-pool {
+  grid-area: pool;
+}
+.pvt-key {
+  grid-area: key;
+}
+.pvt-tok-read {
+  grid-area: tokRead;
+}
+.pvt-pool-read {
+  grid-area: poolRead;
+}
+.pvt-tok-goes {
+  grid-area: tokGoes;
+}
+.pvt-pool-goes {
+  grid-area: poolGoes;
+}
+.pvt-measured-area {
+  grid-area: measured;
+  min-width: 0;
+}
+
+/* On a phone the frame is kept small enough for the tokens under it to stay in reach. */
+.pvt-frame-head,
+.pvt-frame,
+.pvt-frame-dim {
+  justify-self: center;
+  width: min(100%, 260px);
+}
+
+/* Headings sit on the drawings they name, however many lines the neighbour takes. */
+.pvt-frame-head,
+.pvt-tok-head,
+.pvt-pool-head {
+  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 8px;
+  padding-bottom: 8px;
+}
+.pvt-tok-head,
+.pvt-pool-head {
+  padding-top: 20px;
+}
+.pvt-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.25rem;
+}
+.pvt-small {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+.pvt-faint {
+  color: var(--text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   The drawings, each in its own pixels. They scale with their column;
+   strokes keep their width.
+   -------------------------------------------------------------------------- */
+
+.pvt-scaled {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  overflow: visible;
+}
+.pvt-scaled * {
+  vector-effect: non-scaling-stroke;
+}
+.pvt-quiet {
+  pointer-events: none;
+}
+.pvt-place {
+  cursor: crosshair;
+}
+.pvt-handle {
+  cursor: grab;
+  /* A finger on the cube moves the cube; a finger anywhere else scrolls the page. */
+  touch-action: none;
+}
+.pvt-handle[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.pvt-table {
+  fill: var(--surface-2);
+}
+.pvt-border {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.pvt-grid-lines line {
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+.pvt-touched {
+  fill: color-mix(in srgb, var(--vision) 14%, var(--surface-2));
+}
+.pvt-touched-edge {
+  fill: none;
+  stroke: var(--vision);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.pvt-cube {
+  fill: var(--vision);
+}
+.pvt-cube-edge {
+  stroke: var(--surface);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+.pvt-ghost {
+  fill: none;
+  stroke: var(--vision);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 2;
+  pointer-events: none;
+}
+
+/* A token: its 16 x 16 numbers on the table colour. */
+.pvt-cell {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 0.75;
+}
+/* Changed by the move: an ink outline, so the meaning does not rest on a hue. */
+.pvt-changed {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.pvt-holding {
+  fill: none;
+  stroke: var(--vision);
+  stroke-width: 1;
+}
+.pvt-changed-number {
+  fill: var(--text);
+}
+
+/* The frame's size as a dimension line. */
+.pvt-frame-dim {
+  padding-top: 6px;
+}
+.pvt-dimension {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.pvt-dimension::before,
+.pvt-dimension::after {
+  flex: 1;
+  height: 9px;
+  border-top: 1px solid var(--border-strong);
+  margin-top: 8px;
+  content: "";
+}
+.pvt-dimension::before {
+  border-left: 1px solid var(--border-strong);
+}
+.pvt-dimension::after {
+  border-right: 1px solid var(--border-strong);
+}
+
+/* --------------------------------------------------------------------------
+   The pooled vector: one chip at the tokens' scale, one brightened.
+   -------------------------------------------------------------------------- */
+
+.pvt-pool {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.pvt-chip {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   The key, what the move changed, and where each goes.
+   -------------------------------------------------------------------------- */
+
+.pvt-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+}
+.pvt-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pvt-key svg {
+  flex: none;
+  overflow: visible;
+}
+
+.pvt-tok-read,
+.pvt-pool-read {
+  padding-top: 10px;
+}
+.pvt-readout {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.pvt-readout + .pvt-readout {
+  margin-top: 6px;
+}
+/* What each representation can tell apart: the readout the figure is about, so it comes first and larger. */
+.pvt-lead {
+  color: var(--text);
+  font-size: 0.9375rem;
+}
+.pvt-lead strong {
+  font-size: 1.0625rem;
+}
+.pvt-of-all {
+  display: block;
+}
+.pvt-readout strong {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+/* The largest change of one number, from nothing to the whole step from table to cube. */
+.pvt-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.pvt-meter-track {
+  position: relative;
+  flex: 1;
+  min-width: 48px;
+  max-width: 160px;
+  height: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+}
+.pvt-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background-color: var(--text-muted);
+}
+
+.pvt-tok-goes,
+.pvt-pool-goes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+}
+.pvt-arrow-down {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--border-strong);
+}
+.pvt-arrow-down::before {
+  width: 0;
+  height: 12px;
+  border-left: 1.5px solid currentColor;
+  content: "";
+}
+.pvt-arrow-down svg {
+  display: block;
+}
+.pvt-head {
+  display: grid;
+  width: 100%;
+  max-width: 220px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 1.5px solid var(--action);
+  border-radius: 2px;
+  background-color: var(--surface);
+  text-align: center;
+  place-content: center;
+}
+
+/* "Compare from here" when the cube is already where the comparison starts. */
+.pvt-compare[aria-disabled="true"],
+.pvt-compare[aria-disabled="true"]:hover {
+  border-color: var(--border);
+  background-color: transparent;
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   The measured comparison. Its two columns are the columns of the drawing
+   above it: patch tokens left, pooled vector right.
+   -------------------------------------------------------------------------- */
+
+.pvt-measured {
+  margin-top: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background-color: var(--surface);
+}
+.pvt-measured-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 12px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.pvt-measured-head code {
+  font-size: 0.85em;
+}
+.pvt-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+/* The two results share their rows, so the counts and the tracks line up however the labels wrap. */
+.pvt-result {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 2px;
+  align-content: start;
+  min-width: 0;
+  padding: 8px 12px 10px;
+}
+.pvt-result + .pvt-result {
+  border-left: 1px solid var(--border);
+}
+.pvt-result dt,
+.pvt-result dd {
+  margin: 0;
+}
+.pvt-value {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+/* The interval keeps to one line: beside the count when there is room, under it when not. */
+.pvt-interval {
+  display: inline-block;
+  white-space: nowrap;
+}
+.pvt-policy {
+  margin-top: 2px;
+}
+.pvt-measured-foot {
+  margin: 0;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+}
+.pvt-measured-foot p {
+  margin: 0;
+}
+.pvt-measured-foot p + p {
+  margin-top: 4px;
+}
+/* The caveat is read before the source: in ink, so the gap above is not taken for the effect of pooling. */
+.pvt-measured-caveat {
+  color: var(--text);
+}
+
+/* A 0 to 100% line: the result as a dot, its 95% interval as a whisker through it. */
+.pvt-track {
+  position: relative;
+  display: block;
+  height: 20px;
+  margin: 4px 5px 0;
+}
+.pvt-track::before {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--border-strong);
+  content: "";
+}
+/* The 0% and 100% ends as ticks under the line, clear of a whisker's caps and of the dot near either end. */
+.pvt-track::after {
+  position: absolute;
+  top: calc(50% + 6px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-inline: 1px solid var(--border-strong);
+  content: "";
+}
+.pvt-whisker {
+  position: absolute;
+  top: calc(50% - 4px);
+  z-index: 1;
+  height: 9px;
+  border-inline: 2px solid var(--text-muted);
+}
+.pvt-whisker::before {
+  position: absolute;
+  top: 3px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background-color: var(--text-muted);
+  content: "";
+}
+.pvt-dot {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background-color: var(--text);
+  outline: 2px solid var(--surface);
+}
+.pvt-scale {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* --------------------------------------------------------------------------
+   From 560px: three columns, read from left to right.
+   -------------------------------------------------------------------------- */
+
+@container (min-width: 560px) {
+  .pvt-layout {
+    --gap: 32px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
+    grid-template-areas:
+      "frameHead tokHead  poolHead"
+      "frame     tok      pool"
+      "frameDim  tokRead  poolRead"
+      "key       tokGoes  poolGoes"
+      ".         measured measured";
+  }
+  .pvt-frame-head,
+  .pvt-frame,
+  .pvt-frame-dim {
+    justify-self: stretch;
+    width: auto;
+  }
+  .pvt-tok-head,
+  .pvt-pool-head {
+    padding-top: 0;
+  }
+  .pvt-key {
+    flex-direction: column;
+    align-self: start;
+    padding-top: 14px;
+  }
+}
+
+@container (min-width: 760px) {
+  .pvt-layout {
+    --gap: 44px;
+  }
+}

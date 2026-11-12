@@ -6,8 +6,10 @@ export interface LegendItem {
   color: string;
   /** The marker the series is drawn with, or "line" for a line without markers. Default "line". */
   shape?: MarkerShape | "line";
-  /** A dashed line: reference series such as the expert or the chance level. */
+  /** A dashed line: reference series such as the expert or the chance level, or the second of two sets of weights. */
   dashed?: boolean;
+  /** An open marker: a within-policy contrast drawn in the policy's own hue. */
+  hollow?: boolean;
 }
 
 export interface LegendProps {
@@ -37,7 +39,7 @@ export function Legend({ items, label = "Legend", className = "" }: LegendProps)
               strokeWidth={2}
               strokeDasharray={item.dashed ? "4 3" : undefined}
             />
-            {item.shape && item.shape !== "line" ? <Marker shape={item.shape} x={11} y={6} color={item.color} /> : null}
+            {item.shape && item.shape !== "line" ? <Marker shape={item.shape} x={11} y={6} color={item.color} hollow={item.hollow} /> : null}
           </svg>
           {item.label}
         </li>

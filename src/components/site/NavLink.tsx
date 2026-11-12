@@ -11,15 +11,20 @@ interface NavLinkProps {
 const BASE =
   "inline-flex h-8 items-center rounded-control px-2 text-14 sm:px-2.5 font-medium transition-colors duration-100 ease-standard pointer-coarse:h-11";
 
-/** A header link that marks itself as the current section of the site. */
+/**
+ * A header link that marks itself as the current section of the site: a fill
+ * and a 2px accent bar under it (not colour alone), and aria-current "page"
+ * on the section's own page, "true" on a page inside it (a chapter under Learn).
+ */
 export function NavLink({ href, children }: NavLinkProps) {
   const pathname = usePathname();
-  const current = pathname === href || pathname.startsWith(`${href}/`);
+  const page = pathname === href;
+  const current = page || pathname.startsWith(`${href}/`);
   return (
     <Link
       href={href}
-      aria-current={current ? "page" : undefined}
-      className={`${BASE} ${current ? "bg-accent-soft text-ink" : "text-ink-muted hover:text-ink"}`}
+      aria-current={page ? "page" : current ? "true" : undefined}
+      className={`${BASE} ${current ? "bg-accent-soft text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-muted hover:text-ink"}`}
     >
       {children}
     </Link>

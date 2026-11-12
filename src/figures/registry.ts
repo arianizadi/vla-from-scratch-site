@@ -40,4 +40,6 @@ export const FIGURE_COMPONENTS: Record<FigureId, ComponentType<FigureProps>> = {
   tolerance: dynamic(() => import("./tolerance")),
   "arm-replay": dynamic(() => import("./arm-replay")),
   timeline: dynamic(() => import("./timeline")),
+  onset: dynamic(() => import("./onset")),
+  disturbance: dynamic(() => import("./disturbance")),
 };

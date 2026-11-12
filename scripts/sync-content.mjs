@@ -6,9 +6,14 @@
 //   TUTORIAL_REPO=/path/to/repo npm run sync  from another checkout
 //   npm run sync -- /path/to/repo             the same, as an argument
 //
+// "npm run sync" (scripts/sync.mjs) runs this script and then sync-data.mjs, which builds the
+// experiment data and checks it against the notebook copied here. "npm run sync:content" runs
+// this script alone.
+//
 //   tutorial/chapters/*.md    ->  content/chapters/
 //   tutorial/lab-notebook.md  ->  content/lab-notebook.md
-//   tutorial/img/**           ->  public/tutorial/img/
+//   tutorial/notes.md         ->  content/notes.md
+//   tutorial/img/**           ->  public/tutorial/img/  (only the images a page links to)
 //
 // The copy is one-way. A chapter file that is gone from the tutorial is
 // removed here. The pipeline samples (98-*.md, 99-*.md) live only in this
@@ -151,11 +156,20 @@ console.log(`Chapters   ${sourceChapters.length} files from ${source.chapters}: 
 if (removed.length > 0) console.log(`           Removed ${removed.length} no longer in the tutorial: ${removed.join(", ")}.`);
 if (keptSamples.length > 0) console.log(`           Kept the pipeline samples (the tutorial has no chapters yet): ${keptSamples.join(", ")}.`);
 
+// A file without a number is shown only as an appendix page (part: Appendix in its front matter),
+// numbered after the other chapters (src/lib/content.ts).
+const isAppendixName = (name) => /^[a-z][a-z0-9-]*\.md$/.test(name);
+const isAppendix = (name) => /^part:\s*(?:\d+\s+)?appendix\b/im.test(readFileSync(path.join(target.chapters, name), "utf8"));
 const unnamed = sourceChapters.filter((name) => !isChapterName(name));
-if (unnamed.length > 0) {
-  console.log(`           Not named <order>-<slug>.md, so copied but not shown as chapters: ${unnamed.join(", ")}.`);
+const appendix = unnamed.filter((name) => isAppendixName(name) && isAppendix(name));
+const ignored = unnamed.filter((name) => !appendix.includes(name));
+if (appendix.length > 0) {
+  console.log(`           Appendix pages without a number, shown after the numbered chapters: ${appendix.join(", ")}.`);
 }
-for (const name of sourceChapters.filter(isChapterName)) {
+if (ignored.length > 0) {
+  console.warn(`           Warning: not named <order>-<slug>.md and not an appendix page, so not shown: ${ignored.join(", ")}.`);
+}
+for (const name of [...sourceChapters.filter(isChapterName), ...appendix]) {
   const problem = chapterProblem(readFileSync(path.join(target.chapters, name), "utf8"));
   if (problem) console.warn(`           Warning: ${name} is not finished (${problem}); the site will leave it out.`);
 }
@@ -172,24 +186,93 @@ if (existsSync(source.notebook)) {
   if (existsSync(target.notebook)) notebook = readFileSync(target.notebook, "utf8");
 }
 
+// ---------------------------------------------------------------- field notes
+
+// The field notes are shown at /notes (src/app/notes). Their numbers are the notebook's: a number
+// in the notes that the notebook does not print is listed here for a person to check, not removed.
+const notesSource = path.join(tutorial, "notes.md");
+const notesTarget = path.join(root, "content", "notes.md");
+if (existsSync(notesSource)) {
+  console.log(`Notes      ${here(notesTarget)}: ${copyFile(notesSource, notesTarget)}.`);
+  const numbers = readFileSync(notesTarget, "utf8").match(/\d+(?:\.\d+)?(?:%|\/\d+| mm\b|M\b)?/g) ?? [];
+  const unprinted = notebook === undefined ? [] : [...new Set(numbers)].filter((number) => !notebook.includes(number));
+  if (unprinted.length > 0) {
+    console.warn(`           ${unprinted.length} numbers in the notes are not in the notebook as written: ${unprinted.join(", ")}.`);
+  }
+} else {
+  console.warn(`Notes      Warning: no field notes at ${notesSource}; ${here(notesTarget)} was left as it is.`);
+}
+
 // ---------------------------------------------------------------- images
 
+// Only the images a page links to are published: a file in the tutorial's img folder that no
+// chapter, the notebook or the notes link to (a screenshot of a tool, a drawing kept for later)
+// is not copied, and a copy no page links to any more is removed.
+
+/** The tutorial-relative paths ("img/x.svg") of the images a Markdown file links to. */
+function linkedImages(file, folder) {
+  if (!existsSync(file)) return [];
+  const text = readFileSync(file, "utf8");
+  const targets = [
+    ...text.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g),
+    ...text.matchAll(/<img[^>]*\ssrc\s*=\s*["']([^"']+)["']/gi),
+  ].map((match) => match[1].split(/[?#]/)[0]);
+  return targets
+    .filter((url) => !/^([a-z][a-z0-9+.-]*:|\/\/|\/|#)/i.test(url))
+    .map((url) => {
+      try {
+        return decodeURI(url);
+      } catch {
+        return url;
+      }
+    })
+    .map((url) => path.posix.normalize(path.posix.join(folder, url)))
+    .filter((relative) => relative.startsWith("img/"));
+}
+
 if (existsSync(source.images) && statSync(source.images).isDirectory()) {
-  const files = walk(source.images);
+  const linked = new Set([
+    ...readdirSync(target.chapters)
+      .filter(isMarkdown)
+      .flatMap((name) => linkedImages(path.join(target.chapters, name), "chapters")),
+    ...linkedImages(target.notebook, "."),
+    ...linkedImages(path.join(root, "content", "notes.md"), "."),
+  ]);
+  const available = walk(source.images);
+  const files = available.filter((file) => linked.has(path.posix.join("img", file.split(path.sep).join("/"))));
   const isSvg = (file) => file.toLowerCase().endsWith(".svg");
   const copies = tally(
     files.map((file) =>
       copyFile(path.join(source.images, file), path.join(target.images, file), isSvg(file) ? withoutRemoteFonts : undefined),
     ),
   );
-  console.log(`Images     ${files.length} files to ${here(target.images)}: ${summary(copies)}.`);
+  console.log(
+    `Images     ${files.length} of ${available.length} files are linked from a page, copied to ${here(target.images)}: ${summary(copies)}.`,
+  );
   for (const file of files.filter(isSvg)) {
     if (loadsFromAnotherHost(readFileSync(path.join(target.images, file), "utf8"))) {
       console.warn(`           Warning: ${file} still loads a resource from another host; the site must not.`);
     }
   }
+  for (const missing of [...linked].filter((relative) => !available.includes(relative.slice("img/".length)))) {
+    console.warn(`           Warning: a page links to ${missing}, which the tutorial does not have.`);
+  }
 } else {
   console.log("Images     The tutorial has no img folder; nothing copied.");
+}
+
+// A published image no page links to is removed, whether or not the tutorial still has it.
+if (existsSync(target.images)) {
+  const kept = new Set([
+    ...readdirSync(target.chapters)
+      .filter(isMarkdown)
+      .flatMap((name) => linkedImages(path.join(target.chapters, name), "chapters")),
+    ...linkedImages(target.notebook, "."),
+    ...linkedImages(path.join(root, "content", "notes.md"), "."),
+  ]);
+  const stale = walk(target.images).filter((file) => !kept.has(path.posix.join("img", file.split(path.sep).join("/"))));
+  for (const file of stale) rmSync(path.join(target.images, file));
+  if (stale.length > 0) console.log(`           Removed ${stale.length} that no page links to: ${stale.join(", ")}.`);
 }
 
 // ---------------------------------------------------------------- quoted numbers

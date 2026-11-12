@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-/** Distance from the top of the viewport at which a heading counts as reached. */
-const REACHED_AT = 120;
+/**
+ * Distance from the top of the viewport at which a heading counts as reached:
+ * the sticky header (56px), the headings' scroll-margin-top (80px) and some
+ * slack, so a heading a link has just scrolled to is already the current one.
+ */
+const REACHED_AT = 160;
 
 /**
  * The id of the last section heading scrolled past, or undefined above the

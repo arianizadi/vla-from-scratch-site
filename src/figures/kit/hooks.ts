@@ -114,3 +114,16 @@ export function useElementSize<T extends Element>(ref: RefObject<T | null>): Ele
 
   return size;
 }
+
+/**
+ * The CSS height of a chart whose drawn height is a share of its width,
+ * clamped: `{ height: "clamp(220px, 42cqw, 320px)" }`. Put it on the <svg>
+ * (width 100%) inside an element with `container-type: inline-size`
+ * (Tailwind: `[container-type:inline-size]`), and compute the drawn height
+ * with the same three numbers. The static HTML, drawn at the fallback width,
+ * then already takes its final height, and the page does not move when the
+ * chart is redrawn at the measured width.
+ */
+export function chartHeight({ min, ratio, max }: { min: number; ratio: number; max: number }): { height: string } {
+  return { height: `clamp(${min}px, ${ratio * 100}cqw, ${max}px)` };
+}

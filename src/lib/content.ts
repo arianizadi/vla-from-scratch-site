@@ -99,13 +99,35 @@ function parseFrontMatter(source: string): { data: FrontMatter; body: string; fo
   return { data, body, found: true };
 }
 
-function parsePart(raw: string | undefined): PartRef {
-  const match = /^(\d+)\s+(.+)$/.exec(raw ?? "");
-  if (!match) {
-    const name = raw?.trim() || "Other chapters";
-    return { number: Number.MAX_SAFE_INTEGER, name, id: "part-other" };
+/**
+ * Chapters numbered from 100 are case studies, from 120 the appendix. They
+ * are grouped by that range whatever their front matter calls the part, so
+ * every case study lands in one group and every appendix page in another,
+ * both after the numbered parts.
+ */
+const CASE_STUDIES_FROM = 100;
+const APPENDIX_FROM = 120;
+
+/**
+ * The part a chapter belongs to. A part without a number takes the one its
+ * chapter numbers imply (order 41 is in part 4), so it sorts with them and is
+ * never printed as a placeholder number.
+ */
+function parsePart(raw: string | undefined, order: number): PartRef {
+  const match = /^(\d+)\s+(.+)$/.exec(raw?.trim() ?? "");
+  const written = (match ? match[2] : raw)?.trim();
+  const number = match ? Number(match[1]) : Math.floor(order / 10);
+  if (order >= APPENDIX_FROM) {
+    return { number: Math.max(number, Math.floor(APPENDIX_FROM / 10)), name: written || "Appendix", id: "appendix" };
   }
-  return { number: Number(match[1]), name: match[2].trim(), id: `part-${match[1]}` };
+  if (order >= CASE_STUDIES_FROM) {
+    return {
+      number: Math.min(Math.max(number, Math.floor(CASE_STUDIES_FROM / 10)), Math.floor(APPENDIX_FROM / 10) - 1),
+      name: written || "Case studies",
+      id: "case-studies",
+    };
+  }
+  return { number, name: written || "Other chapters", id: `part-${number}` };
 }
 
 /** Removes the first-level heading that opens the body; the page header prints the title. */
@@ -212,7 +234,7 @@ function parseChapter(file: string, order: string, source: string): Parsed {
       order: Number(order),
       orderLabel: order,
       title: data.title,
-      part: parsePart(data.part),
+      part: parsePart(data.part, Number(order)),
       summary: data.summary ?? "",
       status,
       words,
@@ -237,16 +259,21 @@ function skip(file: string, problem: string): undefined {
   return undefined;
 }
 
-function readChapter(file: string): Chapter | undefined {
+/** An appendix page may have no number in its file name ("glossary.md"); it is numbered after the others. */
+const APPENDIX_FILE = /^([a-z][a-z0-9-]*)\.md$/;
+const APPENDIX_PART = /^\s*(?:\d+\s+)?appendix\b/i;
+
+function readChapter(file: string, order?: string): Chapter | undefined {
   const name = CHAPTER_FILE.exec(file);
-  if (!name) return undefined;
+  const prefix = name?.[1] ?? order;
+  if (prefix === undefined) return undefined;
 
   let stamp: string;
   let source: string;
   try {
     const full = path.join(CHAPTER_DIR, file);
     const stat = fs.statSync(full);
-    stamp = `${stat.mtimeMs}:${stat.size}`;
+    stamp = `${stat.mtimeMs}:${stat.size}:${prefix}`;
     const known = parsed.get(file);
     if (known?.stamp === stamp) return known.chapter;
     source = fs.readFileSync(full, "utf8");
@@ -254,7 +281,10 @@ function readChapter(file: string): Chapter | undefined {
     return skip(file, `it could not be read (${describe(error)})`);
   }
 
-  const result = parseChapter(file, name[1], source);
+  let result = parseChapter(file, prefix, source);
+  if (!name && "chapter" in result && !APPENDIX_PART.test(parseFrontMatter(source).data.part ?? "")) {
+    result = { problem: "its file name has no number and its front matter does not put it in the Appendix" };
+  }
   const chapter = "chapter" in result ? result.chapter : skip(file, result.problem);
   parsed.set(file, { stamp, chapter });
   return chapter;
@@ -270,10 +300,30 @@ function loadAll(): Chapter[] {
   } catch {
     // No content folder yet: the site has no chapters.
   }
-  const chapters = files
-    .map(readChapter)
-    .filter((chapter): chapter is Chapter => chapter !== undefined)
-    .sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
+  const numbered = files
+    .filter((file) => CHAPTER_FILE.test(file))
+    .map((file) => readChapter(file))
+    .filter((chapter): chapter is Chapter => chapter !== undefined);
+
+  // Unnumbered appendix pages follow every numbered chapter, from APPENDIX_FROM, in file-name order.
+  let next = Math.max(APPENDIX_FROM, ...numbered.map((chapter) => chapter.order + 1));
+  const appendix = files
+    .filter((file) => !CHAPTER_FILE.test(file) && APPENDIX_FILE.test(file))
+    .sort()
+    .map((file) => {
+      const chapter = readChapter(file, String(next));
+      if (chapter) next += 1;
+      return chapter;
+    })
+    .filter((chapter): chapter is Chapter => chapter !== undefined);
+
+  for (const file of files) {
+    if (file.endsWith(".md") && !CHAPTER_FILE.test(file) && !APPENDIX_FILE.test(file)) {
+      skip(file, "its file name is neither <number>-<slug>.md nor a lower-case appendix name");
+    }
+  }
+
+  const chapters = [...numbered, ...appendix].sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
   memo = chapters;
   return chapters;
 }

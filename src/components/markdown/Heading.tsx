@@ -35,24 +35,32 @@ function isProvenance(value: unknown): value is Provenance {
   return typeof value === "string" && Object.hasOwn(PROVENANCE, value);
 }
 
-function Anchor({ id }: { id?: string }) {
+/**
+ * The permalink of a heading. It stands beside the heading, not inside it, so
+ * the heading's name is its text alone; its own name says which section.
+ */
+function Anchor({ id, title }: { id?: string; title?: string }) {
   if (!id) return null;
   return (
-    <a href={`#${id}`} className="heading-anchor" aria-label="Link to this section">
+    <a href={`#${id}`} className="heading-anchor" aria-label={title ? `Link to section: ${title}` : "Link to this section"}>
       #
     </a>
   );
 }
 
-interface SectionHeadingProps extends React.ComponentProps<"h2"> {
+interface HeadingData {
   "data-section"?: string;
   "data-provenance"?: string;
+  "data-title"?: string;
 }
+
+type SectionHeadingProps = React.ComponentProps<"h2"> & HeadingData;
 
 /** An h2: opens a numbered section and, for the fixed sections, says what kind of statement follows. */
 export function SectionHeading({
   "data-section": section,
   "data-provenance": provenance,
+  "data-title": title,
   id,
   children,
   ...rest
@@ -60,15 +68,17 @@ export function SectionHeading({
   const info = isProvenance(provenance) ? PROVENANCE[provenance] : undefined;
   return (
     <div className="section-head">
-      <h2 id={id} {...rest}>
-        {section ? (
-          <span className="section-number" aria-hidden="true">
-            {section}
-          </span>
-        ) : null}
-        {children}
-        <Anchor id={id} />
-      </h2>
+      <div className="heading-row">
+        <h2 id={id} {...rest}>
+          {section ? (
+            <span className="section-number" aria-hidden="true">
+              {section}
+            </span>
+          ) : null}
+          {children}
+        </h2>
+        <Anchor id={id} title={title} />
+      </div>
       {info ? (
         <p className="provenance">
           <Glyph name={info.glyph} />
@@ -81,20 +91,24 @@ export function SectionHeading({
   );
 }
 
-export function Heading3({ id, children, ...rest }: React.ComponentProps<"h3">) {
+export function Heading3({ id, children, "data-title": title, ...rest }: React.ComponentProps<"h3"> & HeadingData) {
   return (
-    <h3 id={id} {...rest}>
-      {children}
-      <Anchor id={id} />
-    </h3>
+    <div className="heading-row heading-row-3">
+      <h3 id={id} {...rest}>
+        {children}
+      </h3>
+      <Anchor id={id} title={title} />
+    </div>
   );
 }
 
-export function Heading4({ id, children, ...rest }: React.ComponentProps<"h4">) {
+export function Heading4({ id, children, "data-title": title, ...rest }: React.ComponentProps<"h4"> & HeadingData) {
   return (
-    <h4 id={id} {...rest}>
-      {children}
-      <Anchor id={id} />
-    </h4>
+    <div className="heading-row heading-row-4">
+      <h4 id={id} {...rest}>
+        {children}
+      </h4>
+      <Anchor id={id} title={title} />
+    </div>
   );
 }

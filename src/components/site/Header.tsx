@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Glyph } from "@/components/ui/Glyph";
 import { site } from "@/lib/site";
 import { NavLink, NavLinkFallback } from "./NavLink";
 import { ThemeToggle } from "./ThemeToggle";
@@ -7,13 +8,14 @@ import { ThemeToggle } from "./ThemeToggle";
 const LINKS = [
   { href: "/learn", label: "Learn" },
   { href: "/lab", label: "Lab" },
+  { href: "/notes", label: "Notes" },
 ];
 
 function Wordmark() {
   return (
     <Link
       href="/"
-      className="inline-flex items-center gap-2 rounded-control text-16 font-bold text-ink no-underline stretch-90"
+      className="touch-target inline-flex items-center gap-2 rounded-control text-16 font-bold text-ink no-underline stretch-90"
     >
       <svg
         viewBox="0 0 20 20"
@@ -46,13 +48,17 @@ export function Header() {
                 </Suspense>
               </li>
             ))}
-            {/* On phones the repository links are in the footer; the header keeps to the two sections. */}
-            <li className="hidden sm:block">
+            {/* On phones the repository link keeps its place as a 44px mark; from 640px it is a word. */}
+            <li className="flex">
               <a
                 href={site.tutorialRepo}
-                className="inline-flex h-8 items-center rounded-control px-2.5 text-14 font-medium text-ink-muted transition-colors duration-100 ease-standard hover:text-ink pointer-coarse:h-11"
+                aria-label="Source on GitHub"
+                className="inline-flex h-11 min-w-11 items-center justify-center rounded-control text-14 font-medium text-ink-muted transition-colors duration-100 ease-standard hover:text-ink sm:h-8 sm:min-w-0 sm:px-2.5 pointer-coarse:h-11"
               >
-                GitHub
+                <Glyph name="bracket" size={16} className="sm:hidden" />
+                <span className="hidden sm:inline" aria-hidden="true">
+                  GitHub
+                </span>
               </a>
             </li>
             <li className="ml-1 flex">

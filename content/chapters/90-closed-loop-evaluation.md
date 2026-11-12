@@ -10,40 +10,35 @@ status: draft
 
 **Closed-loop evaluation** runs a policy inside the simulator, where every action it outputs
 changes the next observation it receives, and counts how many attempts end in success. An
-**open-loop** check, by contrast, compares predicted actions with recorded ones on stored
-observations and never executes them, so an error cannot change what the policy sees next. Only
+**open-loop** check compares predicted actions with recorded ones and never executes them. Only
 the closed-loop count says whether a policy can do its task
-([91-loss-is-not-success.md](91-loss-is-not-success.md)), and it comes from a small random sample,
-so reading it takes some statistics as well as the harness.
+([91-loss-is-not-success.md](91-loss-is-not-success.md)), and it comes from a limited number of
+random scenes, so reading it takes statistics as well as the harness.
 
 ## The idea
 
 An **episode** is one attempt at the task from a fresh scene. A **layout** is everything that
-defines the scene: the arm's starting pose, which objects are on the table, where they lie, and
-which one the instruction names. Here a layout is generated from one integer **seed**, so a seed
+defines the scene: which objects are on the table, where they lie, which one the instruction
+names, and the arm's start pose. Here a layout is generated from one integer **seed**, so a seed
 names a layout exactly.
 
 To measure a policy, take $n$ layouts it was not trained on, run one episode on each and count the
-successes $k$. The **success rate** is $\hat p = k/n$. From the lab notebook: the `dp_vit` policy
-trained on 1000 `pick_cube` demonstrations for 1.5M samples lifted the cube in 37 of 50 episodes,
-so $\hat p = 0.74$.
+successes $k$. The **success rate** is $\hat p = k/n$. From the lab notebook: the
+`dp_vit_lang_reactive` policy ([51-language-conditioning.md](51-language-conditioning.md)) trained
+on 4000 `pick_target` demonstrations for 5M samples, after the position fix, succeeded in 93 of
+100 episodes with its trained weights, so $\hat p = 0.93$.
 
-That 74% is an estimate. Each episode passes or fails, so $k$ follows a **binomial
+That 93% is an estimate. Each episode passes or fails, so $k$ follows a **binomial
 distribution**: the number of successes in $n$ independent trials that each succeed with
-probability $p$. Here $p$ is the rate the policy would reach over every layout the generator can
-produce; the $n$ evaluated layouts are a sample of them. The standard deviation of $k/n$ is
+probability $p$. Here $p$ is the rate over every layout the generator can produce; an evaluation
+draws $n$ of them. The standard deviation of $k/n$ is
 
 $$\sqrt{p(1-p)/n}$$
 
-At $p = 0.5$ this is 7.1 percentage points for 50 episodes and 5.0 for 100. The measured rate
-typically moves by about that much between evaluations of an unchanged policy on different
-layouts. Repeating an evaluation on the same seeds varies only the policy's own sampling noise, so
-it moves less.
-
-A second example, by binomial arithmetic, not measurement: a policy whose true rate is 3%,
-evaluated on 100 layouts, scores 0 or 1 successes 19% of the time and 6 or more 8% of the time.
-Either reading alone is unremarkable for one policy; both in a pair of evaluations on different
-layouts happens about 3% of the time.
+At $p = 0.93$ this is 2.6 percentage points for 100 episodes; at $p = 0.5$ it is 5.0 for 100 and
+7.1 for 50. The measured rate moves by about that much between evaluations of unchanged weights
+on different layouts: the same weights scored 96/100 on the next 100 seeds. Repeating an
+evaluation on the same seeds changes only the noise each draw of the policy starts from.
 
 ## How it works
 
@@ -57,10 +52,11 @@ sequenceDiagram
     participant E as eval.py (simulator)
     participant S as policy_server.py (model)
     E->>S: info
-    S-->>E: checkpoint path, image names
+    S-->>E: path of the weights file loaded, image names
+    E->>E: check_server: stop unless it is the run, number and weights asked for
     loop episode i, seed 1,000,000 + i
         E->>E: env.reset(seed)
-        loop until success or 200 steps
+        loop until success or 200 control steps
             E->>S: infer: 4 JPEGs, state [2, 8], previous action [8], instruction
             S-->>E: actions [15, 8]
             E->>E: env.step for the first 8 actions
@@ -69,144 +65,126 @@ sequenceDiagram
     E->>S: shutdown
 ```
 
-1. `main` in `sim/pickup/eval.py` gives episode `ep` the seed `args.seed_start + ep` (default
-   start `EVAL_SEED_START = 1_000_000`), and `PickupEnv.reset` in `sim/pickup/env.py` draws the
-   whole layout from `np.random.default_rng(seed)`. Demonstrations are collected from seed 0
-   upward (`--seed` in `sim/pickup/collect.py`), so evaluation layouts are disjoint from training
-   layouts.
-2. When its action queue is empty, `eval.py` sends `infer`: the `front` and `wrist` frames at the
-   previous and the current step, the two states, the last executed command `env.last_action`,
-   the instruction and the number of flow steps (the integration steps of the action sampler,
-   [41-flow-matching.md](41-flow-matching.md)).
-3. `Policy.infer` in `sim/pickup/policy_server.py` runs the training preprocessing
-   (`RoboticsProcessor.process_inputs`), calls `model.generate_actions`, denormalises and returns
-   `[1 + future, 8]`: 15 actions, one **chunk**, the block of future actions the policy predicts
-   per call. `eval.py` executes the first `--exec_horizon` of them (default 8) and asks again
+1. **Which policy answers.** `main` in [`sim/pickup/eval.py`](../../sim/pickup/eval.py) sends
+   `info`; the server replies with the path of the weights file it loaded, and `check_server`
+   exits before the first episode unless that is the run, the **checkpoint** (the training state
+   saved at one point of a run) and the kind of weights asked for (`--expect_run`,
+   `--expect_number`, `--expect_weights`).
+2. **Layouts.** Episode `ep` gets the seed `args.seed_start + ep` (default start
+   `EVAL_SEED_START = 1_000_000`); `PickupEnv.reset` in
+   [`sim/pickup/env.py`](../../sim/pickup/env.py) draws the whole layout from
+   `np.random.default_rng(seed)`. Demonstrations use seeds from 0 upward (`--seed` in
+   [`sim/pickup/collect.py`](../../sim/pickup/collect.py)), so evaluation layouts are disjoint
+   from training layouts.
+3. **A query.** When its action queue is empty, `eval.py` sends `infer`: the `front` and `wrist`
+   frames of the previous and the current control step, the two states, the last executed command
+   `env.last_action`, the instruction and the number of flow steps (the integration steps that
+   turn noise into actions, [41-flow-matching.md](41-flow-matching.md)).
+4. **A chunk.** `Policy.infer` in
+   [`sim/pickup/policy_server.py`](../../sim/pickup/policy_server.py) keeps the inputs the run's
+   config names (a policy without **history** gets no previous frames, state or action), runs the
+   training preprocessing (`RoboticsProcessor.process_inputs`), calls `model.generate_actions`,
+   denormalises and returns `[1 + future, 8]`: one **chunk** of 15 actions. `eval.py` executes
+   the first `--exec_horizon` of them (default 8) and asks again
    ([42-chunks-and-execution.md](42-chunks-and-execution.md)).
-4. The episode ends on success or after `--max_steps` control steps (default 200, 10 s at 20 Hz).
-   Nothing else ends it, so every failure is a timeout.
+5. **The end.** The episode ends on success or after `--max_steps` control steps (default 200,
+   10 s at 20 Hz).
 
 ### The success test
 
 `PickupEnv.step` decides success from simulator state, not from images. `lifted_objects` lists
-every object more than `LIFT_HEIGHT = 0.08` m above its settled rest height. `lift_count` goes up
-by one on each control step where the named object is in that list and resets to zero otherwise.
-`success` is `lift_count >= HOLD_STEPS` (10): the named object held 8 cm up for 0.5 s without
-interruption. `info["wrong_object"]` is true on a step where something is lifted and the named
-object is not.
+every object more than `LIFT_HEIGHT = 0.08` m above its settled rest height. `lift_count` counts
+the consecutive control steps on which the named object is in that list, and `success` is
+`lift_count >= HOLD_STEPS` (10): the named object held 8 cm up for 0.5 s.
 
 ### From a count to an interval
 
 A **95% confidence interval** is a range computed by a procedure that contains the true rate in
 about 95% of repeated evaluations. `eval.py` computes the **Wilson interval** with $z = 1.96$,
-the number of standard deviations that leaves 5% in the two tails of a normal distribution. It is
-the set of rates $p$ for which the observed $\hat p$ lies within $z$ standard deviations of $p$,
-with the standard deviation $\sqrt{p(1-p)/n}$ taken at $p$, not at $\hat p$.
-Solving $|\hat p - p| \le z\sqrt{p(1-p)/n}$ for $p$ gives a centre and a half-width:
+which leaves 5% in the two tails of a normal distribution. It is the set of rates $p$ within
+whose $z$ standard deviations, $\sqrt{p(1-p)/n}$ taken at $p$, the observed $\hat p$ lies.
+Solving for $p$:
 
 $$\text{centre} = \frac{\hat p + z^2/2n}{1 + z^2/n}, \qquad
 \text{half} = \frac{z}{1 + z^2/n}\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}}$$
 
-For 37/50: centre $= (0.74 + 0.0384)/1.0768 = 0.723$, half $= 0.118$, interval 60% to 84%.
-
-Background: the textbook (Wald) interval $\hat p \pm z\sqrt{\hat p(1-\hat p)/n}$ has zero width at
-0 or $n$ successes, which claims certainty from a finite sample. The Wilson interval (Wilson,
-1927) does not: 0/50 gives 0 to 7.1%. Brown et al. (2001) show that the Wald interval covers the
-true rate less often than claimed, recommend the Wilson or the Jeffreys interval for small $n$ (40
-or fewer), and find both close to the simpler Agresti-Coull interval above that.
-
-Widths at the two episode counts used here, from the formula:
-
-| Observed rate | 50 episodes | 100 episodes |
-|---|---|---|
-| 0% | 0 to 7.1% | 0 to 3.7% |
-| 6% | 2.1 to 16.2% | 2.8 to 12.5% |
-| 50% | 36.6 to 63.4% | 40.4 to 59.6% |
-| 74% | 60.4 to 84.1% | 64.6 to 81.6% |
-
-The width is proportional to $1/\sqrt{n}$: halving it takes four times the episodes.
+For 93/100: centre $= (0.93 + 0.0192)/1.0384 = 0.914$, half $= 0.052$, interval 86% to 97%. The
+width is roughly proportional to $1/\sqrt{n}$: an observed 50% gives 40-60% for 100 episodes and
+37-63% for 50. Unlike the textbook interval $\hat p \pm z\sqrt{\hat p(1-\hat p)/n}$, it does not
+shrink to zero width at 0 or $n$ successes.
 
 ### Comparing two policies
 
 **Overlapping intervals.** If the intervals of two evaluations do not overlap, the difference is
-larger than evaluation noise explains. The reverse check is conservative: intervals can overlap a
-little while a direct test of the difference still finds one. By arithmetic, 40/100 and 55/100
-have intervals 31-50% and 45-64%, which overlap, yet the 15-point gap is 2.1 standard deviations
-of the difference ($\sqrt{(0.4 \cdot 0.6 + 0.55 \cdot 0.45)/100} = 7.0$ points). Use overlap as a
-first look, and the standard deviation of the difference or the paired test below for close
-calls. Overlap is never evidence that two policies are equal.
+larger than evaluation noise explains. The same recipe trained before a bug fix ("What we
+measured") read 83/100 against 93/100. The intervals, 74-89% and 86-97%, overlap, yet the gap is
+2.2 standard deviations of the difference between two independent readings
+($\sqrt{(0.83 \cdot 0.17 + 0.93 \cdot 0.07)/100} = 4.5$ points). Overlap is never evidence that
+two policies are equal.
 
-**The same seeds for every policy.** Because the layout depends only on the seed, two evaluations
-with the same task, `--seed_start` and episode count face identical scenes and instructions, and
-the outcomes can be compared in **pairs**, layout by layout. Background: with paired pass/fail
-outcomes, only the layouts where the two policies disagree carry information, and an exact sign
-test on those counts (the exact form of McNemar's test) can detect differences that two
-overlapping intervals hide. Its **p-value** is the probability of a split at least as lopsided as
-the observed one if each disagreement were equally likely to go either way; below 0.05 is the
-usual threshold for calling a difference real.
+**The same seeds for every policy.** Two evaluations with the same task, `--seed_start` and
+episode count face identical layouts, so their outcomes can be compared in **pairs**. Background:
+only the layouts where the two disagree carry information, and an exact sign test on them can
+detect differences that overlapping intervals hide. Its **p-value** is the probability of a split
+at least as lopsided as the observed one if each disagreement were equally likely to go either way.
 
-**One training seed against several.** A **training seed** is a different integer from a layout
-seed: it seeds the random number generators of a training run, so two runs of one recipe with
-different training seeds end as two different policies. `vla_foundry/main.py` seeds the run and
-the shuffling of its data files (shards) from `hparams.seed` (default 42), and every result in
-the lab notebook is one training seed per run. The Wilson interval covers only the randomness of
-evaluation: which layouts were drawn, and the policy's sampling noise
-(`DiffusionPolicy.generate_actions` starts every chunk from `torch.randn_like` noise, and
-`policy_server.py` sets no random seed). An interval therefore describes one checkpoint.
-Background: Agarwal et al. (2021) argue that point estimates from a handful of training runs are
-unreliable and recommend reporting uncertainty across runs. A claim about a method needs several
-training seeds.
+**One training seed against several.** A Wilson interval describes one weights file. Another
+**training seed** (`hparams.seed`, default 42) trains another policy, and a claim about a method
+needs several (background: Agarwal et al., 2021).
 
 ## In this repository
 
 One evaluation, from the repository root:
 
 ```bash
-sim/pickup/scripts/eval.sh experiments/pickup/dp_vit_pick_cube_1k pick_cube 50
+sim/pickup/scripts/eval.sh experiments/pickup/my_run pick_target 100
 ```
 
-`sim/pickup/scripts/eval.sh` starts `policy_server.py` in the background, logs it to
-`policy_server.log` in the output directory, waits until that log says `listening on`, then runs
-`eval.py` with `--shutdown_server`. It also passes `--expect_run` (and `--expect_number`,
-`--expect_weights` when `PICKUP_CHECKPOINT`, `PICKUP_WEIGHTS` are set); `check_server` in
-`eval.py` stops before the first episode if the server reports another run, checkpoint number or
-weights kind. Arguments after the episode count (default 50) go to `eval.py`.
+[`sim/pickup/scripts/eval.sh`](../../sim/pickup/scripts/eval.sh) starts `policy_server.py`
+(logged to `policy_server.log` in the output directory), waits until that log says
+`listening on`, then runs `eval.py` with `--shutdown_server` and `--expect_run <run>` (plus
+`--expect_number`, `--expect_weights` when `PICKUP_CHECKPOINT`, `PICKUP_WEIGHTS` are set).
+Arguments after the episode count (default 50) go to `eval.py`.
 
 | Setting | Effect |
 |---|---|
-| `PICKUP_CHECKPOINT` | evaluate this checkpoint number, not the newest. Either file of the pair (`checkpoint_N.pt`, `ema_N.pt`) may be named; `PICKUP_WEIGHTS`, or its default when unset, decides which is loaded |
-| `PICKUP_WEIGHTS=raw\|ema` | trained weights, or their **EMA** (an exponential moving average of the weights kept during training); unset, `Policy.__init__` serves EMA when the run's config has `ema.enabled` |
+| `PICKUP_CHECKPOINT` | the checkpoint to evaluate (default: the newest), as the path of its `checkpoint_N.pt` or `ema_N.pt` |
+| `PICKUP_WEIGHTS=raw\|ema` | the trained weights, or their **EMA** (an exponential moving average kept during training); unset, `Policy.__init__` serves EMA when the run's config has `ema.enabled` |
 | `PICKUP_OUT` | output directory, default `results/pickup/<run>/<task>` |
-| `PICKUP_PORT` | socket port; unset, `eval.sh` asks the operating system for a free one, so evaluations can run side by side. `eval.py` and `policy_server.py` run by hand default to `--port 6200` |
+| `PICKUP_PORT` | socket port; unset, `eval.sh` takes a free one (run by hand, both programs default to 6200) |
 | `--exec_horizon`, `--flow_steps`, `--seed_start`, `--max_steps`, `--videos` | actions executed per chunk (8), flow steps (10), first seed, timeout, rollouts saved as mp4 (5) |
-| `--expert` | only with `python -m sim.pickup.eval` directly (Check yourself 1): `ScriptedExpert` through the same loop, no server. Not for `eval.sh`, whose server would never be shut down |
+| `--stale_images`, `--expert_prefix`, `--prefix_target`, `--first_prev_action` | probes: frozen cameras; the expert drives the first control steps, toward the named or another object; the expert's first command as first previous action ([95](95-what-a-policy-looks-at.md)) |
+| `--random_start` | a random gripper start pose, drawn from the seed, in place of the home pose ([95](95-what-a-policy-looks-at.md)) |
+| `--disturb reach\|grasp` | the named object is moved once per episode, 80 mm (`--disturb_mm`): at control step `--disturb_step` (default 15) of the reach, or as the gripper first closes ([95](95-what-a-policy-looks-at.md)) |
+| `--expert` | `ScriptedExpert` through the same loop, no server; run `eval.py` itself, not `eval.sh` |
 
-`results.json` contains:
+`results.json`, written through a temporary file (`write_json`) so that no reader sees half of it,
+contains:
 
 | Field | Content |
 |---|---|
-| `episodes`, `successes`, `success_rate`, `success_ci95` | $n$, $k$, $\hat p$, Wilson bounds |
-| `per_target`, `mean_steps_success` | successes and episodes per named object; mean length of successful episodes |
-| `wrong_object_rate` | share of episodes with a step where an object was up and the named one was not |
+| `task`, `episodes`, `successes`, `success_rate`, `success_ci95` | the task, $n$, $k$, $\hat p$, Wilson bounds |
+| `per_target`, `mean_steps_success`, `wrong_object_rate` | successes and episodes per named object; mean control steps of successes; share of episodes that lifted another object |
 | `grasp` | `diagnostics.summarize`: where the gripper first closed ([92-measuring-failure.md](92-measuring-failure.md)) |
-| `inference_latency_ms` | mean, median and 95th percentile per chunk |
-| `task`, `exec_horizon`, `flow_steps`, `seed_start`, `interventions` | the settings used; `interventions` records `--expert_prefix`, `--prefix_target`, `--stale_images`, `--first_prev_action` and the `--disturb` settings |
-| `wall_time_s`, `server` | duration; checkpoint path actually loaded, parameter count, image names |
+| `exec_horizon`, `flow_steps`, `noise`, `random_start`, `seed_start`, `interventions` | the settings used; `interventions` holds the probe and `--disturb` flags |
+| `server`, `inference_latency_ms`, `wall_time_s` | the `info` reply, with the weights file loaded; latency per chunk; duration |
 | `per_episode` | seed, target, instruction, success, steps, `wrong_object`, `prefix_goal`, `disturbed` and the grasp record of every episode |
 
-**Every checkpoint.** A **checkpoint** is a copy of the weights saved during training;
-`sim/pickup/scripts/train.sh` writes 6 per run by default.
-`sim/pickup/scripts/eval_checkpoints.sh` evaluates each one, newest first, 100 episodes by default,
-into `results/pickup/<run>/<task>/ckpt_<N>_<raw|ema>/`. It skips checkpoint files younger than 60 s
-and evaluations that already have a `results.json`, and claims work by creating the output
-directory, so several workers (`PICKUP_EVAL_JOBS`) share a run. A claim left without results for
-1800 s (`PICKUP_STALE_SECONDS`) is taken over. A failed evaluation gives its claim back and is
-retried after 20 s, so a checkpoint that cannot be loaded shows up as the same
-`== <run> checkpoint N` line repeating. No videos are saved unless `PICKUP_VIDEOS` is set. With
-`PICKUP_WATCH=1` it polls every 30 s until the training log reports the end of the run:
+**Every checkpoint.** A checkpoint holds the weights and data position in `checkpoint_N.pt`, the
+optimiser state in `optimizer_N.pt` and, with `ema.enabled` (on in the pickup policy configs; no
+flag needed), the EMA weights in `ema_N.pt`
+([80-the-training-loop.md](80-the-training-loop.md)). `train.sh` writes 6 checkpoints per run
+unless `PICKUP_NUM_CHECKPOINTS` says otherwise; the runs on machine B used 10.
+[`sim/pickup/scripts/eval_checkpoints.sh`](../../sim/pickup/scripts/eval_checkpoints.sh)
+evaluates the raw and the EMA weights of every checkpoint, newest first, 100 episodes by default,
+into `results/pickup/<run>/<task>/ckpt_<N>_<raw|ema>/`. It skips evaluations that already have a
+`results.json`, and several workers (`PICKUP_EVAL_JOBS`) can share a run. With `PICKUP_WATCH=1`
+it polls until the training log reports the end of the run. The recommended first real run
+([`README.md`](../../README.md)), evaluated while it trains:
 
 ```bash
-sim/pickup/scripts/train_resilient.sh dp_vit_lang pick_target_1500 my_run 1000000 --ema.enabled True &
+sim/pickup/scripts/make_dataset.sh pick_target 4000 pick_target_4k --random_start --disturb_prob 0.5
+sim/pickup/scripts/train_resilient.sh dp_vit_lang_reactive pick_target_4k my_run 5000000 &
 PICKUP_WATCH=1 PICKUP_EVAL_JOBS=2 sim/pickup/scripts/eval_checkpoints.sh experiments/pickup/my_run pick_target 100 &
 ```
 
@@ -217,83 +195,124 @@ PICKUP_WATCH=1 PICKUP_EVAL_JOBS=2 sim/pickup/scripts/eval_checkpoints.sh experim
 .venv/bin/python -m sim.pickup.monitor --once
 ```
 
-`sim/pickup/summarize.py` prints one Markdown row per `results.json`: count, interval, grasp
-diagnostics, per-object counts. `checkpoint_samples` reads the `Samples: X / Y` lines of the
-training log to place each checkpoint on the training axis. `runs_table` in
-`sim/pickup/monitor.py` draws one sparkline of success per weights kind, next to the loss.
+[`sim/pickup/summarize.py`](../../sim/pickup/summarize.py) prints one Markdown row per
+`results.json`: the count with its interval, how often the gripper **closed at the named
+object** (the object nearest the gripper when it first closed was the one the instruction named),
+the **slope**, the median miss and per-object counts. The slope is the least-squares slope of
+where the gripper first closed against where the named object was, both table axes pooled
+(`close_slope`): near 1, the gripper goes where the object is, however imprecisely; near 0, where
+it closes does not depend on the scene. The policies that failed here were near 0: they did not
+reach between the objects, they ignored them
+([92-measuring-failure.md](92-measuring-failure.md)).
+[`sim/pickup/monitor.py`](../../sim/pickup/monitor.py) draws success as one sparkline per weights
+kind, next to the loss.
 
 <!-- interactive: loss-vs-success -->
 *Figure: the training loss of a run against samples seen, with the closed-loop success of each
-checkpoint and its Wilson interval. For the `vla_qwen` run in the lab notebook the loss falls from
-0.087 to 0.03-0.04 while success reads 0/50, 1/50, 6/50 and 6/100.*
-
-`tutorials/STATISTICAL_COMPARISON.md` documents a different pipeline, `vla_foundry/eval/`, with a
-sequential test (STEP) whose episode budget is fixed in advance. The pickup harness does not use
-it.
+checkpoint and its Wilson interval. In the notebook's `vla_qwen` run the loss falls from 0.087 to
+0.03-0.04 while success reads 0/50, 1/50, 6/50 and 6/100.*
 
 ## What we measured
 
-All numbers are from `tutorial/lab-notebook.md`: unseen layouts, one training seed per run.
+All numbers are from [`tutorial/lab-notebook.md`](../lab-notebook.md): unseen layouts, one
+training seed per run. Intervals in brackets apply the formula to the notebook's counts.
 
 **The harness itself.** The scripted expert through the same loop scored 100/100 on `pick_target`
-on machine B, 99/100 on machine A, and 49/50 on `pick_cube`: the task is solvable and the success
-test fires.
+on machine B (L40S GPUs, 128 CPU cores), 99/100 on machine A (one RTX 4090, 24 GB), and 49/50 on
+`pick_cube`: the task is solvable and the success test fires.
 
-**Intervals at 50 episodes** (`pick_cube`, machine A). Pooled CLIP on 200 demos scored 2/50
-(1-14%). `dp_vit` scored 15/50 (19-44%) on 200 demos, 20/50 (28-54%) on 1000 demos at 500k samples
-and 37/50 (60-84%) at 1.5M. The first and the last are separated from everything else; 30% and 40%
-are not separated from each other.
+**Final results on `pick_target`** (machine B, 100 layouts, raw / EMA weights). The fix is to the
+rotary position table, which had been computed in bfloat16 ([12-positions.md](12-positions.md));
+the run after it saved raw weights only.
 
-**The inference-setting sweep.** On the 74% checkpoint, 50 episodes each: default (8 actions per
-chunk, 10 flow steps) 74%; 4 actions per chunk 84%; 15 actions per chunk 78%; 4 flow steps 86%; 25
-flow steps 84%. The notebook records that all intervals overlap; the formula gives 60-84%, 71-92%,
-65-87%, 74-93% and 71-92%. The sweep does not show that any setting beats the default; reporting
-the best of five (86%) as an improvement would be selecting on noise.
+| Policy | Demos | Samples | Success | Closed at the named object | Slope |
+|---|---|---|---|---|---|
+| `dp_vit_lang_reactive`, no history, after the fix | 4000 | 5.0M | 93% | 99% | 0.98 |
+| same, before the fix | 4000 | 5.0M | 83% / 85% | 100% / 100% | 0.98 / 0.98 |
+| same, before the fix | 1500 | 3.0M | 64% / 62% | 99% / 100% | 0.96 / 0.97 |
+| same, before the fix | 1500 | 1.0M | 3% / 5% | 49% / 41% | 0.29 / 0.18 |
+| `dp_vit_lang`, history, before the fix | 4000 | 3.0M (stopped) | 2% / 2% | 30% / 35% | 0.11 / 0.08 |
 
-**6% against 1%.** On `pick_target`, first round, `vla_qwen` scored 6/100 and `dp_vit` scored
-1/100. The formula gives 2.8-12.5% and 0.2-5.4%, which overlap, and by arithmetic a Fisher exact
-test (whether two pass/fail counts fit one shared rate) gives a two-sided p-value of 0.12. These
-counts do not support "the pretrained backbone is better", "language input helps" or "six times
-the success rate"; each policy is also one training run. They do show that both policies fail a
-task the expert solves. The evidence that the two behave differently is elsewhere in the notebook:
-the Qwen policy never lifted an object other than the named one in 150 episodes, while `dp_vit`
-closed nearest the named object 32% of the time (chance: 33%).
+The first two rows are the close call of "Overlapping intervals", on one training seed each; their
+curves (trained weights) read 88% to 94% against 81% to 86% from 3.0M samples on. A second pair
+with other seeds (`--data.seed 43 --hparams.seed 43`), differing in the position table alone, ends
+at 96% / 96% with the fixed table and 90% / 89% with the old one, and again the fixed table starts
+to look earlier (closed at the named object after 1.0M samples: 83% against 44%;
+[101-case-pick-target.md](101-case-pick-target.md)). The fourth row is the third row's policy and
+data on a budget that ended too early
+([71-how-much-data-and-training.md](71-how-much-data-and-training.md)). Nor is the last row blind:
+it reads the target from its previous action, and at 2.5M samples succeeds on 1/100 as served,
+22/100 when its first previous action is the expert's first command and 77/100 when the expert
+drives the first 10 control steps ([52-history-and-shortcuts.md](52-history-and-shortcuts.md)).
+Trained after the fix on demonstrations that begin with a hold frame (`collect.py --hold_steps 1`),
+the history policy ends at 0% / 4% after 5M samples, and where it closes still does not depend on
+the scene.
 
-**A curve.** The same Qwen run read 6/50 at 300k samples and 6/100 at 400k. Read as rates, 12% then
-6% looks like a decline; the intervals (5.6-23.8% and 2.8-12.5%) overlap.
+**A curve, raw against EMA.** The second row by checkpoint (raw / EMA): 0% / 1% at 1.0M samples,
+4% / 2% at 1.5M, 4% / 36% at 2.0M, 56% / 70% at 2.5M, 81% / 75% at 3.0M, then 80% to 86%; the
+slope had already reached 0.81 / 0.96 at 2.0M. At 2.0M the two weights files differ by more than
+evaluation noise (1.6-9.8% and 27.3-45.8%); before the rise and after it they agree within noise.
+Not every run shows this: in the 3M-sample run on 1500 demonstrations the two stay within 9 points
+of each other. Save and evaluate both.
 
-**A difference that is not evaluation noise.** The notebook's by-checkpoint table for
-`dp_vit_lang_reactive` on 4000 demos, a run still in progress when it was written, reads 4% (raw
-weights) and 36% (EMA weights) at the 2.0M-sample checkpoint. The EMA per-object counts sum to
-36/100; taking the raw evaluation as 100 layouts too, the intervals are 1.6-9.8% and 27.3-45.8%,
-far apart. It is one intermediate checkpoint of one training seed: at 1.5M samples the same run
-read 4% raw and 2% EMA, so this does not show that EMA weights are better in general. The run has
-no final result yet and none is reported here.
+**A second set of 100 layouts.** The final checkpoints of eight runs (averaged weights where the
+run saved them; [95-what-a-policy-looks-at.md](95-what-a-policy-looks-at.md)), evaluated again
+on seeds 1,000,100 to 1,000,199:
+
+| Demonstrations | Seeds from 1,000,000 | Seeds from 1,000,100 |
+|---|---|---|
+| one instruction per layout, before the fix | 85/100 | 83/100 |
+| one instruction per layout | 93/100 | 96/100 |
+| early windows repeated | 96/100 | 100/100 |
+| every object named | 89/100 | 93/100 |
+| recoveries (object moved, expert recovers) | 84/100 | 93/100 |
+| random start poses | 98/100 | 97/100 |
+| random start poses and recoveries | 94/100 | 87/100 |
+| the same, early windows repeated | 86/100 | 74/100 |
+
+The same weights differ by 1 to 12 points between the sets, and the order changes: random start
+poses with recoveries lead recoveries alone by 10 points, then trail by 6. A gap of a few points on
+100 layouts is not a ranking.
+
+**Flow steps and actions per chunk.** Before the fix, 1 flow step read 61/100 (51-70%) against
+85/100 (77-91%) with 10: separated. Two steps matched ten before the fix (89/100) and on four of
+the seven trained after it (94 against 93, 84 against 84, 98 against 98, 94 against 94), but cost
+19 points with early windows repeated (77 against 96), 12 with every object named (77 against 89)
+and 12 with random start poses, recoveries and early windows repeated (74 against 86): measure it
+on the policy that will run ([41-flow-matching.md](41-flow-matching.md)).
+Executing 2 or 4 actions per chunk in place of 8 did not help: 76 and 84 against 85 of 100
+([42-chunks-and-execution.md](42-chunks-and-execution.md)).
 
 ## Where it goes wrong
 
-- **The evaluation stops before the first episode.** `eval.sh` waits for `listening on` in
-  `policy_server.log`. If the server exits first (bad checkpoint, port taken: `policy_server.py`
-  binds the port before loading the model), the script prints the last five lines of that log and
-  exits. Run by hand, `connect` in `eval.py` retries the socket for 600 s before raising.
-- **The wrong policy was evaluated.** Two evaluations given the same `PICKUP_PORT` both reach
-  whichever server bound it first. `eval.sh` makes `eval.py` stop with "the policy server on port
-  ... is serving ..." in that case, and `summarize.py` leaves out `ckpt_*` results whose
-  `server.checkpoint` does not match their directory. For evaluations started by hand, check
-  `server.checkpoint` in `results.json`. Comparing raw weights of one run with EMA weights of
-  another confounds two changes; the 4% against 36% above is the same checkpoint.
+- **The evaluation stops before the first episode.** The server exited before `listening on`
+  (a weights file that fails to load, or a taken port); `eval.sh` prints the end of
+  `policy_server.log`.
+- **The wrong policy was evaluated.** Two evaluations on one port both talked to the server that
+  bound it first, and the second filed the other run's results as its own: about 40 evaluations
+  here. Now `eval.sh` takes a free port, `check_server` stops when the reply names
+  another weights file, and `summarize.py` and the
+  monitors leave out `ckpt_*` results whose `server.checkpoint` does not match their directory.
+  Run by hand, `eval.py` checks only what `--expect_*` asks for.
+- **A flat 0% is read as a failed design.** The run of the curve above read 0% to 4% up to 1.5M
+  samples and ended at 83% / 85%. Evaluate every
+  checkpoint and watch the slope ([71-how-much-data-and-training.md](71-how-much-data-and-training.md)).
+- **A success rate is read as a policy that watches the scene.** With the cameras frozen on the
+  first frame, the 93% policy succeeds on 1/100 yet closes at the named object in 94% of
+  episodes. With the named object moved 80 mm at control step 20 it succeeds on 0/97; the policy
+  trained on recoveries, on 79/96 ([95-what-a-policy-looks-at.md](95-what-a-policy-looks-at.md)).
 - **Picking the best checkpoint.** `summarize.py --best` and the `best` column of `monitor.py`
-  take the maximum over all evaluations of a run, 12 for a run with EMA. The maximum of noisy
-  readings is biased upward. Re-evaluate the chosen checkpoint on fresh layouts
-  (`--seed_start 1000100`) and report that number.
+  take the maximum over a run's evaluations, which is biased upward: from 3.0M samples on, the 12
+  readings of the curve above lie between 75% and 86% and pool to 983/1200 = 82%, at which one
+  reading has a standard deviation of 3.8 points. Re-evaluate the chosen checkpoint on fresh
+  layouts (`--seed_start 1000100`) and report that.
 - **Seeds below 1,000,000.** `--seed_start 0` evaluates on layouts that have demonstrations: a
-  deliberate check (the pooled-CLIP policy scored 0/20 on its own training layouts), not a
-  generalisation number.
-- **Nothing is evaluated on macOS.** `age` in `eval_checkpoints.sh` calls `stat -c %Y`, the GNU
-  form. BSD `stat` rejects `-c`, so every checkpoint is skipped.
-- **Changed settings.** `--max_steps`, `--exec_horizon`, `--flow_steps` and the intervention flags
-  (`--expert_prefix`, `--stale_images`, `--first_prev_action`, `--disturb`) change the test.
-  `results.json` stores all of them except `--max_steps`; check them before comparing two files.
+  deliberate check, not a generalisation number.
+- **Nothing is evaluated on macOS.** `eval_checkpoints.sh` calls GNU `stat -c %Y`; BSD `stat`
+  rejects `-c`, so every checkpoint is skipped.
+- **Changed settings.** `--max_steps`, `--exec_horizon`, `--flow_steps`, `--random_start`, the
+  probes and `--disturb` change the test; `results.json` stores all but `--max_steps`. Run without
+  `PICKUP_OUT`, they overwrite the plain evaluation's `results.json`.
 
 ## Background and further reading
 
@@ -301,18 +320,15 @@ no final result yet and none is reported here.
   [doi:10.1080/01621459.1927.10502953](https://doi.org/10.1080/01621459.1927.10502953). The
   interval `eval.py` computes.
 - Brown et al., "Interval Estimation for a Binomial Proportion" (2001),
-  [doi:10.1214/ss/1009213286](https://doi.org/10.1214/ss/1009213286). Shows that the textbook
-  (Wald) interval has erratic coverage and recommends the Wilson or Jeffreys interval for small
-  samples and the Agresti-Coull interval for larger ones.
+  [doi:10.1214/ss/1009213286](https://doi.org/10.1214/ss/1009213286). The textbook (Wald)
+  interval has erratic coverage; Wilson or Jeffreys recommended for small $n$.
 - Agarwal et al., "Deep Reinforcement Learning at the Edge of the Statistical Precipice" (2021),
   [arXiv:2108.13264](https://arxiv.org/abs/2108.13264). Argues for reporting uncertainty across
-  training runs when only a few are available.
-- Kress-Gazit et al., "Robot Learning as an Empirical Science: Best Practices for Policy
-  Evaluation" (2024), [arXiv:2409.09491](https://arxiv.org/abs/2409.09491). Recommends reporting
-  experimental conditions, statistical analysis and failure modes with success rates.
+  training runs.
 - Snyder et al., "Is Your Imitation Learning Policy Better than Mine? Policy Comparison with
-  Near-Optimal Stopping" (2025), [arXiv:2503.10966](https://arxiv.org/abs/2503.10966). The STEP
-  sequential test that `tutorials/STATISTICAL_COMPARISON.md` refers to.
+  Near-Optimal Stopping" (2025), [arXiv:2503.10966](https://arxiv.org/abs/2503.10966). A
+  sequential test the framework's own pipeline uses (`tutorials/STATISTICAL_COMPARISON.md`); the
+  pickup harness does not.
 
 ## Check yourself
 
@@ -322,12 +338,13 @@ no final result yet and none is reported here.
    .venv/bin/python -m sim.pickup.eval --task pick_target --episodes 100 --expert --out results/pickup/expert/pick_target
    ```
 
-2. Evaluate one checkpoint twice on the same layouts and count the episodes whose outcome changed;
-   every change is the policy's sampling noise.
+2. Evaluate the same weights twice on the same layouts and once on the next 100. Every episode
+   whose outcome changes between the first two is noise of the draws.
 
    ```bash
    PICKUP_OUT=results/pickup/my_run/pick_target/repeat_a sim/pickup/scripts/eval.sh experiments/pickup/my_run pick_target 100
    PICKUP_OUT=results/pickup/my_run/pick_target/repeat_b sim/pickup/scripts/eval.sh experiments/pickup/my_run pick_target 100
+   PICKUP_OUT=results/pickup/my_run/pick_target/seeds2 sim/pickup/scripts/eval.sh experiments/pickup/my_run pick_target 100 --seed_start 1000100
    .venv/bin/python - results/pickup/my_run/pick_target/repeat_a/results.json results/pickup/my_run/pick_target/repeat_b/results.json <<'EOF'
    import json, sys
    from math import comb
@@ -342,15 +359,14 @@ no final result yet and none is reported here.
    EOF
    ```
 
-   `p` is the p-value of the sign test; for the same checkpoint twice it should be large. The
-   script also compares two policies evaluated on the same seeds.
-3. The sweep read 74% at the default and 84% with 4 actions per chunk, 50 episodes each. Using the
-   standard deviation of a difference, $\sqrt{(p_1(1-p_1) + p_2(1-p_2))/n}$, find the $n$ per
-   setting at which a 10-point gap equals 1.96 standard deviations. (About 126.) If the true gap
-   is 10 points, the observed gap falls short of that threshold in about half of such experiments;
-   for an 80% chance of exceeding it, replace 1.96 by 1.96 + 0.84. (About 257.)
-4. Open one `results.json` and find, for the first failed episode, its `seed`, `steps`,
-   `wrong_object` and `close_nearest`. Every failure has `steps` equal to `--max_steps`, because
-   only success ends an episode early. Decide which failure it was: another object was lifted
-   (`wrong_object` true), the gripper closed nearest another object (`close_nearest` differs from
-   `target`), or it closed nearest the named object and still failed.
+   `p` is the p-value of the sign test: large for the same weights twice. The same script
+   compares two policies on shared seeds.
+3. 10 flow steps read 85/100 and 2 read 89/100. How many episodes per setting make that gap
+   1.96 standard deviations of the difference, $\sqrt{(p_1(1-p_1) + p_2(1-p_2))/n}$? (About 540.)
+4. Make `check_server` fire: serve one run by hand and ask for another.
+
+   ```bash
+   .venv/bin/python -m sim.pickup.policy_server --checkpoint_dir experiments/pickup/my_run --port 6200 &
+   .venv/bin/python -m sim.pickup.eval --task pick_target --episodes 1 --port 6200 --expect_run another_run --out results/pickup/check_server_test
+   kill %1
+   ```

@@ -31,6 +31,7 @@ export {
   usePageVisible,
   useInView,
   useElementSize,
+  chartHeight,
   type ElementSize,
   type InViewOptions,
 } from "./hooks";

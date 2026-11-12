@@ -1,0 +1,15 @@
+{
+  "task": "pick_target",
+  "episodesPerOffset": 320,
+  "machine": "B",
+  "section": "Grasp tolerance",
+  "offsets": [
+    {"offsetMm":0,"cube":{"successes":75,"episodes":75},"tblock":{"successes":85,"episodes":85},"can":{"successes":89,"episodes":89},"hex":{"successes":71,"episodes":71},"all":{"successes":320,"episodes":320}},
+    {"offsetMm":5,"cube":{"successes":73,"episodes":75},"tblock":{"successes":85,"episodes":85},"can":{"successes":88,"episodes":89},"hex":{"successes":70,"episodes":71},"all":{"successes":316,"episodes":320}},
+    {"offsetMm":10,"cube":{"successes":74,"episodes":75},"tblock":{"successes":85,"episodes":85},"can":{"successes":84,"episodes":89},"hex":{"successes":69,"episodes":71},"all":{"successes":312,"episodes":320}},
+    {"offsetMm":15,"cube":{"successes":71,"episodes":75},"tblock":{"successes":85,"episodes":85},"can":{"successes":68,"episodes":89},"hex":{"successes":66,"episodes":71},"all":{"successes":290,"episodes":320}},
+    {"offsetMm":20,"cube":{"successes":70,"episodes":75},"tblock":{"successes":83,"episodes":85},"can":{"successes":26,"episodes":89},"hex":{"successes":50,"episodes":71},"all":{"successes":229,"episodes":320}},
+    {"offsetMm":25,"cube":{"successes":55,"episodes":75},"tblock":{"successes":76,"episodes":85},"can":{"successes":13,"episodes":89},"hex":{"successes":22,"episodes":71},"all":{"successes":166,"episodes":320}},
+    {"offsetMm":30,"cube":{"successes":24,"episodes":75},"tblock":{"successes":65,"episodes":85},"can":{"successes":3,"episodes":89},"hex":{"successes":11,"episodes":71},"all":{"successes":103,"episodes":320}}
+  ]
+}

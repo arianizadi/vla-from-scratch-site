@@ -10,8 +10,7 @@ status: draft
 
 A vision-language-action policy (VLA) is a neural network that takes camera images, a text
 instruction and the robot's joint state, and outputs robot actions. Each of its parts was invented
-for a different problem: translation, image classification, captioning, steering a van. The history
-below is in order, with dates; each later design choice answers a specific problem.
+for a different problem: translation, image classification, captioning, steering a van.
 
 ## The idea
 
@@ -24,19 +23,18 @@ One config in this repository contains all three:
 simulated Franka Panda arm, made of two networks. The backbone is a pretrained vision-language model
 (VLM, a language model that also accepts images) that reads the images and the instruction. The
 action head is a smaller network that turns the backbone's output, its conditioning, into actions.
-The other terms in the table are explained below.
 
 | Part | In `vla_qwen.yaml` and the preset files it includes | Line of work |
 |---|---|---|
 | Backbone | `Qwen/Qwen3-VL-2B-Thinking`; 4 images enter its prompt as 49 tokens each | Transformer (2017), GPT-style pretraining (2018-2020), ViT (2020), VLMs (2022-2024) |
-| Readout | the action token, one special token appended to the prompt; the vectors the language model computes for it in its last 4 layers (its hidden states), joined into one vector, condition the action head | RT-2 (2023) |
+| Readout | the action token, one extra token appended to the prompt; its hidden states (the language model's vectors for it) in the last 4 layers, joined into one vector, condition the action head | VLM as backbone: RT-2 (2023); this readout: VLA Foundry (2026) |
 | Action head | a 12-layer, 512-wide transformer in which every position attends to every other (no causal mask), trained with flow matching | Diffusion Policy (2023), π0 (2024) |
-| Output | `[batch, 16, 8]`: 16 control steps of 8-D joint and gripper targets, the last 15 predicted (one chunk); `sim/pickup/eval.py` executes the first 8 (`--exec_horizon`), then asks again | action chunks (ACT, 2023), receding-horizon execution (Diffusion Policy, 2023) |
+| Output | `[batch, 16, 8]`: 16 control steps of 8-D joint and gripper targets, 15 predicted (one chunk); `sim/pickup/eval.py` executes 8 (`--exec_horizon`), then asks again | action chunks (ACT, 2023), receding-horizon execution (Diffusion Policy, 2023) |
 | Training data | demonstrations from a scripted expert | supervised image-to-action learning (ALVINN, 1988), behaviour cloning |
 
 <!-- interactive: timeline -->
 *Figure: the papers and systems named here on a time axis from 1988 to 2025, in three lanes
-(language, vision, robot learning) that join at RT-2 in 2023, each linked to the work it builds on.*
+(language, vision, robot learning) that join at RT-2 in 2023.*
 
 ## How each step led to the next
 
@@ -52,9 +50,9 @@ fixed-length vector, the other decoded the translation from it. Every sentence h
 vector.
 
 Bahdanau 2014 removed that limit. For each word it produced, the decoder computed a weighted average
-over all encoder states. The weights were not fixed: a small learned network scored each encoder
-state against the decoder's state, and the scores were normalised to sum to one. That operation is
-attention: a lookup over a set of vectors, driven by their content.
+over all encoder states, with weights from a small learned network that scored each encoder state
+against the decoder's state, normalised to sum to one. That operation is attention: a lookup over
+a set of vectors, driven by their content.
 
 Vaswani 2017 (the Transformer) dropped the recurrence and kept only attention: every token attends
 to every other token in one step (in a next-token language model, only to earlier tokens: the causal
@@ -64,10 +62,10 @@ mask), so all positions are trained in parallel. That made much larger models pr
 ### Pretraining and scale (2018-2020)
 
 Radford 2018 (GPT) trained a Transformer to predict the next token of unlabelled text, then
-fine-tuned it (continued training from the pretrained weights) on each task. The training signal
-comes from the text itself, so nothing has to be labelled. Brown 2020 (GPT-3) showed that a large
-enough model performs new tasks from examples written in its prompt. A pretrained language model
-became a reusable part that already knows about objects and instructions. See
+fine-tuned it (continued training from the pretrained weights) on each task. Brown 2020 (GPT-3)
+showed that a large enough model performs new tasks from examples written in its prompt. A
+pretrained language model became a reusable part that already knows about objects and instructions.
+See
 [training a language model](13-training-a-language-model.md).
 
 ### Images as tokens (2020-2021)
@@ -101,12 +99,11 @@ See [joining vision and language](30-joining-vision-and-language.md).
 
 ### Imitation before large models (1988-2011)
 
-Imitation learning trains a policy from demonstrations. Its simplest form, behaviour cloning, is
-supervised learning: the input is an observation, the label is the action the expert took.
+Behaviour cloning, the simplest form of imitation learning (training a policy from demonstrations),
+is supervised learning: the input is an observation, the label is the action the expert took.
 
 ALVINN (Pomerleau 1988) was a three-layer network trained by supervised learning to map camera and
-laser range finder images to a steering direction. The 1988 paper trained it on simulated road
-images and tested it on Carnegie Mellon's autonomous test vehicle.
+laser range finder images to a steering direction.
 
 Ross and Bagnell showed in 2010 that a cloned policy's errors compound: a small error takes it to a
 state the expert never visited, where it has no training data and errs more. Ross 2011 gave the
@@ -116,9 +113,8 @@ to the dataset and retrain. It needs an expert on call during training. See
 
 ### Scale, then a VLM as the backbone (2021-2023)
 
-BC-Z (Jang 2021) cloned more than 100 tasks on a real robot, with the task given as an embedding (a
-vector computed by a pretrained model) of a language instruction or human video, and performed some
-tasks it had no robot demonstrations for.
+BC-Z (Jang 2021) cloned more than 100 tasks on a real robot, conditioned on an embedding of a
+language instruction or human video, and performed some tasks it had no robot demonstrations for.
 
 RT-1 (Brohan 2022) was a Transformer that takes images and an instruction and outputs action tokens:
 each action dimension is rounded into one of 256 bins and the bin index is predicted like a word. It
@@ -136,22 +132,20 @@ Demonstrations are multimodal: in the same situation two different actions can b
 example passing an obstacle on the left or the right. A network trained with a squared-error loss to
 output one action learns their average, which is correct for neither.
 
-Diffusion Policy (Chi 2023) generates a short sequence of actions by iterative denoising conditioned
-on the observation: it starts from random noise and refines it over several denoising steps, which
-lets it represent several modes. It executes the first part of the sequence and re-plans (receding-horizon
-control). ACT (Zhao 2023), built on low-cost bimanual (two-arm) ALOHA hardware, learns a generative
-model over action sequences and calls predicting a chunk of future actions at once action chunking;
-the paper reports learning 6 fine manipulation tasks from 10 minutes of demonstrations. A chunk
-means fewer decisions per episode, so fewer chances for errors to compound. Flow matching
-(Lipman 2022) is a simpler way to train such a generator: regress the velocity that carries noise to
-data. See [flow matching](41-flow-matching.md) and [chunks and execution](42-chunks-and-execution.md).
+Diffusion Policy (Chi 2023) generates a short sequence of actions by denoising conditioned on the
+observation: starting from random noise, it refines it over several steps, which lets it represent
+several modes. It executes the first part of the sequence and re-plans (receding-horizon control).
+ACT (Zhao 2023), on low-cost two-arm ALOHA hardware, predicts a chunk of future actions at once with
+a generative model (action chunking). A chunk means fewer decisions per episode, so fewer chances
+for errors to compound. Flow matching (Lipman 2022) is a simpler way to train such a generator: regress the velocity that
+carries noise to data. See [flow matching](41-flow-matching.md) and
+[chunks and execution](42-chunks-and-execution.md).
 
 ### Shared data and generalist policies (2023-2025)
 
 An embodiment is one robot body with its own cameras and action space. Until 2023 the convention was
 a separate model and dataset for each robot. Open X-Embodiment (2023) pooled data from 22 robots
-into one dataset in a standard format; the paper reports that a model trained on the pool showed
-positive transfer, improving several of the robots. Octo and OpenVLA train on it. The policies that
+into one dataset in a standard format, and reports positive transfer to several of the robots. Octo and OpenVLA train on it. The policies that
 followed combine the earlier steps:
 
 | Policy | Backbone | Action output |
@@ -173,21 +167,19 @@ differ from the papers.
 **Actions are not text tokens.** RT-2 and OpenVLA emit actions through the language model's
 vocabulary. Here `VLMHFBackboneWrapper._prepare_inputs_for_action_token`
 ([`vlm_hf_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_hf_backbone.py))
-appends the action token to the prompt, and `_extract_action_token_embeddings` concatenates its
-hidden states from the last `num_vlm_layers_to_use` layers into
+places the action token after the prompt's last real token, and `conditioning_from_hidden_states`
+([`base.py`](../../vla_foundry/models/vision_language_backbones/base.py)) concatenates its hidden
+states from the last `num_vlm_layers_to_use` layers into
 `[batch, 1, hidden x num_vlm_layers_to_use]`, the conditioning of a separate action transformer.
 
 **The "diffusion policy" is trained with flow matching.** Every policy config in
-`sim/pickup/configs` sets `use_flow_matching_scheduler: true`, directly or through an included
-preset, so `create_noise_scheduler` (`vla_foundry/models/diffusion/__init__.py`) returns
-`FlowMatchingScheduler` (`vla_foundry/models/diffusion/noise_scheduler_diffusers.py`).
-`DiffusionPolicy.forward` calls `add_noise(actions, noise, timesteps, mask=future_mask)`, which
-computes `x_start + scale * (noise - x_start) * mask` with `scale = timestep / num_timesteps` and
-clamps the result to `clamp_range` (`[-3, 3]` here); positions outside the mask keep their clean
-action. `DiffusionPolicyBatchHandler.prepare_inputs_and_targets`
-(`vla_foundry/models/batch_handlers.py`) sets the target to `noise - actions`.
+`sim/pickup/configs` sets `use_flow_matching_scheduler: true`, directly or through a preset, so
+`create_noise_scheduler` (`vla_foundry/models/diffusion/__init__.py`) returns
+`FlowMatchingScheduler`, and `DiffusionPolicyBatchHandler.prepare_inputs_and_targets`
+(`vla_foundry/models/batch_handlers.py`) sets the target to `noise - actions`
+([flow matching](41-flow-matching.md)).
 
-**Demonstrations are single passes of an expert.** `_worker` in
+**Demonstrations come from a scripted expert.** `_worker` in
 [`sim/pickup/collect.py`](../../sim/pickup/collect.py) steps `ScriptedExpert.act()` until the
 episode ends and drops failed episodes. No learned policy runs there, so the data has none of the
 states DAgger collects.
@@ -195,12 +187,12 @@ states DAgger collects.
 The era is selected by `model.vision_language_backbone.type`, resolved by
 `get_vision_language_backbone` in `vla_foundry/models/vision_language_backbones/__init__.py`:
 
-| `type` | What the action head receives | Used by (in `sim/pickup/configs/`) |
+| `type` | Conditioning | Used by (in `sim/pickup/configs/`) |
 |---|---|---|
 | `clip_backbone` | one pooled vector per image, one for the text | `dp_clip.yaml` |
 | `vit_backbone` | every patch token (196 per image), plus 32 instruction-token slots when `text_tokens` is set | `dp_vit.yaml`, `dp_vit_lang.yaml` (4 images); `dp_vit_reactive.yaml`, `dp_vit_lang_reactive.yaml` (2 images) |
-| `vlm_backbone` | one vector from a pretrained Hugging Face VLM | `vla_qwen.yaml` |
-| `vlm_foundry_backbone` | one vector, or all tokens (`conditioning: all_tokens`), from a VLM trained here | `vla_custom.yaml`, `vla_custom_tokens.yaml`, `vla_custom_tokens_reactive.yaml` |
+| `vlm_backbone` | one vector, or all tokens (`conditioning: all_tokens`), from a pretrained Hugging Face VLM | `vla_qwen.yaml`, `vla_qwen_tokens_reactive.yaml` |
+| `vlm_foundry_backbone` | the same choice, from a VLM trained here | `vla_custom.yaml`, `vla_custom_tokens.yaml`, `vla_custom_tokens_reactive.yaml` |
 
 ## What we measured
 
@@ -209,49 +201,67 @@ simulator and it sees the result) on unseen layouts, one training seed per run, 
 (a confidence interval for a proportion).
 
 **One vector against patch tokens.** On `pick_cube` with 200 demonstrations and 300k training
-samples (machine A), the diffusion policy on CLIP ViT-B/32 with one pooled vector per image and one
-for the text (245M parameters) scored 2/50 = 4% (1-14%) with a final loss of 0.040. The one on a
-small ViT trained from scratch with every patch as a token (36M) scored 15/50 = 30% (19-44%) with a
-final loss of 0.091. This agrees with the lesson of 2014 that a single vector is a bottleneck. It
-does not show that CLIP features are poor: the two policies also differ in size and pretraining.
+samples on machine A (one RTX 4090, 24 GB), the diffusion policy on CLIP ViT-B/32 with one pooled
+vector per image and one for the text (245M parameters) scored 2/50 = 4% (1-14%), final loss 0.040.
+The one on a small ViT trained from scratch with every patch as a token (36M) scored 15/50 = 30%
+(19-44%), final loss 0.091. This fits the 2014 lesson that one vector is a bottleneck, but the two
+policies also differ in size and pretraining.
 
-**A pretrained VLM as backbone.** On `pick_target` with 1500 demonstrations, first round (machine
-A), `vla_qwen` scored 6/100 at its final checkpoint (400k samples) and the from-scratch `vla_custom`
-0/100 after 1.0M. The Qwen policy never lifted an object other than the named one in 150 episodes.
-That fits RT-2's premise that a pretrained VLM brings the link between words and objects, but
-weakly: 6% is a failing policy, differences of a few percent between single runs are noise, and the
-notebook has no wrong-object count for the other policies.
+**`pick_target` without a pretrained backbone.** `dp_vit_lang_reactive` is the same patch-token
+policy with the instruction added as tokens ([language conditioning](51-language-conditioning.md))
+and no history (no previous frame, state or action). On machine B (L40S GPUs, 128 CPU cores), after
+5.0M samples on 4000 demonstrations, it scored 83% / 85% over 100 layouts (trained weights / their
+running average, EMA). That run was at 0% / 1% after 1.0M samples, and with 1500 demonstrations a
+1.0M-sample run ended at 3% / 5%, a 3.0M-sample run at 64% / 62%: a budget that ends early reads as
+a broken design ([how much data and training](71-how-much-data-and-training.md),
+[case study](101-case-pick-target.md)). These runs computed the position table in half precision;
+with it fixed, the same recipe ends at 93% (trained weights), and a second pair of seeds at
+96% / 96% against 90% / 89% with the old table ([positions](12-positions.md)). With history
+(`dp_vit_lang`, 4000 demonstrations, before the fix) the policy was at 2% / 2% after 3.0M samples;
+probes show it reads the target from its previous action, not the cameras. After the fix, on
+demonstrations that begin with a hold frame, it ends at 0% / 4% after 5M samples
+([history and shortcuts](52-history-and-shortcuts.md)).
+
+**A pretrained VLM as backbone.** In the first round on `pick_target` (machine A, 1500
+demonstrations) `vla_qwen` scored 6/100 after 400k samples and the from-scratch `vla_custom` 0/100
+after 1.0M. Both had history, one conditioning vector and too small a budget. With every token
+handed to the action head, no history and 4000 demonstrations, the from-scratch VLA ends at
+86% / 87% after 3M samples (75% / 85% with a randomly initialised backbone, which starts to look
+about 0.75M samples later) and Qwen at 70% / 72% after 0.5M
+([the from-scratch path](62-the-from-scratch-path.md); [field notes](../notes.md), "Pretraining a
+backbone: mainly an earlier start").
 
 ## Where it goes wrong: what is still hard
 
 **Precision.** What you see: a policy reaches for the right object and closes the gripper beside it.
-Measured here, with the expert's grasp point shifted 10 mm sideways (320 episodes per offset, same
-seeds on both machines), success on the cube, can and hex nut was 99%, 94% and 97% on machine B and
-99%, 60% and 61% on machine A, where the can and hex nut were already at 94% and 89% unshifted. At
-20 mm on machine B the can is at 29%. The unshifted expert closes 5 mm (median) from the object
-(machine B). Tolerance depends on the object and the machine, so check it before blaming the model:
-[measuring failure](92-measuring-failure.md).
+Measure how much error a grasp forgives, per object and machine, before blaming the model
+([measuring failure](92-measuring-failure.md)). The 85% policy closes 7 mm (median) from the named
+object. Before the position fix its failures were grasp-angle errors: 93% on the can, graspable at
+any angle, 55% on the T block (pooled over the checkpoints from 3.0M samples on). Most of that was
+the position bug: after the fix the T block is at 87% with clean demonstrations and 92% with random
+start poses (last three checkpoints pooled).
 
-**Data.** Text and images were already on the internet; robot actions are not. Each demonstration
-has to be executed by a robot, teleoperated (driven by a person) or scripted. Measured here,
-collecting 1500 demonstrations took 70 s with 48 simulator processes, and 1500 `pick_target`
-demonstrations give 98,841 training windows: cheap only because the task can be scripted. See
-[demonstrations](70-demonstrations.md).
+**Data.** Text and images were already on the internet; robot actions are not: each demonstration
+has to be teleoperated (driven by a person) or scripted. Here 1500 demonstrations took 70 s with 48
+simulator processes, cheap only because the task can be scripted
+([demonstrations](70-demonstrations.md)).
 
-**Evaluation.** A language model can be compared with another by its loss on held-out text. A
-policy's loss does not predict its success: on `pick_cube` above, the 4% policy had the lower final
-loss. Only closed-loop rollouts count, and they are noisy: 2 successes in 50 episodes is anywhere
-from 1% to 14%. See [loss is not success](91-loss-is-not-success.md).
+**Evaluation.** Language models are compared by their loss on held-out text; policies cannot be: on
+`pick_cube` above, the 4% policy had the lower final loss. Only closed-loop rollouts count, and they
+are noisy (1-14% for 2 of 50) ([loss is not success](91-loss-is-not-success.md)). A rate near zero
+does not say whether a policy is imprecise or not looking. The slope `sim/pickup/summarize.py`
+prints, of where the gripper closed against where the named object was, does (near 1 or near 0): for
+the 85% policy, 0.11 / 0.14 after 1.0M samples and 0.98 / 0.98 at the end.
 
-**Recovery.** What you see: a policy that misses carries on with the motion. Measured here, the
-pooled-CLIP policy on `pick_cube` (machine A) scored 0/20 on its own training layouts: it ran a
-plausible reach-descend-close-lift a few centimetres from the cube. To check, watch the rollout
-videos `sim/pickup/eval.py` saves (`--videos`) for a second attempt after an empty close. Of the
-methods above, DAgger addresses the cause, by training on states the policy itself reaches, but
-needs an expert during training. Fixed demonstrations hold only states the expert visited; the
-policy runs on states it reaches itself. Chunks reduce the number of decisions but add no data about
-mistakes. The [roadmap](../roadmap.md) plans noise-injected and retry demonstrations; none has been
-run.
+**Recovery.** What you see: a policy that misses does not recover. The 85% policy looks at the scene
+once: with the named object moved 80 mm at control step 20
+(`eval.py --disturb reach --disturb_step 20`) it scored 0/96, closing 8 mm (median) from where the
+object had been; moved as the gripper closed (`--disturb grasp`), 1/99
+([what a policy looks at](95-what-a-policy-looks-at.md)). Policies trained on demonstrations with
+random start poses and recoveries (`collect.py --random_start --disturb_prob 0.5`) succeed 89-94% of
+the time wherever in the reach the object is moved or as the gripper closes, also from a random
+start pose ([field notes](../notes.md), "Self-correction has to be in the data"); noise-injected
+demonstrations remain on the [roadmap](../roadmap.md).
 
 ## Background and further reading
 
@@ -291,9 +301,9 @@ Robot learning
 
 ## Check yourself
 
-1. Print the Qwen VLA config, the model preset it includes and the transformer preset that one
-   includes. For `vision_language_backbone.type`, `hf_pretrained`, `transformer`, `is_causal: false`
-   and `use_flow_matching_scheduler`, name the reading-list paper behind the idea. Note which preset
+1. Print the Qwen VLA config, its model preset and that preset's transformer preset. For
+   `vision_language_backbone.type`, `hf_pretrained`, `transformer`, `is_causal: false` and
+   `use_flow_matching_scheduler`, name the reading-list paper behind the idea, and say which preset
    value `vla_qwen.yaml` overrides.
 
    ```bash
@@ -301,12 +311,12 @@ Robot learning
      vla_foundry/config_presets/models/transformer_100m.yaml
    ```
 
-2. RT-2 writes actions as text tokens. From the two methods below, state what this repository does
-   with the action token instead, and the shape of the result.
+2. RT-2 writes actions as text tokens. From the two functions below, state what this repository
+   does with the action token instead, and the shape of the result.
 
    ```bash
-   grep -n -A16 "def _prepare_inputs_for_action_token\|def _extract_action_token_embeddings" \
-     vla_foundry/models/vision_language_backbones/vlm_hf_backbone.py
+   grep -n -A17 "def insert_after_last_real_token\|def conditioning_from_hidden_states" \
+     vla_foundry/models/vision_language_backbones/base.py
    ```
 
 3. With the environment from [setup](01-setup-and-first-run.md), run the scripted expert on ten

@@ -8,9 +8,8 @@ status: draft
 
 # Text Becomes Tokens
 
-A neural network computes on numbers, so "pick up the red cube" has to become a list of integers
-before any model here can use it. The tokenizer does that: it is a fixed, deterministic function
-from a string to a list of token ids, and back. A robot policy depends on it because the
+A neural network computes on numbers, so "pick up the red cube" has to become a list of integers.
+The tokenizer does that: a fixed, deterministic function from a string to token ids, and back. A robot policy depends on it because the
 instruction is the only input that separates "pick up the red cube" from "pick up the green can"
 when both are on the table. One bug recorded in the lab notebook, and several edge cases the code
 now guards against, came from how token ids are padded and batched, not from a network's layers.
@@ -35,10 +34,9 @@ Three units are in common use.
 Subwords are the standard compromise, and **byte-pair encoding** (BPE) is the usual way to build
 them: start from single characters and repeatedly merge the most frequent adjacent pair into a new
 token. Background: Sennrich et al. (2016) adapted byte-pair encoding, a compression algorithm,
-to split words for translation. The procedure below follows their description with one
-simplification: they also append an end-of-word symbol to every word, so that a piece at the end of
-a word and the same letters inside a word are different tokens. In both, pairs are never counted
-across word boundaries.
+to split words for translation. The procedure below leaves out their end-of-word symbol, which
+makes a piece at the end of a word a different token from the same letters inside one. In both,
+pairs are never counted across word boundaries.
 
 The training corpus is four words, each split into characters, with counts:
 `c u b e` (5), `c u b e s` (2), `t u b e` (3) and `b e d` (2).
@@ -52,8 +50,8 @@ Count every adjacent pair, weighted by the word counts, merge the most frequent,
 | 3 | `c ube` 7, `t ube` 3, `ube s` 2, `be d` 2 | `c`+`ube` -> `cube` | `cube`, `cube s`, `t ube`, `be d` |
 | 4 | `t ube` 3, `cube s` 2, `be d` 2 | `t`+`ube` -> `tube` | `cube`, `cube s`, `tube`, `be d` |
 
-Stopping after four merges gives a vocabulary of 11 tokens: the seven characters plus the four
-merges. Number them in that order: `b`=0, `c`=1, `d`=2, `e`=3, `s`=4, `t`=5, `u`=6, `be`=7, `ube`=8,
+Four merges give a vocabulary of 11 tokens, the seven characters and the four merges, numbered in
+that order: `b`=0, `c`=1, `d`=2, `e`=3, `s`=4, `t`=5, `u`=6, `be`=7, `ube`=8,
 `cube`=9, `tube`=10.
 
 To encode new text, split it into characters and apply the merges in the order they were learned.
@@ -73,9 +71,9 @@ above merged one click at a time.*
 
 The from-scratch path has three stages: stage 1 trains a language model on text alone, stage 2
 adds images to make a vision-language model (VLM), and stage 3 adds actions to make a
-vision-language-action policy (VLA). All three, and the patch-token policy (`dp_vit_lang.yaml`,
-which reads image patches and instruction tokens directly), use the tokenizer published with
-`HuggingFaceTB/SmolVLM2-256M-Video-Instruct`.
+vision-language-action policy (VLA). All three, and the patch-token policy
+(`dp_vit_lang_reactive.yaml`, which reads image patches and instruction tokens directly), use the
+tokenizer published with `HuggingFaceTB/SmolVLM2-256M-Video-Instruct`.
 
 Background, from that model's published tokenizer files: it is a GPT-2-style BPE tokenizer with a
 base vocabulary of 49,152 entries plus 128 added tokens (ids 49,152 to 49,279), 49,280 in total.
@@ -119,17 +117,20 @@ That template writes `<|im_start|>`, the capitalised role, a colon, the content,
 [`simple_vlm_processor.py`](../../vla_foundry/models/vision_language_backbones/simple_vlm_processor.py)
 then replaces every `<image>` with `image_seq_length` copies of itself, and only then calls the
 tokenizer. `get_processor` sets `image_seq_length` from the config key `data.img_num_tokens`. With
-`sim/pickup/configs/dp_vit_lang.yaml` (two cameras, frames t-1 and t, `img_num_tokens: 1`) the model
-receives 14 ids:
+[`dp_vit_lang_reactive.yaml`](../../sim/pickup/configs/dp_vit_lang_reactive.yaml), the config the
+recipe in the [README](../../README.md) trains (two cameras, one frame each, `img_num_tokens: 1`),
+the model receives 12 ids:
 
 ```text
-ids:    1 11126 42 49190 49190 49190 49190 18188 614 260 2382 20636 49279 198
-tokens: <|im_start|> User : <image> <image> <image> <image> pick Ġup Ġthe Ġred Ġcube <end_of_utterance> Ċ
+ids:    1 11126 42 49190 49190 18188 614 260 2382 20636 49279 198
+tokens: <|im_start|> User : <image> <image> pick Ġup Ġthe Ġred Ġcube <end_of_utterance> Ċ
 ```
 
 `convert_ids_to_tokens` prints a leading space as `Ġ` and a newline as `Ċ`. `pick` has no `Ġ`
-because the template puts it directly after `<image>`. `vla_custom.yaml` has the same four images
-with `img_num_tokens: 256`, so 4 x 256 = 1,024 placeholders and 1,034 ids in all.
+because the template puts it directly after `<image>`. `dp_vit_lang.yaml` adds **history** (each
+camera's frame at t-1, the previous joint state and the previous action): four images, so four
+placeholders and 14 ids. `vla_custom.yaml` has the same four images with `img_num_tokens: 256`, so
+4 x 256 = 1,024 placeholders and 1,034 ids in all.
 
 ```mermaid
 flowchart LR
@@ -140,9 +141,12 @@ flowchart LR
     E --> F["embedding table<br/>[49280, 512] in the language model and VLM"]
 ```
 
-`vla_custom.yaml` appends one extra id, the action token, to every prompt and adds a row for it,
-49,281 in all (`VLMFoundryBackboneWrapper.__init__`, `resize_token_embeddings`). The patch-token
-policy uses its own table of shape `[49280, 256]`.
+`vla_custom.yaml` adds one id after the last real token of every prompt: the **action token**, a
+special token whose hidden states are the **conditioning**, the tensor `[batch, tokens, width]`
+that the backbone, here the VLM, hands to the action head, the transformer that produces the
+actions ([What the action head sees](50-what-the-action-head-sees.md)).
+`VLMFoundryBackboneWrapper.__init__` adds a table row for it (`resize_token_embeddings`), 49,281 in
+all. The patch-token policy uses its own table of shape `[49280, 256]`.
 
 In the VLM the placeholder id never contributes its own embedding. `VLM.forward` in
 [`vla_foundry/models/vlm.py`](../../vla_foundry/models/vlm.py) finds the positions where
@@ -153,18 +157,19 @@ with the projected patch embeddings (`masked_scatter`).
 In the patch-token policy, `ViTBackboneWrapper._embed_text` in
 [`vit_backbone.py`](../../vla_foundry/models/vision_language_backbones/vit_backbone.py) receives the
 same `input_ids` and looks up every real id in its own `text_embedding` table, so the five wrapper
-ids and the four `<image>` placeholders are embedded like words and count against `text_tokens: 32`.
+ids and the `<image>` placeholders are embedded like words and count against `text_tokens: 32`
+([Language conditioning](51-language-conditioning.md)).
 
 ### Padding and the attention mask
 
 A batch is one tensor of shape `[batch, tokens]`, so every row needs the same length. **Padding**
 appends the pad id to short rows. The **attention mask** is a second tensor of the same shape with 1
-for real tokens and 0 for padding. **Truncation** is the opposite: it cuts a row longer than
-`max_length` down to that length. Two padding strategies are used here:
+for real tokens and 0 for padding. **Truncation** cuts a row longer than `max_length` down to
+it. Two padding strategies are used here:
 
 - `padding="max_length"`: every row is padded to a fixed length. `batch_tokenize` in
-  `vla_foundry/data/pipelines/text_untokenized.py` and `vla_foundry/data/pipelines/image_caption.py`
-  pad to `seq_len + 1`.
+  `vla_foundry/data/pipelines/text_untokenized.py` and `ImageCaptionPipeline` in
+  `vla_foundry/data/pipelines/image_caption.py` pad to `seq_len + 1`.
 - `padding=True`: every row is padded to the longest row in that batch.
   `RoboticsProcessor.process_inputs` in `vla_foundry/data/processor/robotics_processor.py` uses
   this, so a policy's prompt length depends on what else is in the batch.
@@ -200,7 +205,7 @@ from vla_foundry.models.vision_language_backbones.simple_vlm_processor import Si
 
 proc = SimpleVLMProcessor()
 proc.image_seq_length = 1   # data.img_num_tokens; vla_custom.yaml uses 256
-n_images = 4                # 2 cameras x 2 frames
+n_images = 2                # 2 cameras x 1 frame; 4 for the configs with history
 tok = proc.tokenizer
 
 text = apply_chat_template(proc, n_images, "pick up the red cube")
@@ -219,47 +224,48 @@ EOF
 
 ## What we measured
 
-Two lab-notebook entries follow from this chapter; the notebook has no token counts or ids.
+Three entries of the [lab notebook](../lab-notebook.md) bear on this chapter.
 
-- **Vocabulary size costs memory.** The stage-1 language model (12 layers, 512 wide, vocabulary
-  49,280, 91.4M parameters) ran out of memory at batch 128 on the 24 GB card: the float32 logits for
-  128 x 256 tokens over a 49,280-word vocabulary are 6.5 GB per tensor.
-- **Padding moved the action token.** See the first failure below. Its effect on success was not
-  measured.
+- **Vocabulary size costs memory.** The stage-1 language model (91.4M parameters) ran out of
+  memory at batch 128 on machine A (one RTX 4090, 24 GB): the float32 logits for 128 x 256 tokens
+  over a 49,280-word vocabulary are 6.5 GB per tensor.
+- **Sequence length decided which models a position bug reached.** A token's position is its index
+  in the row. The table attention uses to encode positions ([Positions](12-positions.md)) was
+  computed in 16-bit floats (bfloat16), and positions above 256 collapsed onto even numbers and
+  above 512 onto multiples of 4: 641 distinct positions out of 2048. Stage 1's sequences are 256
+  tokens long and were not affected. Stage 2's are 320 and were: one image's 256 placeholders push
+  every caption token past position 256. The table is now computed in float32. Trained again with
+  the fixed table, the `dp_vit_lang_reactive` run below ends at 93% (trained weights) instead of
+  83%, and a second pair of runs with other seeds, differing in the table alone, ends at 96% / 96%
+  against 90% / 89%; in both pairs the policy starts to look at the scene earlier
+  ([Positions](12-positions.md)).
+- **The instruction's ids select the object, once the policy uses them.** On machine B (L40S GPUs,
+  128 CPU cores), the `dp_vit_lang_reactive` policy, trained before the position fix for 5.0M
+  samples (training windows drawn by the data loader) on 4000 `pick_target` demonstrations,
+  succeeded on 83% / 85% of 100 unseen layouts (trained weights / averaged weights, a running
+  average of the weights saved by the same run). A layout fixes the objects, their poses, the named
+  object and the arm's start pose. The policy closed at the named object in 100% / 100% of them:
+  the object nearest the gripper when it first closed was the one the instruction named (chance:
+  33%). Having the ids in the input was not enough. At 1.0M samples that run was at 35% / 32% on
+  that measure and 0% / 1% success; with the fixed table, at 65% and 8% (trained weights)
+  ([How much data and training](71-how-much-data-and-training.md)). With history, also on 4000
+  demonstrations and before the fix, the policy was at 30% / 35% on that measure and 2% / 2%
+  success when its run was stopped at 3.0M samples: it read the target from its previous action,
+  not from the instruction. Trained after the fix, on demonstrations that begin with a hold frame
+  (`collect.py --hold_steps 1`), it still ends at 0% / 4% after 5M samples
+  ([History and shortcuts](52-history-and-shortcuts.md)).
 
 ## Where it goes wrong
 
 ### A token appended after the padding
 
-**What you see.** Nothing. No error, a normal loss.
-
-**Why.** The action-token recipe appends one extra id to the prompt and reads the hidden state at
-that position as the summary handed to the action head
-([What the action head sees](50-what-the-action-head-sees.md)). Appending to a padded batch puts the
-token after the pads. The toy ids below are the test's (image placeholder 7, pad 0, action token
-`A`), padded to 9, so the shift is three positions. For `pick_target` the lab notebook records a
-short instruction probed one position later, behind a padding token.
-
-```text
-row padded to 9, token appended:  7 7 7 7 3 4 0 0 0 A    A at index 9, three pads before it
-same prompt served alone:         7 7 7 7 3 4 A          A at index 6
-after the fix, in both cases:     7 7 7 7 3 4 A 0 0 0    A at index 6 = (real tokens including A) - 1
-```
-
-In training, `padding=True` pads to the longest prompt in the batch; the policy server
-(`sim/pickup/policy_server.py`) sends one prompt, so nothing is padded. The token's position, and
-the pads before it, therefore differed between the two. [Positions](12-positions.md) explains why
-the index matters.
-
-**How to check.** `test_conditioning_does_not_depend_on_padding` in
-`tests/essential/models/test_vlm_foundry_backbone_conditioning.py` feeds the same prompt alone and
-padded to 9 and requires equal conditioning (the vectors handed to the action head).
-
-**What was done.** `_prepare_inputs_for_action_token` in
-[`vlm_foundry_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_foundry_backbone.py)
-concatenates the token and then reorders each row with a stable `argsort` on the mask so real tokens
-come first; `_extract_action_conditioning` reads index `real.sum(dim=1) - 1`. The Hugging Face
-backbone (`vlm_hf_backbone.py`) still appends after the padding and reads index `-1`.
+`padding=True` pads a short prompt to the longest one in its training batch; the policy server
+(`sim/pickup/policy_server.py`) processes one prompt per request and pads nothing. The action token
+used to be appended after the pads, so a short instruction's token sat one position later, behind a
+padding token, in training than when served, with no error and a normal loss;
+`VLMFoundryBackboneWrapper._prepare_inputs_for_action_token` now inserts it after the last real
+token, and the effect on success was not measured (in full:
+[Train and inference must see the same thing](93-train-inference-skew.md)).
 
 <!-- interactive: padding-shift -->
 *Figure: two prompts of different length, padded on the right; an appended token lands after the
@@ -269,16 +275,16 @@ on.*
 ### The same instruction, different token counts
 
 **What you see.** Nothing for `text_tokens: 32`: `_embed_text` keeps the first 32 real ids and drops
-the rest. A `ValueError` naming `conditioning_len`, the fixed prompt length set in
-`vla_custom_tokens.yaml`.
+the rest. A `ValueError` naming `conditioning_len`, a fixed prompt length that some configs set:
+1040 in `vla_custom_tokens.yaml`, 528 in `vla_custom_tokens_reactive.yaml`.
 
 **Why.** The count depends on more than the instruction's words: on the number of images times
-`img_num_tokens` (1,024 placeholders in `vla_custom.yaml`, four in `dp_vit_lang.yaml`), on the
-template's five wrapper ids, and on the tokenizer. Surface details count too: with this tokenizer a
-trailing full stop adds an id, while a capital `P` or a leading space keeps the count and replaces
-the first id, because `pick`, `Pick` and ` pick` are three vocabulary entries. Nor do the four
-`pick_target` instructions have one length (5 ids for the red cube and the green can, 6 for the blue
-hex nut and the yellow T block), so the rows of a batch differ by one id before padding.
+`img_num_tokens`, on the template's five wrapper ids, and on the tokenizer. Surface details count
+too: with this tokenizer a trailing full stop adds an id, while a capital `P` or a leading space
+keeps the count and replaces the first id, because `pick`, `Pick` and ` pick` are three vocabulary
+entries. Nor do the four `pick_target` instructions have one length (5 ids for the red cube and the
+green can, 6 for the blue hex nut and the yellow T block), so the rows of a batch differ by one id
+before padding.
 
 **How to check.** Print `len(ids)` with the command above for the longest instruction, with the
 config's image count and `img_num_tokens`. Set the budget from that count.
@@ -312,12 +318,16 @@ before stage 1, not after.
 
 ### Arguments that do not reach the tokenizer
 
-**What you see.** Nothing; an over-long prompt would lose its first ids, placeholders included.
+**What you see.** Nothing while prompts fit. An over-long prompt would lose its first ids,
+placeholders included, and in the VLM the `assert` on the placeholder count in `VLM.forward` would
+fail ([Training a VLM](31-training-a-vlm.md)).
 
 **Why.** `ImageCaptionPipeline` passes `padding_side="right"` and `RoboticsProcessor` a `truncation`
-flag, but `SimpleVLMProcessor.__call__` forwards only `padding` and `max_length` and always sets
-`truncation=True`. Both sides are therefore the tokenizer's own, and its published configuration
-truncates on the left. This was not exercised here.
+flag, but `SimpleVLMProcessor.__call__` hands the tokenizer only `return_tensors`, `padding` and
+`max_length`, and always sets `truncation=True`. Both sides are therefore the tokenizer's own, and
+its published configuration truncates on the left. Through the processor this was not exercised
+here; in stage 1 `batch_tokenize` calls the tokenizer directly, and a document longer than 257 ids
+keeps only its last 257.
 
 **How to check.** The command above prints `tok.padding_side` and `tok.truncation_side`. Keep
 prompts shorter than `max_length`.
@@ -325,20 +335,18 @@ prompts shorter than `max_length`.
 ## Background and further reading
 
 - Sennrich, [Neural Machine Translation of Rare Words with Subword Units](https://arxiv.org/abs/1508.07909),
-  2016. Adapted the byte-pair-encoding compression algorithm to word segmentation, so a model with a
-  fixed vocabulary can represent any word as a sequence of subword units.
+  2016. Byte-pair encoding applied to word segmentation: any word becomes subword units from a
+  fixed vocabulary.
 - Radford, [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf),
-  2019 (GPT-2). Applied BPE to bytes, with a base vocabulary of 256 and a final one of 50,257, so no
-  input needs an "unknown" token.
+  2019 (GPT-2). BPE over bytes (base vocabulary 256, final 50,257), so no input needs an "unknown"
+  token.
 - Marafioti, [SmolVLM: Redefining small and efficient multimodal models](https://arxiv.org/abs/2504.05299),
-  2025. Describes a family of compact vision-language models (256M to 2.2B parameters) for
-  low-memory inference; the tokenizer and chat template reused here are published on the
+  2025. Compact vision-language models (256M to 2.2B parameters); the tokenizer and chat template reused here are published on the
   [SmolVLM2-256M-Video-Instruct model page](https://huggingface.co/HuggingFaceTB/SmolVLM2-256M-Video-Instruct).
 - Hugging Face Transformers documentation,
   [Chat templates](https://huggingface.co/docs/transformers/en/chat_templating) and
-  [Padding and truncation](https://huggingface.co/docs/transformers/v4.57.3/en/pad_truncation).
-  The reference for `apply_chat_template` and for the `padding`, `truncation` and `max_length`
-  arguments.
+  [Padding and truncation](https://huggingface.co/docs/transformers/v4.57.3/en/pad_truncation),
+  for `apply_chat_template` and the `padding`, `truncation` and `max_length` arguments.
 
 ## Check yourself
 
@@ -352,6 +360,7 @@ prompts shorter than `max_length`.
 3. Run the padding tests and read what they compare:
 
    ```bash
-   uv run pytest tests/essential/models/test_vlm_foundry_backbone_conditioning.py \
+   .venv/bin/python -m pytest tests/essential/models/test_backbone_conditioning.py \
+       tests/essential/models/test_vlm_foundry_backbone_conditioning.py \
        tests/essential/models/test_vit_backbone_text.py -k padding -v
    ```

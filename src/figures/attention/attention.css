@@ -1,0 +1,529 @@
+/* ==========================================================================
+   The attention figure. HTML laid out by CSS: a real table for the matrix
+   (so a screen reader can walk it), a second table for the focused row.
+   Colours come from the tokens in globals.css only: the sequential scale for
+   weights (re-stepped in ramp.ts), the highlighter for the focused row, ink
+   and hairlines for the rest.
+   ========================================================================== */
+
+.at-root {
+  --beat: 600ms;
+  --cell-edge: color-mix(in srgb, var(--text) 30%, transparent);
+  container: attention / inline-size;
+  min-width: 0;
+  color: var(--text);
+}
+
+.at-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+@container attention (min-width: 760px) {
+  .at-layout {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+/* The name of a part of the drawing: label type, faint. */
+.at-label {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.at-label b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.at-mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+/* --------------------------------------------------------------------------
+   The matrix.
+   -------------------------------------------------------------------------- */
+
+.at-matrix-block {
+  min-width: 0;
+}
+
+/* The matrix shrinks to about 262px of stage (a 320px screen); if a drawn
+   set of vectors ever prints wider numbers, it scrolls here, not the page.
+   The padding keeps the focus ring and the focused-row frame inside the clip. */
+.at-scroll {
+  /* Positioned, so the absolutely placed screen-reader text inside is clipped too. */
+  position: relative;
+  margin: -4px;
+  padding: 4px;
+  overflow-x: auto;
+}
+
+.at-matrix {
+  border-collapse: separate;
+  border-spacing: 3px;
+  margin: -3px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1;
+}
+
+.at-col-head {
+  height: 28px;
+  padding: 0 0 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  font-variant-ligatures: none;
+  text-align: center;
+  vertical-align: bottom;
+}
+.at-col-head[data-ghost] {
+  color: var(--text-faint);
+}
+
+.at-row-head {
+  padding: 0 4px 0 0;
+  text-align: right;
+}
+
+/* A row's token: a button that focuses the row. The focused row wears the highlighter. */
+.at-row-button {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 44px;
+  height: 40px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-ligatures: none;
+  cursor: pointer;
+}
+.at-row-button:hover {
+  border-color: var(--border-strong);
+}
+.at-row-button[aria-pressed="true"] {
+  border-color: var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+}
+.at-row-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.at-row-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 44px;
+  height: 40px;
+  padding: 0 7px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+/* One cell: a surface with three layers (shade, hatch, number), so a change
+   of state is a change of opacity, never of colour. */
+.at-cell {
+  position: relative;
+  box-sizing: border-box;
+  width: 52px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 1px;
+  text-align: center;
+  cursor: pointer;
+}
+@container attention (max-width: 359px) {
+  .at-cell {
+    width: 38px;
+    min-width: 0;
+  }
+}
+/* A 320px screen: narrower cells and row heads, and no "vs. without" column;
+   the line under the key says what it would have shown. */
+@container attention (max-width: 299px) {
+  .at-cell {
+    width: 36px;
+  }
+  .at-row-button,
+  .at-row-ghost {
+    min-width: 0;
+    padding: 0 4px;
+  }
+  .at-row-head {
+    padding-right: 2px;
+  }
+  .at-change-head,
+  .at-change {
+    display: none;
+  }
+}
+@container attention (min-width: 300px) {
+  .at-no-column {
+    display: none;
+  }
+}
+@container attention (max-width: 299px) {
+  .at-column-only {
+    display: none;
+  }
+}
+/* Touch screens: 44px targets (DESIGN.md, section 5). */
+@media (pointer: coarse) {
+  .at-row-button,
+  .at-row-ghost,
+  .at-cell {
+    height: 44px;
+  }
+}
+.at-cell[data-ghost] {
+  border: 1px dashed var(--border);
+  cursor: default;
+}
+.at-cell-edge {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--cell-edge);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.at-shade,
+.at-hatch {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--beat) var(--ease-standard) var(--delay, 0ms);
+}
+.at-shade[data-on],
+.at-hatch[data-on] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-shade,
+  .at-hatch {
+    transition-delay: 0ms;
+  }
+}
+.at-value {
+  position: relative;
+  color: var(--text);
+  font-weight: 500;
+  font-stretch: 88%;
+}
+.at-value[data-muted] {
+  padding: 2px 4px;
+  border-radius: 1px;
+  background-color: var(--surface);
+  color: var(--text-muted);
+}
+
+/* The focused row: a 2px ink frame along the top and bottom of each of its cells. */
+.at-cell[data-focus]::after {
+  position: absolute;
+  inset: -3px -2px;
+  border-top: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  content: "";
+  pointer-events: none;
+}
+.at-cell[data-focus][data-first]::after {
+  left: -3px;
+  border-left: 2px solid var(--text);
+}
+.at-cell[data-focus][data-last]::after {
+  right: -3px;
+  border-right: 2px solid var(--text);
+}
+
+/* The column that says whether a row changed when the last token was added. */
+.at-change-head {
+  padding: 0 0 4px 6px;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.1;
+  text-align: left;
+  vertical-align: bottom;
+}
+.at-change {
+  padding: 0 0 0 6px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  text-align: left;
+  white-space: nowrap;
+}
+.at-change[data-kind="changed"] {
+  color: var(--text);
+  font-weight: 600;
+}
+.at-change[data-kind="new"] {
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   The key under the matrix: the five steps of the scale and the hatch.
+   -------------------------------------------------------------------------- */
+
+.at-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 20px;
+  margin-top: 16px;
+}
+.at-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 28px);
+  column-gap: 2px;
+}
+.at-swatch {
+  position: relative;
+  height: 14px;
+  border-radius: 1px;
+}
+.at-ticks {
+  display: flex;
+  justify-content: space-between;
+  width: calc(5 * 28px + 4 * 2px + 12px);
+  margin: 3px -6px 0;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1;
+}
+.at-ticks span {
+  display: flex;
+  justify-content: center;
+  width: 12px;
+  white-space: nowrap;
+}
+.at-mask-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+}
+.at-mask-key .at-swatch {
+  width: 28px;
+}
+.at-change-note {
+  /* As wide as the matrix, never wider: the sentence must not widen the grid column. */
+  width: 0;
+  min-width: 100%;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+.at-change-note i {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   The focused row, step by step.
+   -------------------------------------------------------------------------- */
+
+.at-readout {
+  min-width: 0;
+}
+.at-query {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+.at-query code {
+  color: var(--text);
+}
+
+.at-steps {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.125rem;
+}
+.at-steps th,
+.at-steps td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+.at-steps thead th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-faint);
+  font-weight: 600;
+  font-stretch: 80%;
+  vertical-align: bottom;
+}
+.at-steps th[scope="row"] {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-ligatures: none;
+  text-align: left;
+}
+.at-steps td.at-key-col,
+.at-steps th.at-key-col {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: left;
+}
+@container attention (max-width: 559px) {
+  .at-steps .at-key-col {
+    display: none;
+  }
+}
+@container attention (max-width: 299px) {
+  .at-steps th,
+  .at-steps td {
+    padding-right: 6px;
+  }
+  .at-steps .at-bar-col {
+    min-width: 40px;
+  }
+}
+.at-steps tr[data-masked] td {
+  color: var(--text-faint);
+}
+.at-steps tfoot td,
+.at-steps tfoot th {
+  border-bottom: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.at-steps .at-pending {
+  color: var(--text-faint);
+}
+.at-bar-col {
+  width: 40%;
+  min-width: 56px;
+}
+.at-steps td.at-bar-col {
+  padding-right: 0;
+}
+.at-track {
+  position: relative;
+  height: 12px;
+  border: 1px solid var(--border);
+  border-radius: 1px;
+}
+.at-bar {
+  position: absolute;
+  inset: -1px auto -1px -1px;
+  border: 1px solid var(--cell-edge);
+  border-radius: 1px;
+  transform-origin: left center;
+}
+
+/* A token named in a sentence of the readout. */
+.at-token {
+  color: var(--text);
+}
+
+/* The computation: always shown in a wide figure, behind "Show the
+   computation" in a narrow one. */
+.at-wide-only {
+  margin-top: 14px;
+}
+.at-narrow-only {
+  display: none;
+}
+@container attention (max-width: 559px) {
+  .at-wide-only {
+    display: none;
+  }
+  .at-narrow-only {
+    display: block;
+  }
+}
+.at-details {
+  margin-top: 10px;
+}
+.at-details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  list-style: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.at-details > summary:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.at-details > summary::-webkit-details-marker {
+  display: none;
+}
+/* The disclosure mark: a small triangle that points down when open. */
+.at-details > summary::before {
+  width: 0;
+  height: 0;
+  border-block: 4px solid transparent;
+  border-left: 6px solid currentColor;
+  content: "";
+  transition: transform var(--duration-micro, 120ms) var(--ease-standard);
+}
+.at-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+.at-details[open] > summary {
+  margin-bottom: 10px;
+}
+@media (pointer: coarse) {
+  .at-details > summary {
+    min-height: 44px;
+  }
+}
+.at-footnote {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+}
+
+.at-mix {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.375rem;
+}
+.at-mix code {
+  color: var(--text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

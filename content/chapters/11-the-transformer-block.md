@@ -13,7 +13,8 @@ every position in a sequence read from other positions (attention) and then proc
 feed-forward network). In this repository one class, `Transformer`, is the stage-1 language model
 (the three training stages are laid out in
 [62-the-from-scratch-path.md](62-the-from-scratch-path.md)), the language half of the stage-2
-vision-language model and, with the causal mask switched off, the action head of the policies.
+vision-language model and, with the causal mask switched off, the action head of the policies, the
+part that outputs the robot's actions.
 
 ## The idea
 
@@ -68,7 +69,7 @@ batch 32, 256-token sequences
 
 ### Shapes from ids to logits
 
-| Step | Operation | Result |
+| Step of the forward pass | Operation | Result |
 |---|---|---|
 | input | token ids | `[32, 256]` |
 | embedding | look up rows of a 49,280 x 512 table | `[32, 256, 512]` |
@@ -90,8 +91,8 @@ batch 32, 256-token sequences
 | final norm | LayerNorm | `[32, 256, 512]` |
 | output projection | linear 512 -> 49,280 | `[32, 256, 49280]` |
 
-LayerNorm, heads and the gate are defined in the three subsections that follow. Position enters
-only inside attention; nothing is added to the embeddings.
+LayerNorm, heads and the gate are defined below. Position enters only inside attention; nothing is
+added to the embeddings.
 
 ### Attention
 
@@ -241,38 +242,46 @@ causal mask already hides them. The pad rows compute something meaningless and d
 cross-entropy: `TransformerBatchHandler.prepare_inputs_and_targets` (`VLMBatchHandler` in stage 2)
 marks every target equal to `cfg.data.pad_token_id`, and `CrossEntropyLossWithZLoss.forward`
 replaces those targets with `ignore_index`. With right padding, every position whose input is a pad
-also has a pad as its target. (The optional z-loss term in the same function averages over all
-positions, pads included; `hparams.z_loss_coefficient` is 0.0 by default and in stage 1, so it is
-off.) The shortcut avoids building a `[batch, heads, tokens, tokens]` bias tensor in every layer,
-which is what `torch_attn` does when given a mask.
+also has a pad as its target. (The z-loss penalty in the same function does average over pads, but
+`hparams.z_loss_coefficient` is 0.0 by default and in stage 1:
+[13-training-a-language-model.md](13-training-a-language-model.md).) The shortcut avoids building a
+`[batch, heads, tokens, tokens]` bias tensor in every layer, which is what `torch_attn` does when
+given a mask.
 
-With `use_cache=True` the mask is kept. Generated tokens are appended to the right of the prompt, so
-any padding in a batch of prompts, on either side, lies to the left of the generated tokens, where
-the causal mask does not hide it; `apply_attention_mask_` adds it to the causal bias.
+With `use_cache=True` the mask is kept: generated tokens are appended after the whole prompt, so
+padding on either side of it lies to their left, where the causal mask does not hide it, and
+`apply_attention_mask_` adds the mask to the causal bias.
 
 ## What we measured
 
-From the lab notebook, stage 1 on machine A (one RTX 4090): this model, 91.4M parameters, trained on
-61,000 DCLM-baseline web documents for 500k samples at batch 32, took about 15 min at 550 samples/s;
-the loss went from 6.3 to 4.1 and the samples were grammatical English. On machine B the final loss
-was 4.15.
+From the lab notebook, stage 1 on machine A (one RTX 4090, 24 GB): this model, 91.4M parameters,
+trained on 61,000 DCLM-baseline web documents for 500k samples at batch 32, took about 15 min at
+550 samples/s; the loss went from 6.3 to 4.1 and the text it generated was grammatical English. On
+machine B (L40S GPUs, 128 CPU cores) the final loss was 4.15.
 
-On machine A (24 GB), stage 1 ran out of memory at batch 128: the float32 logits for 128 x 256
-tokens over a 49,280-entry vocabulary are 6.5 GB per tensor. At batch 32 the same arithmetic gives
-1.6 GB.
+On machine A, stage 1 ran out of memory at batch 128: the float32 logits for 128 x 256 tokens over
+a 49,280-entry vocabulary are 6.5 GB per tensor. At batch 32 the same arithmetic gives 1.6 GB.
 
-The block as implemented trains. No run here compares SwiGLU with GELU, pre-norm with post-norm, or
-tied with untied weights.
+The block as implemented trains, without the causal mask too: six of them, 256 wide
+(`sim/pickup/configs/dp_vit_lang_reactive.yaml`), are the action head of a policy for
+`pick_target` (three objects on the table, pick up the one the instruction names). After 5M
+training samples on 4000 demonstrations it succeeds in 93 of 100 unseen layouts (which objects are
+on the table, where they are, which one the instruction names, and the arm's start pose, all fixed
+by a seed) with its trained weights, after the position fix below; before it, the same
+recipe ended at 83% with trained weights and 85% with averaged weights
+([101-case-pick-target.md](101-case-pick-target.md)). No run here compares
+SwiGLU with GELU, pre-norm with post-norm, or tied with untied weights.
 
 ## Where it goes wrong
 
 | What you see | Why | Check and fix |
 |---|---|---|
 | Out of memory when the batch grows | logits are `[batch, tokens, 49280]` in float32 | multiply it out before raising `per_gpu_batch_size` or `seq_len` |
-| Predictions for a sequence change with the amount of padding in front of it | a left-padded batch went through `forward` without the cache; the mask was dropped and real tokens attended to pads | print `tokenizer.padding_side`; `batch_tokenize` (stage 1, `vla_foundry/data/pipelines/text_untokenized.py`) pads to `max_length` without setting a side; `vla_foundry/data/pipelines/image_caption.py` passes `padding_side="right"` |
+| Predictions for a sequence change with the amount of padding in front of it | a left-padded batch went through `forward` without the cache; the mask was dropped and real tokens attended to pads | print `tokenizer.padding_side`. Neither stage sets it: `batch_tokenize` (`vla_foundry/data/pipelines/text_untokenized.py`) passes no side, and `SimpleVLMProcessor.__call__` does not forward the `padding_side="right"` that `vla_foundry/data/pipelines/image_caption.py` passes, so both use the tokenizer's default, `right` for the SmolVLM2 tokenizer |
 | Same symptom during batched generation | `Transformer.generate(use_cache=False)` calls `forward` without the cache, so the mask is dropped there too | left-pad the prompts (`tokenizer.padding_side = "left"`) and keep `use_cache=True`, or generate one prompt at a time; `generate` takes the logits of the last position, which is a pad in a right-padded prompt (read from the code, not run) |
 | `is_causal=False` passed to `forward` changes nothing | the code computes `is_causal or self.is_causal`, so the argument can switch the mask on and never off | set `is_causal: false` in the config, as the action-head configs do |
-| A shape error in the position embedding, or attention narrower than the stream | `head_dim = hidden_dim // n_heads` is integer division with no check: an odd head width breaks the rotary embedding, an even one drops the remainder silently | choose `n_heads` that divides `hidden_dim` |
+| A shape error in the position embedding, or attention narrower than the stream | `head_dim = hidden_dim // n_heads` is integer division with no check: an odd head width breaks the rotary embedding, an even one drops the remainder silently | choose `n_heads` that divides `hidden_dim` into an even head width |
+| Nothing: no error, and training and serving agree | the rotary position table was computed in bfloat16 (16-bit floats, 8 significant bits) under `hparams.precision: amp_bf16`: positions above 256 collapsed onto even numbers and above 512 onto multiples of 4, leaving 641 distinct positions out of 2048. The 15 action-step tokens (one per predicted action) of the 85% policy shared 8 positions | fixed in `vla_foundry/positional_embedding.py`: the angles are computed in float32, then cast (`tests/essential/models/test_rotary_precision.py`); `positional_embedding_type: rotary_legacy_autocast` reproduces the old table. Stage 1 (256 tokens) was not affected. The 85% policy was trained before the fix. Retrained with the fixed table, it ends at 93% (trained weights). A second pair of runs with other seeds, differing in the table alone, ends at 96% / 96% against 90% / 89% ([12-positions.md](12-positions.md)) |
 
 ## Background and further reading
 
@@ -291,8 +300,7 @@ None of the following was measured here.
 - Touvron et al., "LLaMA: Open and Efficient Foundation Language Models", 2023.
   <https://arxiv.org/abs/2302.13971>. Combines pre-normalisation (with RMSNorm; the stage-1
   model here uses LayerNorm), SwiGLU at 2/3 of 4d and rotary positions. The comment in
-  `get_feed_forward` says its width rule, including the round-up to a multiple of 256, follows the
-  llama and lit-llama code.
+  `get_feed_forward` attributes its width rule and the round-up to the llama and lit-llama code.
 - Press and Wolf, "Using the Output Embedding to Improve Language Models", 2016.
   <https://arxiv.org/abs/1608.05859>. Weight tying.
 - Elhage et al., "A Mathematical Framework for Transformer Circuits", 2021.
@@ -304,7 +312,7 @@ None of the following was measured here.
 1. Build the stage-1 model and count its parameters. Expected: 91383808.
 
    ```bash
-   uv run python - <<'EOF'
+   .venv/bin/python - <<'EOF'
    from vla_foundry.models.transformer import Transformer
    from vla_foundry.params.model_params import TransformerParams
 
@@ -321,7 +329,7 @@ None of the following was measured here.
    last twelve, without and with the mask. Expected: 0.0, a non-zero value, 0.0.
 
    ```bash
-   uv run python - <<'EOF'
+   .venv/bin/python - <<'EOF'
    import torch
    from vla_foundry.models.transformer import Transformer
    from vla_foundry.params.model_params import TransformerParams

@@ -1,0 +1,907 @@
+/* ==========================================================================
+   pipeline: the whole loop on one plate. Eight stations, alternately a
+   program (a plain card) and a file one program writes and the next reads
+   (a card with a folded corner); one item, on the highlighter, travels
+   through them. Colours come from the design tokens only, so both themes
+   follow. Modality hues appear only on the parts an item holds, always with
+   their word.
+
+   Layout follows the width of the figure, not of the window:
+
+     under 480px   one column of compact cards (name only; the file or
+                   program is in the panel under the loop)
+     under 680px   one column, top to bottom; the server and the simulator
+                   exchange observations and chunks through two labelled
+                   arrows, with a wider gap between them
+     from 680px    a U: the four offline stations left to right on top,
+                   the four of the closed loop right to left underneath,
+                   and a dashed return from the success rate to the expert.
+                   A spacer column between the second and third stations
+                   makes room for the labels on the exchange arrows.
+   ========================================================================== */
+
+.pl-root {
+  container: pipeline / inline-size;
+  min-width: 0;
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   The key: what the two card shapes and the highlighted token mean.
+   -------------------------------------------------------------------------- */
+
+.pl-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+}
+.pl-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.pl-key-card {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 14px;
+}
+.pl-key-token {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid var(--text);
+  border-radius: 2px;
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-stretch: 80%;
+  line-height: 1.125rem;
+}
+
+/* --------------------------------------------------------------------------
+   The loop.
+   -------------------------------------------------------------------------- */
+
+.pl-loop {
+  --gap-x: 40px;
+  --gap-y: 16px;
+  --mid: 0px;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--gap-y);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pl-station {
+  position: relative;
+  min-width: 0;
+}
+/* Room for the two labelled arrows between the server and the simulator. */
+.pl-at-server {
+  margin-bottom: 28px;
+}
+
+/* The card is a button: click or focus it to read the stage. Its outline and
+   fill are drawn by .pl-shape underneath, so the folded corner of a file can be
+   clipped without clipping the focus ring. */
+.pl-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "num name slot"
+    "num tag  slot";
+  align-items: center;
+  column-gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px 6px 10px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pl-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pl-shape {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background-color: var(--surface);
+  transition: background-color var(--duration-micro) var(--ease-standard);
+}
+.pl-card:hover .pl-shape {
+  background-color: var(--surface-2);
+}
+.pl-card[aria-current="step"] .pl-shape {
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+/* A file: the top right corner is folded over. */
+.pl-file .pl-shape {
+  border-radius: 2px 0 2px 2px;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.pl-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: var(--border-strong);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+.pl-card[aria-current="step"] .pl-fold {
+  background-color: var(--text);
+}
+
+.pl-num {
+  position: relative;
+  grid-area: num;
+  align-self: start;
+  min-width: 1.25ch;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pl-name {
+  position: relative;
+  grid-area: name;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.25rem;
+}
+.pl-tag {
+  position: relative;
+  grid-area: tag;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-ligatures: none;
+  line-height: 1.125rem;
+}
+
+/* Where the item sits when it is at this station. Always reserved, so the
+   card does not change size when the item arrives or leaves. */
+.pl-slot {
+  position: relative;
+  display: flex;
+  grid-area: slot;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  min-height: 24px;
+}
+.pl-token {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--text);
+  border-radius: 2px;
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-stretch: 80%;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Arrows: a line and a chevron, drawn from the edge of the card that they
+   leave, through the gap, toward the next card. Each arrow is placed by the
+   side it leaves from (--side via the class) and a position along that side
+   (--at). The pivot is the point on the edge; the arrow is turned from there.
+   -------------------------------------------------------------------------- */
+
+.pl-arrow {
+  position: absolute;
+  width: calc(var(--len) - 6px);
+  height: 10px;
+  color: var(--border-strong);
+  pointer-events: none;
+  transform-origin: 0 50%;
+}
+.pl-arrow::before {
+  position: absolute;
+  top: 4.25px;
+  right: 1px;
+  left: 0;
+  border-top: 1.5px solid currentColor;
+  content: "";
+}
+.pl-arrow::after {
+  position: absolute;
+  top: 1.5px;
+  right: 1.25px;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(45deg);
+}
+.pl-dashed::before {
+  border-top-style: dashed;
+}
+.pl-right,
+.pl-left {
+  --len: var(--gap-x);
+}
+.pl-top,
+.pl-bottom {
+  --len: var(--gap-y);
+}
+.pl-long {
+  --len: calc(var(--gap-y) + 28px);
+}
+.pl-right {
+  top: calc(var(--at) - 5px);
+  left: calc(100% + 3px);
+}
+.pl-left {
+  top: calc(var(--at) - 5px);
+  left: -3px;
+  transform: rotate(180deg);
+}
+.pl-bottom {
+  top: calc(100% + 3px - 5px);
+  left: var(--at);
+  transform: rotate(90deg);
+}
+.pl-top {
+  top: calc(-3px - 5px);
+  left: var(--at);
+  transform: rotate(-90deg);
+}
+
+/* The command that runs a group of stations: a dimension-style bracket with
+   end ticks and the script's name on it. Wide layout only. */
+.pl-bracket {
+  position: absolute;
+  left: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--span) * 100% + (var(--span) - 1 + var(--cross, 0)) * var(--gap-x) + var(--cross, 0) * var(--mid));
+  height: 9px;
+  border-right: 1px solid var(--border-strong);
+  border-left: 1px solid var(--border-strong);
+  pointer-events: none;
+}
+.pl-bracket::before {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--border-strong);
+  content: "";
+}
+.pl-bracket-top {
+  top: -21px;
+}
+.pl-bracket-bottom {
+  bottom: -21px;
+}
+.pl-bracket-label {
+  position: relative;
+  padding: 0 6px;
+  background-color: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-ligatures: none;
+  line-height: 1rem;
+  white-space: nowrap;
+}
+
+/* What travels along each of the two exchange arrows, in words. In the narrow
+   layout the chunk's label sits right of the arrow going down, near its top,
+   and the observations' left of the arrow going up, near its bottom. */
+.pl-edge {
+  position: absolute;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.pl-edge-chunk {
+  top: calc(100% + 3px);
+  left: calc(30% + 12px);
+}
+.pl-edge-obs {
+  right: calc(30% + 12px);
+  bottom: calc(100% + 3px);
+}
+
+/* Narrow and compact: the name only on the card; what the item holds folds
+   into the panel's disclosure with the command and files, so the loop, the
+   sentence under it and the controls fit on one phone screen. */
+@container pipeline (max-width: 479px) {
+  .pl-card {
+    grid-template-areas: "num name slot";
+  }
+  .pl-tag {
+    display: none;
+  }
+  .pl-details:not([data-open]) :is(.pl-groups, .pl-details-head) {
+    display: none;
+  }
+  .pl-more-toggle {
+    margin-top: 0;
+  }
+  .pl-now {
+    margin-top: 12px;
+  }
+}
+
+/* The arrows of the layout that is not shown. */
+.pl-wide-only {
+  display: none;
+}
+
+/* The return from the success rate to the expert, as words under the column. */
+.pl-again {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+.pl-again-mark {
+  flex: none;
+  width: 18px;
+  border-top: 1.5px dashed var(--border-strong);
+}
+.pl-return-label {
+  position: absolute;
+  top: calc(-1 * var(--gap-y) / 2 - 9px);
+  left: 36px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+  white-space: nowrap;
+}
+
+@container pipeline (min-width: 680px) {
+  .pl-loop {
+    --gap-x: 32px;
+    --gap-y: 56px;
+    --mid: 32px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--mid) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--gap-x);
+    padding: 28px 0;
+  }
+  .pl-station {
+    grid-row: var(--row);
+    grid-column: var(--col);
+  }
+  .pl-at-server {
+    margin-bottom: 0;
+  }
+  .pl-long {
+    --len: calc(2 * var(--gap-x) + var(--mid));
+  }
+  .pl-edge {
+    width: calc(2 * var(--gap-x) + var(--mid));
+    text-align: center;
+  }
+  .pl-edge-chunk {
+    top: calc(35% - 5px - 19px);
+    right: 100%;
+    left: auto;
+  }
+  .pl-edge-obs {
+    top: calc(65% + 7px);
+    right: auto;
+    bottom: auto;
+    left: 100%;
+  }
+  .pl-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "num  name"
+      "num  tag"
+      "slot slot";
+    align-content: start;
+    align-items: start;
+    row-gap: 2px;
+    height: 100%;
+    min-height: 100px;
+    padding: 10px 12px 10px 10px;
+  }
+  .pl-slot {
+    justify-content: flex-start;
+    align-self: end;
+    margin-top: 8px;
+  }
+  .pl-wide-only {
+    display: block;
+  }
+  .pl-bracket {
+    display: flex;
+  }
+  .pl-narrow-only {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The stage: the station the item is at, with its command and files.
+   -------------------------------------------------------------------------- */
+
+/* What is happening now: right under the loop, so the item and the sentence
+   are read together. Three lines are kept, so the controls under the plate
+   do not jump as the sentence changes. */
+.pl-now {
+  min-height: calc(4 * 1.375rem);
+  max-width: 72ch;
+  margin: 20px 0 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+.pl-now-where {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-stretch: 88%;
+}
+
+.pl-details-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+@container pipeline (min-width: 480px) {
+  .pl-details-stack {
+    margin-top: 12px;
+    padding-top: 16px;
+  }
+}
+.pl-details {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.pl-details[data-hidden] {
+  display: none;
+}
+@container pipeline (min-width: 680px) {
+  .pl-now {
+    min-height: calc(2 * 1.375rem);
+  }
+  .pl-details[data-hidden] {
+    display: block;
+    visibility: hidden;
+  }
+}
+
+/* What the item holds, or what is sent and read: a label and its chips. */
+.pl-groups {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+.pl-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 20px;
+}
+.pl-group dt {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.25rem;
+}
+.pl-group dd {
+  min-width: 0;
+  margin: 0;
+}
+@container pipeline (min-width: 560px) {
+  .pl-group {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+  .pl-group dt {
+    margin-top: 1px;
+  }
+}
+
+/* The disclosure for the command, the files and the longer description. */
+.pl-more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin-top: 8px;
+  padding: 0 8px 0 4px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  cursor: pointer;
+}
+.pl-more-toggle:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pl-more-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .pl-more-toggle {
+    min-height: 44px;
+  }
+}
+.pl-more-chevron {
+  transition: transform var(--duration-micro) var(--ease-standard);
+}
+.pl-more-toggle[aria-expanded="true"] .pl-more-chevron {
+  transform: rotate(90deg);
+}
+.pl-more-where {
+  display: none;
+  color: var(--text);
+  font-weight: 600;
+}
+@container pipeline (max-width: 479px) {
+  .pl-more-where {
+    display: inline;
+  }
+}
+.pl-more[hidden] {
+  display: none;
+}
+
+/* collect.py's options: one per line, with what each is for. */
+.pl-options-note {
+  margin: 0 0 6px;
+}
+.pl-options {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.pl-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 12px;
+}
+.pl-option dt {
+  margin: 0;
+  color: var(--text);
+}
+.pl-option dd {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+@container pipeline (min-width: 560px) {
+  .pl-option {
+    grid-template-columns: 22ch minmax(0, 1fr);
+  }
+}
+.pl-details-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+}
+.pl-details-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.375rem;
+}
+.pl-details-kind {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.pl-summary {
+  max-width: 72ch;
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+.pl-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 20px;
+  margin: 16px 0 0;
+}
+.pl-facts dt {
+  margin-top: 10px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.25rem;
+}
+.pl-facts dt:first-child {
+  margin-top: 0;
+}
+.pl-facts dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+@container pipeline (min-width: 560px) {
+  .pl-facts {
+    grid-template-columns: 112px minmax(0, 1fr);
+    row-gap: 12px;
+  }
+  .pl-facts dt,
+  .pl-facts dt:first-child {
+    margin-top: 1px;
+  }
+}
+
+.pl-commands {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+/* The site's code block, a little smaller: a strip with what the command is for and Copy. */
+.pl-command {
+  min-width: 0;
+  margin: 0;
+}
+.pl-command .code-block-strip {
+  padding-left: 12px;
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+.pl-command pre {
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  /* A command wraps at its spaces rather than scrolling: Copy still gives the one line. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pl-command pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.pl-paths {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pl-path {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-ligatures: none;
+  line-height: 1.25rem;
+}
+.pl-path-note {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+/* What the item holds: one chip per part, outlined in its modality hue,
+   with its word. Plain parts get the hairline. */
+.pl-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pl-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+}
+.pl-part::before {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background-color: var(--border-strong);
+  content: "";
+}
+.pl-vision {
+  border-color: var(--vision);
+}
+.pl-vision::before {
+  background-color: var(--vision);
+}
+.pl-language {
+  border-color: var(--language);
+}
+.pl-language::before {
+  background-color: var(--language);
+}
+.pl-action {
+  border-color: var(--action);
+}
+.pl-action::before {
+  background-color: var(--action);
+}
+/* Sent, but not read by the run's config: dashed, struck through, with the word. */
+.pl-unused {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+.pl-unused s {
+  text-decoration-thickness: 1px;
+}
+.pl-unused-word {
+  color: var(--text-faint);
+  font-style: italic;
+}
+.pl-success,
+.pl-failure {
+  padding-left: 6px;
+}
+.pl-success::before,
+.pl-failure::before {
+  display: none;
+}
+.pl-success {
+  border-color: var(--success);
+}
+.pl-success svg {
+  color: var(--success);
+}
+.pl-failure {
+  border-color: var(--failure);
+}
+.pl-failure svg {
+  color: var(--failure);
+}
+
+/* --------------------------------------------------------------------------
+   Every command at once: the loop as its three commands, each with the
+   stations it covers and the files they write, then the other commands. The
+   row of the station the item is at has a 2px accent edge and the soft fill.
+   -------------------------------------------------------------------------- */
+
+.pl-all {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.pl-all-heading {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.25rem;
+}
+.pl-all-heading:not(:first-child) {
+  margin-top: 20px;
+}
+.pl-all-list,
+.pl-all-extras {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pl-all-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px 20px;
+  padding: 10px 12px;
+  border-left: 2px solid transparent;
+}
+.pl-all-item[data-current] {
+  border-left-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+.pl-all-extras li {
+  padding-left: 12px;
+  border-left: 2px solid transparent;
+}
+.pl-all-extras li[data-current] {
+  border-left-color: var(--accent);
+}
+.pl-all-name {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  margin: 0;
+}
+.pl-all-name .pl-path {
+  font-weight: 500;
+}
+.pl-all-covers {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+}
+.pl-all-here {
+  color: var(--text);
+  font-weight: 600;
+}
+.pl-all-body {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.pl-all-label {
+  margin: 4px 0 0;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.pl-root .pl-all-path {
+  color: var(--text-muted);
+}
+@container pipeline (min-width: 560px) {
+  .pl-all-item {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+}

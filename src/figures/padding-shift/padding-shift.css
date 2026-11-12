@@ -1,0 +1,413 @@
+/* ==========================================================================
+   padding-shift: a batch of token ids drawn as rows of cells under a ruler of
+   positions. Colours come from the design tokens only, so both themes follow.
+
+   Geometry. Every cell, ruler number and marker is placed by its position in
+   the row: it is one column wide and translated by (index x its own width).
+   Moving a token is therefore a change of transform, which is all that is
+   animated here (with opacity). The component sets three numbers on .ps-drawing:
+
+     --cols-wide     columns when every position is drawn
+     --cols-narrow   columns when the template's first tokens are folded
+     --skip-narrow   positions the fold removes in front of the first drawn one
+   ========================================================================== */
+
+.ps-root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.ps-drawing {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.ps-track {
+  --columns: var(--cols-narrow);
+  --skip: var(--skip-narrow);
+  --cell: calc(100% / var(--columns));
+  position: relative;
+}
+/* Whole pixels per column keep the 1px outlines sharp wherever a cell lands. */
+@supports (width: round(down, 10px, 1px)) {
+  .ps-track {
+    --cell: round(down, calc(100% / var(--columns)), 1px);
+  }
+}
+@container (min-width: 520px) {
+  .ps-track {
+    --columns: var(--cols-wide);
+    --skip: 0;
+  }
+}
+
+.ps-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  width: var(--cell);
+  transform: translateX(calc((var(--index) - var(--skip)) * 100%));
+  transition:
+    transform 600ms var(--ease-standard),
+    opacity 200ms var(--ease-standard);
+}
+.ps-slot[data-hidden="true"] {
+  opacity: 0;
+}
+
+/* The template's first tokens: drawn one by one on a wide stage, folded into
+   one break cell on a narrow one. (Two classes, so that these outrank the
+   display of whatever else the slot is.) */
+.ps-slot.ps-folded {
+  display: none;
+}
+.ps-slot.ps-break {
+  transform: none;
+}
+@container (min-width: 520px) {
+  .ps-slot.ps-folded {
+    display: grid;
+  }
+  .ps-slot.ps-break {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The strip above the ruler: the tensor's shape on the left, the dimension
+   line between the token's two positions on the right.
+   -------------------------------------------------------------------------- */
+
+.ps-strip {
+  height: 38px;
+}
+.ps-shape {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  white-space: nowrap;
+}
+.ps-dimension {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--cell) * var(--span));
+  transform: translateX(calc((var(--lo) - var(--skip)) * 100% / var(--span)));
+  transition: opacity 200ms var(--ease-standard);
+}
+.ps-dimension[data-hidden="true"] {
+  opacity: 0;
+}
+.ps-dimension-label {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.ps-dimension-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+/* --------------------------------------------------------------------------
+   The ruler: one number per position. The followed token's index is under the
+   highlighter; its index on the other path has a dashed outline.
+   -------------------------------------------------------------------------- */
+
+.ps-ruler {
+  height: 22px;
+  margin-bottom: 4px;
+}
+.ps-tick,
+.ps-cursor,
+.ps-echo {
+  place-items: center;
+  font-size: clamp(12px, 4cqw, 13px);
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1;
+}
+.ps-tick {
+  color: var(--text-faint);
+}
+.ps-cursor > span,
+.ps-echo > span {
+  display: grid;
+  width: calc(100% - 2px);
+  max-width: 34px;
+  height: 20px;
+  border-radius: 2px;
+  place-items: center;
+}
+.ps-cursor {
+  z-index: 1;
+}
+.ps-cursor > span {
+  border: 1px solid var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-weight: 700;
+}
+.ps-echo > span {
+  border: 1px dashed var(--border-strong);
+}
+
+/* --------------------------------------------------------------------------
+   The rows: one cell per token.
+   -------------------------------------------------------------------------- */
+
+.ps-rows {
+  display: grid;
+  gap: 2px;
+}
+.ps-row {
+  height: 40px;
+}
+.ps-token {
+  display: grid;
+  height: 100%;
+  margin-inline: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: clamp(12px, 4cqw, 13px);
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1;
+  white-space: nowrap;
+  place-items: center;
+}
+/* On the narrowest stages (a 320px phone) a cell is about 24px wide: the
+   words narrow further instead of the type getting smaller than 12px. */
+@container (max-width: 300px) {
+  .ps-token {
+    font-stretch: 68%;
+    letter-spacing: -0.01em;
+  }
+  .ps-pad .ps-token > span {
+    padding-inline: 1px;
+  }
+}
+/* The template around the instruction is quieter than the instruction's words. */
+.ps-template .ps-token {
+  color: var(--text-faint);
+}
+
+/* Padding: hatched and dashed, the drafting sign for material that is not there. */
+.ps-pad .ps-token {
+  border-style: dashed;
+  background-image: repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 6px);
+  color: var(--text-faint);
+}
+.ps-pad .ps-token > span {
+  padding: 2px;
+  border-radius: 1px;
+  background-color: var(--surface);
+}
+
+/* The token the figure follows: the highlighter. */
+.ps-action {
+  z-index: 1;
+}
+.ps-action .ps-token {
+  border-color: var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-weight: 700;
+}
+/* The same token in the other row: outlined, not followed. */
+.ps-action-other .ps-token {
+  border-color: var(--text);
+  font-weight: 700;
+}
+
+/* The break cell: its right edge is a break line. */
+.ps-break-shape {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  width: calc(100% - 2px);
+  height: 100%;
+  overflow: visible;
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.ps-break-label {
+  position: relative;
+  display: grid;
+  height: 100%;
+  color: var(--text-faint);
+  font-size: clamp(12px, 4cqw, 13px);
+  font-weight: 500;
+  line-height: 1;
+  place-items: center;
+}
+
+/* Served alone, the other prompt is not in the request. Its cells go first and
+   the outline follows, so the two never read on top of each other; on the way
+   back the outline goes first. */
+.ps-row[data-absent="true"] .ps-slot {
+  opacity: 0;
+  transition-duration: 600ms, 120ms;
+}
+.ps-row[data-absent="false"] .ps-slot {
+  transition-delay: 0ms, 120ms;
+}
+.ps-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  display: grid;
+  width: calc(var(--cell) * (var(--ghost-columns) - var(--skip)) - 2px);
+  border: 1px dashed var(--border-strong);
+  border-radius: 2px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-standard);
+  place-items: center;
+}
+.ps-row[data-absent="false"] .ps-ghost {
+  transition-duration: 120ms;
+}
+.ps-row[data-absent="true"] .ps-ghost {
+  opacity: 1;
+  transition-delay: 120ms;
+}
+
+/* --------------------------------------------------------------------------
+   The reading: the token's index on both paths, for both prompts.
+   -------------------------------------------------------------------------- */
+
+.ps-ledger {
+  width: 100%;
+  max-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ps-ledger th,
+.ps-ledger td {
+  padding: 8px 0 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.ps-ledger .ps-head-prompt,
+.ps-ledger tbody th {
+  padding-left: 0;
+}
+.ps-ledger thead th {
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.0625rem;
+  vertical-align: bottom;
+}
+/* The spanning header over the two columns of indices: a thin rule under it,
+   the strong rule stays under the column headings. */
+.ps-ledger thead .ps-head-group {
+  padding-bottom: 4px;
+  border-bottom-color: var(--border);
+}
+.ps-ledger thead tr + tr th {
+  padding-top: 4px;
+}
+.ps-ledger tbody th {
+  font-weight: 500;
+}
+.ps-ledger tbody tr + tr > * {
+  border-top: 1px solid var(--border);
+}
+.ps-ledger .ps-num {
+  width: 26%;
+  text-align: right;
+}
+.ps-ids {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.ps-verdict {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.125rem;
+}
+.ps-verdict svg {
+  flex: none;
+}
+.ps-differs svg {
+  color: var(--failure);
+}
+.ps-same svg {
+  color: var(--success);
+}
+.ps-index {
+  display: inline-grid;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-weight: 600;
+  place-items: center;
+}
+.ps-index-drawn {
+  border-color: var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-weight: 700;
+}
+.ps-index-elsewhere {
+  border: 1px dashed var(--border-strong);
+}
+.ps-aside {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+/* Reduced motion: every change lands at once, without the staggered delays above. */
+@media (prefers-reduced-motion: reduce) {
+  .ps-drawing *,
+  .ps-drawing *::before,
+  .ps-drawing *::after {
+    transition-delay: 0ms !important;
+  }
+}

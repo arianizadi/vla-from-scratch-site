@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync": "node scripts/sync-content.mjs"
+    "sync": "node scripts/sync.mjs",
+    "sync:content": "node scripts/sync-content.mjs",
+    "sync:data": "node scripts/sync-data.mjs",
+    "check:data": "node scripts/check-data.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

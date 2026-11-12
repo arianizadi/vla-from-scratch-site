@@ -21,7 +21,8 @@ export interface StepperProps {
 /**
  * Previous and Next around the current position. At either end the button
  * stays focusable and is announced as unavailable, so keyboard focus is never
- * lost by stepping to the end.
+ * lost by stepping to the end. The position between the buttons is plain
+ * text; screen readers hear it through the frame's status line.
  */
 export function Stepper({ label, value, min = 0, max, onChange, format, className = "" }: StepperProps) {
   const name = label.charAt(0).toUpperCase() + label.slice(1);
@@ -45,7 +46,8 @@ export function Stepper({ label, value, min = 0, max, onChange, format, classNam
       >
         <Glyph name="chevron-left" size={14} />
       </button>
-      <output>{text}</output>
+      {/* Not a live region: the frame's status line is the one place a step is announced. */}
+      <span className="fig-stepper-value">{text}</span>
       <button
         type="button"
         aria-label={`Next ${label}`}

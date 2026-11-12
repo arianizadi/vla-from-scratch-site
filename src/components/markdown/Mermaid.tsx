@@ -73,16 +73,72 @@ function themeVariables(): Record<string, string | boolean> {
   };
 }
 
+/** Label text of a node or a message: line breaks and markup become spaces. */
+function plain(text: unknown): string {
+  return String(text ?? "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+interface FlowDb {
+  getVertices(): Map<string, { id: string; text?: string }> | Record<string, { id: string; text?: string }>;
+  getEdges(): { start: string; end: string; text?: string }[];
+}
+interface SequenceDb {
+  getMessages(): { from?: string; to?: string; message?: unknown }[];
+  getActors(): Map<string, { name: string; description?: string }>;
+}
+
 /**
- * A Mermaid diagram inside the figure plate. The server sends the diagram's
- * source as text; the drawing replaces it once Mermaid has loaded, and is
- * redrawn when the theme changes. If drawing fails, the source stays.
+ * The diagram as readable sentences, read from Mermaid's own parse: one line
+ * per arrow of a flowchart ("actions [64, 15, 8] to add_noise"), one per
+ * message of a sequence diagram. Undefined for other kinds, which keep their
+ * source as the text form.
  */
-export function Mermaid({ chart }: { chart: string }) {
+async function describe(mermaid: MermaidApi, chart: string): Promise<string[] | undefined> {
+  const diagram = await mermaid.mermaidAPI.getDiagramFromText(chart);
+  const db = diagram.db as unknown as Partial<FlowDb & SequenceDb>;
+  if (typeof db.getEdges === "function" && typeof db.getVertices === "function") {
+    const raw = db.getVertices();
+    const vertices = raw instanceof Map ? raw : new Map(Object.entries(raw));
+    const name = (id: string) => plain(vertices.get(id)?.text) || id;
+    return db.getEdges().map((edge) => {
+      const label = plain(edge.text);
+      return `${name(edge.start)} → ${name(edge.end)}${label ? ` (${label})` : ""}`;
+    });
+  }
+  if (typeof db.getMessages === "function" && typeof db.getActors === "function") {
+    const actors = db.getActors();
+    const name = (id?: string) => plain(actors.get(id ?? "")?.description) || id || "";
+    return db
+      .getMessages()
+      .filter((message) => message.from && message.to)
+      .map((message) => `${name(message.from)} → ${name(message.to)}: ${plain(message.message)}`);
+  }
+  return undefined;
+}
+
+/**
+ * A Mermaid diagram inside the figure plate, titled from the heading above it
+ * and described by the sentence that introduces it (the pipeline supplies
+ * both). The server sends the diagram's source as text; the drawing replaces
+ * it once Mermaid has loaded, and is redrawn when the theme changes. Its text
+ * form lists the diagram's arrows in words. If drawing fails, the source stays.
+ */
+export function Mermaid({ chart, title = "Diagram", lead }: { chart: string; title?: string; lead?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const host = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
   const [svg, setSvg] = useState<string | undefined>(undefined);
+  const [lines, setLines] = useState<string[] | undefined>(undefined);
+  const [scrolls, setScrolls] = useState(false);
 
   useEffect(() => {
     const element = host.current;
@@ -99,6 +155,17 @@ export function Mermaid({ chart }: { chart: string }) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
+  // The drawing takes a tab stop only when it is wider than the plate and scrolls.
+  useEffect(() => {
+    const element = stage.current;
+    if (!element || svg === undefined) return;
+    const measure = () => setScrolls(element.scrollWidth > element.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [svg]);
 
   useEffect(() => {
     if (!near) return;
@@ -142,7 +209,16 @@ export function Mermaid({ chart }: { chart: string }) {
           const upright = (await mermaid.render(`mermaid-${id}-${thisRun}-tb`, turned)).svg;
           if (drawnWidth(upright) < drawnWidth(drawing)) drawing = upright;
         }
-        if (!cancelled && thisRun === run) setSvg(drawing);
+        let described: string[] | undefined;
+        try {
+          described = await describe(mermaid, chart);
+        } catch {
+          described = undefined;
+        }
+        if (!cancelled && thisRun === run) {
+          setSvg(drawing);
+          setLines(described && described.length > 0 ? described : undefined);
+        }
       } catch {
         if (!cancelled && thisRun === run) setSvg(undefined);
       }
@@ -156,28 +232,41 @@ export function Mermaid({ chart }: { chart: string }) {
     };
   }, [near, chart, id]);
 
+  const summary = lead ? `${lead}.` : `${title}.`;
+  const label = `${summary} ${lines ? "Its arrows are listed in words" : "Its source is"} under \u201cDiagram as text\u201d.`;
+
   return (
     <FigureFrame
-      title="Diagram"
+      title={title}
       stamp="schematic"
       grid={svg !== undefined}
       controls={
         svg !== undefined ? (
           <details className="w-full">
             <summary className="cursor-pointer text-ink-muted">Diagram as text</summary>
-            <pre className="mermaid-source mt-2">{chart}</pre>
+            {lines ? (
+              <ul className="mermaid-lines mt-2">
+                {lines.map((line, index) => (
+                  <li key={index}>{line}</li>
+                ))}
+              </ul>
+            ) : (
+              <pre className="mermaid-source mt-2">{chart}</pre>
+            )}
           </details>
         ) : undefined
       }
     >
       <div ref={host} className="min-h-[120px]">
         {svg !== undefined ? (
-          <div className="mermaid-stage" tabIndex={0} role="group" aria-label="Diagram, scrolls sideways when wide">
-            <div
-              role="img"
-              aria-label="Diagram. Its source is available as text below."
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
+          <div
+            ref={stage}
+            className="mermaid-stage"
+            tabIndex={scrolls ? 0 : undefined}
+            role={scrolls ? "group" : undefined}
+            aria-label={scrolls ? `${title}, scrolls sideways` : undefined}
+          >
+            <div role="img" aria-label={label} dangerouslySetInnerHTML={{ __html: svg }} />
           </div>
         ) : (
           <pre className="mermaid-source">{chart}</pre>

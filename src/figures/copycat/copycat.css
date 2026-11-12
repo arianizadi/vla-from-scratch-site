@@ -1,0 +1,390 @@
+/* ==========================================================================
+   copycat: a rollout of the scripted expert against "repeat the previous
+   action", above the probes of a policy with history. A data chart: series
+   hues only, text in ink. Layout follows the figure's width (container
+   queries), not the window's.
+   Plain (global) CSS: every class starts with "copycat-".
+   ========================================================================== */
+
+.copycat-root {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.copycat-part + .copycat-part {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.copycat-heading {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.3125rem;
+}
+.copycat-sub {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+
+.copycat-takeaway {
+  max-width: 68ch;
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.3125rem;
+}
+
+/* The controls of the rollout sit with it, above the chart they move. */
+.copycat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.copycat-controls + .copycat-controls {
+  margin-top: -4px;
+}
+
+.copycat-legend .copycat-band-swatch {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+/* ---------------------------------------------------------------- readout */
+
+.copycat-readout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0 4px;
+  padding: 0;
+}
+@container (min-width: 620px) {
+  .copycat-readout {
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  }
+}
+.copycat-readout > div {
+  min-width: 0;
+}
+.copycat-readout dt {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.copycat-readout dd {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.copycat-readout dd span {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- the chart */
+
+.copycat-chart {
+  position: relative;
+  margin-top: 8px;
+  touch-action: pan-y;
+  cursor: crosshair;
+  border-radius: 2px;
+}
+.copycat-chart:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.copycat-chart {
+  container-type: inline-size;
+}
+/* The chart's final height from the first paint: the wide layout, or the narrow one under 480px
+   (the same rule as RolloutChart.tsx), so nothing moves when it is redrawn at the measured width. */
+.copycat-chart svg {
+  display: block;
+  width: 100%;
+  height: var(--h-wide, auto);
+}
+@container (max-width: 479px) {
+  .copycat-chart svg {
+    height: var(--h-narrow, auto);
+  }
+}
+.copycat-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.copycat-annotation {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 80%;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.copycat-annotation.copycat-annotation-muted {
+  fill: var(--text-muted);
+}
+.copycat-hint {
+  margin: 6px 0 0;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+
+/* ---------------------------------------------------------------- the probe rows */
+
+.copycat-probes {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.copycat-probe-head,
+.copycat-probe {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px 16px;
+  align-items: center;
+}
+@container (min-width: 600px) {
+  .copycat-probe-head,
+  .copycat-probe {
+    grid-template-columns: minmax(150px, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.copycat-probe-head {
+  padding: 0 8px 6px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.copycat-probe-head > :first-child {
+  display: none;
+}
+@container (min-width: 600px) {
+  .copycat-probe-head > :first-child {
+    display: block;
+  }
+}
+@container (max-width: 599px) {
+  .copycat-probe-head {
+    display: none;
+  }
+}
+
+.copycat-probe {
+  position: relative;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.copycat-probe:hover {
+  background-color: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+.copycat-probe:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.copycat-probe-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.copycat-radio {
+  position: relative;
+  top: 2px;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background-color: var(--surface);
+}
+.copycat-probe input:checked ~ .copycat-probe-label .copycat-radio {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
+  background-color: var(--accent);
+}
+
+.copycat-measure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.copycat-head-text {
+  grid-column: 1 / -1;
+}
+
+/* On a narrow figure each track says what it measures. */
+.copycat-measure-name {
+  grid-column: 1 / -1;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+@container (min-width: 600px) {
+  .copycat-measure-name {
+    display: none;
+  }
+}
+.copycat-value {
+  min-width: 4.5em;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.copycat-track {
+  position: relative;
+  height: 22px;
+}
+.copycat-track::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-strong);
+  content: "";
+}
+.copycat-track-ends {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+  border-inline: 1px solid var(--border-strong);
+}
+.copycat-whisker {
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  margin-top: -4px;
+  border-inline: 1.5px solid var(--text-muted);
+}
+.copycat-whisker::before {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background-color: var(--text-muted);
+  content: "";
+}
+.copycat-dot {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  overflow: visible;
+}
+.copycat-chance {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1.5px dashed var(--text-muted);
+}
+
+.copycat-scale {
+  position: relative;
+  height: 17px;
+}
+.copycat-scale span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.copycat-scale span:first-child {
+  transform: none;
+}
+.copycat-scale span:last-child {
+  transform: translateX(-100%);
+}
+
+.copycat-pending {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 10px 8px 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+.copycat-related-name {
+  color: var(--text);
+  font-weight: 500;
+}
+.copycat-echo {
+  margin: 10px 0 0;
+  padding: 8px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+.copycat-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warning);
+  font-weight: 500;
+  font-stretch: 80%;
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.copycat-table-box {
+  max-height: 360px;
+  overflow: auto;
+}
+.copycat-condition {
+  min-width: 14em;
+}
+.copycat-table-box + .copycat-table-box {
+  margin-top: 16px;
+}

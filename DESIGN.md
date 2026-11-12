@@ -39,11 +39,12 @@ Custom properties on `:root`; dark under `:root[data-theme="dark"]` and `@media 
 | `--failure` | #B83227 | #FF8375 | with a cross glyph and a word |
 | `--warning` | #8F5A00 | #F2B84B | draft, running; clock glyph and a word |
 
-Modality hues appear only in schematic figures, always with a label. Series hues appear only in data charts. A plate never uses both sets.
+Modality hues appear only in schematic figures, always with a label. Series hues appear only in data charts. A plate never uses both sets. Figures whose drawing is itself a grid or a table (patch grids, token blocks, config rows) switch the graph paper off.
 
-**Series (fixed order, never cycled), light / dark:** 1 blue #2B62D9 / #5B8DEF; 2 red #D6452B / #C93C3C; 3 green #12936A / #1FA884; 4 yellow #BF9000 / #B38C00; 5 violet #7A4FD6 / #9C7CF0; 6 magenta #CF4A8E / #D6609C. Validated on `--surface` in both themes. Light yellow is 2.91:1, so it always has a shaped marker and a direct label.
+**Series (fixed order, never cycled), light / dark:** 1 blue #2B62D9 / #5B8DEF; 2 red #D6452B / #D94A4A; 3 green #12936A / #1FA884; 4 yellow #9E7700 / #B38C00; 5 violet #7A4FD6 / #9C7CF0; 6 magenta #CF4A8E / #D6609C. Every series is at least 3:1 on `--surface` and `--surface-2` in its theme (light yellow 4.1 / 3.5, dark red 3.8 / 3.3); yellow still always has a shaped marker and a direct label.
 **Object identity:** blue hex nut = 1, hexagon; red cube = 2, square; green can = 3, circle; yellow T block = 4, T glyph.
 **Policy identity:** patch-token ViT without language = 1; pooled CLIP = 2; ViT with instruction tokens = 3; Qwen VLA = 4; custom VLA pretrained = 5; custom VLA random-init = 6. Never colour by object and by policy in one chart: facet by one.
+**Colour follows identity, never selection or order.** A run's hue and marker are its policy's (`POLICY_SERIES`, keyed on the run's design through `policySeries`), in every chart; a reader can carry a colour from one figure to the next. Contrasts within one policy (trained against averaged weights, before against after the fix, one budget against another, two runs of the same policy) keep the policy's hue and differ by fill and line: filled and solid first, then open markers and dashed lines. A colour is never assigned in the order a reader turns runs on.
 **Reference series** (expert, 33% chance): `--text-muted`, dashed.
 **Sequential** (attention), low to high: light #EEF2FC, #C9D6F5, #9DB5EC, #6C8FE0, #2B62D9, #1C2F7D; dark #132237, #1F3A66, #2C5299, #4A77D4, #7FA6F5, #C7DAFF.
 **Syntax:** keyword #7A3FB5 / #C3A6FF; string #17694A / #7FD6AA; number #A24A00 / #FFB37A; function `--accent`; comment `--text-faint` italic.
@@ -82,8 +83,8 @@ Never below 12px or narrower than 80%; no all-caps. Links: `--accent`, 1px under
 Chapter grid, centred:
 
 ```
->=1280:    272 sidebar | 48 | 680 text | 32 | 248 margin
-1024-1279: 240 sidebar | 48 | 680 text      (margin notes fold inline)
+>=1344:    272 sidebar | 48 | 680 text | 32 | 248 margin
+1024-1343: 240 sidebar | 48 | 680 text      (margin notes fold inline)
 <1024:     one column; sidebar is a dialog drawer; 44px sticky section bar
 ```
 
@@ -91,15 +92,15 @@ Prose, code and tables are 680px. Figures, Mermaid and wide blocks are 960px.
 
 ## 5. Components
 
-**Header.** 56px, sticky, `--bg`, 1px bottom border. Wordmark; Chapters, Lab, GitHub, theme toggle; a menu dialog under 768px. Skip link first.
+**Header.** 56px, sticky, `--bg`, 1px bottom border. Wordmark; Learn, Lab, Notes, GitHub, theme toggle. Under 640px GitHub is a 44px mark with a name. The current section has `--accent-soft` and a 2px `--accent` bar under it; `aria-current="page"` on the section's own page, `"true"` inside it. Skip link first.
 
 **Footer.** Both repositories, licence, and: "Every number on this site is copied from the lab notebook."
 
-**Curriculum index** (landing and `/learn`). A contents page, not cards. Sticky 240px list of parts; chapter rows with order number, title, summary, figure count and a Draft badge. Unwritten parts read "In preparation". `/learn` adds a filter by part.
+**Curriculum index** (landing and `/learn`). A contents page, not cards. Sticky 240px list of parts; chapter rows with order number, title, summary, figure count and a status badge. While every chapter has the same status the page says it once and the rows carry no badge. Unwritten parts read "In preparation". `/learn` adds a filter by part (chips, 44px on touch). Unnumbered appendix pages (`glossary.md`) are numbered after the other chapters.
 
 **Chapter page.** Sidebar: parts as collapsible groups (`aria-expanded`); the current chapter expands to its h2 sections with scroll-spy (2px `--accent` bar, `--accent-soft` fill). This is the only table of contents. Header: order number (44px, `--text-faint`), part, h1, summary as lead, then status, reading time, figures, "View source on GitHub". Footer: previous and next rows.
 
-**Provenance callouts.** Generated from the fixed sections and "Background:" paragraphs: a glyph and label in the margin column (inline above the block under 1280px), a 2px `--border-strong` left rule, no tinted box.
+**Provenance callouts.** Generated from the fixed sections and "Background:" paragraphs: a glyph and label in the margin column (inline above the block under 1344px), a 2px `--border-strong` left rule, no tinted box.
 - Filled square, **Measured here**: links to the lab row.
 - Bracket, **In this repository**: repository-relative file links to GitHub.
 - Open circle, **Background**: background paragraphs and the reading list.
@@ -108,12 +109,13 @@ Prose, code and tables are 680px. Figures, Mermaid and wide blocks are 960px.
 
 **Code block.** `--surface`, 1px `--border`, 32px strip with language or path and a Copy button ("Copied" for 1.5 s). Long lines scroll. Highlighted lines: `--accent-soft` with a 2px `--accent` edge.
 
-**Table.** Cells 8px 12px, 1px `--border` row rules, `--border-strong` under the head. `overflow-x: auto`; sticky first column under 640px.
+**Table.** Cells 8px 12px, 1px `--border` row rules, `--border-strong` under the head. Named by a caption (visually hidden when the heading or lead above says it). `overflow-x: auto` in a `ScrollBox`: it takes focus and a name only while it scrolls, and a fade at the right edge says there is more. Sticky first column under 640px, never wider than about 40% of the box (128px for a run label, which wraps).
 
-**Figure plate** (`FigureFrame`, shared by all 17 figures, Mermaid and lab charts). `<figure>` on `--surface` with a 1px `--border-strong` frame.
+**Figure plate** (`FigureFrame`, shared by every figure in `catalog.ts`, Mermaid and lab charts). `<figure>` on `--surface` with a 1px `--border-strong` frame. Reading order: header; an optional one-line takeaway built from the data; the primary drawing; controls; secondary panels; caption; the method note folded behind "How this was measured".
 - Header strip, 36px: "Fig. 41.2", title, and a required stamp: filled square **Measured** (links to lab rows), half square **Computed** (the real algorithm running on a toy input), open circle **Schematic**.
 - Stage: 16:9, at least 280px high, 24px padding. Schematic plates get a graph-paper grid (8px minor, 40px major, `--grid`); charts do not.
-- Control bar: Play or Pause, Previous step, Next step, Reset; native range sliders with label and live value; radio groups as segments; "Show as table" on data figures. Targets 32px, 44px on touch. An `aria-live="polite"` line states the current step.
+- Control bar: global state goes here, in this order: Play or Pause, the stepper, sliders, segments, then "Show as table" (a `ControlButton`, everywhere, lab included) and Reset. Controls inside the stage only for direct manipulation of the drawing. Native range sliders with label and live value; radio groups as segments. Targets 32px, 44px on touch. The status line is the plate's only live region: it is announced once it has settled (a playing figure is announced when it pauses or ends); the stepper's "Step 3 of 10" is plain text.
+- Mermaid diagrams are titled from the heading above them and described by the sentence that introduces them; "Diagram as text" lists their arrows in words.
 - `<figcaption>`: the sentence that stands in for the figure on GitHub.
 - Sizes are dimension lines with a value and unit (px, mm, tokens, steps); shapes are Plex Mono tags.
 
@@ -136,12 +138,13 @@ Animate transform, opacity and SVG path attributes only. `motion/react` for inte
 
 ## 7. Landing page
 
-1. **Hero plate: "One control cycle, drawn in plan."** Text in columns 1 to 5 (h1, one sentence, "Start at chapter 0", "Open the lab notebook"); plate in columns 6 to 12; stacked under 1024px. One inline SVG (720 x 540) with GSAP: a plan of the `pick_target` table draws itself (0 s); the instruction splits into `--language` token chips (1 s); a 16 x 16 `--vision` patch grid sweeps the camera inset and the named object's patches take `--mark` (2 s); 15 noise points travel over 10 flow steps onto a path, 8 turn solid `--action` and the gripper executes them, 7 stay dashed, then it re-plans (3 s); the jaws close and a dimension line reports the measured miss (6 s). About 7 s, once. Controls outside the SVG: "Scripted expert" (5 mm, 100/100) or "Policy without language" (185 mm, 1/100), an object picker, Replay. Caption: layout illustrative; distances and counts measured, linked to lab rows.
-2. **Evidence table.** Notebook rows, not stat tiles: Policy, Task, Successes / episodes, 95% interval, and an inline 0 to 100% track with dot and whisker. Rows link to lab anchors.
-3. **The route.** The `pipeline` figure, wide.
-4. **Contents.** The curriculum index.
-5. **List of figures.** Four columns (two under 768px) of static line thumbnails with title and host chapter.
-6. **Footer.**
+1. **Hero.** Text in columns 1 to 5 (h1, two sentences, "Start at chapter 0", "See the results"); the plate in columns 6 to 12; stacked under 1280px. The plate (`OnsetPlate`) is the main finding, measured: where the gripper first closed in every evaluation episode of one policy at several points of its training, and the scripted expert, drawn around the named object or on the table. Steps through training once on arrival (never under reduced motion). Visible labels on its three segment groups (Checkpoint, Weights, View); the table under it prints success as "n/N = p%" for policies and expert alike. Caption: two sentences; the method folds behind "How this was measured". The stage holds its final height while the episodes load.
+2. **Status note.** The runs still training, by their labels, from the data module.
+3. **What you will learn.** The stages and the parts in reading order, from the chapter files.
+4. **What the measurements showed.** The findings as statements, each with its chapter and a link to its results on `/lab`; no number typed into the text.
+5. **Field notes.** A pointer to `/notes`.
+6. **How to start.** The commands of the tutorial's README; the result of the recipe's run, or "not yet measured here" while it is training.
+7. **Footer.**
 
 ## 8. Lab page (`/lab`)
 
@@ -149,6 +152,7 @@ Title, data-file date, and a Conventions list (closed-loop, unseen layouts, one 
 
 ## 9. Charts
 
+- Reserve the final height from the first paint: a fixed pixel height, or `chartHeight()` with container units for a height that follows the width. Nothing below a figure moves when it hydrates or its data arrives.
 - One y-axis; two measures become two aligned panels with a shared crosshair.
 - Lines 2px; markers at least 8px, shaped by entity; bars with a 2px gap; gridlines `--grid`; baseline `--border-strong`; ticks 13px `--text-faint`.
 - Success rates are a dot with a Wilson whisker and the count beside it; single-seed results say so in the caption.

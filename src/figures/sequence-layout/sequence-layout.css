@@ -1,0 +1,444 @@
+/* ==========================================================================
+   sequence-layout: token sequences drawn to scale, one cell per token.
+   Colours come from the design tokens only, so both themes follow. Modality
+   hues mark what a token carries (image, text, action); the neutral greys
+   mark the time and the state; the highlighter marks only the token under the
+   cursor and its counterpart in the other sequence.
+   ========================================================================== */
+
+.sl-root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  /* The picker switches to a compact select by the width it is given, not the window's. */
+  container: sl-root / inline-size;
+}
+
+.sl-missing {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   The config selector: a radio group laid out as a table.
+   -------------------------------------------------------------------------- */
+
+.sl-picker {
+  --picker-columns: minmax(0, 1fr) minmax(88px, 0.42fr) minmax(88px, 0.42fr);
+  display: grid;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sl-picker-legend {
+  padding: 0;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.sl-picker-head,
+.sl-picker-row {
+  display: grid;
+  grid-template-columns: var(--picker-columns);
+  align-items: center;
+  gap: 4px 16px;
+  padding: 6px 10px;
+}
+.sl-picker-head {
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  font-weight: 600;
+  line-height: 1.0625rem;
+}
+.sl-picker-row {
+  position: relative;
+  min-height: 36px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color var(--duration-micro) var(--ease-standard);
+}
+.sl-picker-row:hover {
+  background-color: var(--surface-2);
+}
+.sl-picker-row[data-selected="true"] {
+  background-color: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.sl-picker-row:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.sl-picker-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  min-width: 0;
+}
+.sl-picker-title {
+  color: var(--text);
+  font-weight: 500;
+}
+.sl-picker-row[data-selected="true"] .sl-picker-title {
+  font-weight: 600;
+}
+.sl-plate-file,
+.sl-picker-file {
+  overflow-wrap: anywhere;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.plate .sl-picker-file {
+  padding: 0;
+  background: none;
+}
+.sl-picker-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.sl-picker-track {
+  position: relative;
+  height: 8px;
+  border-left: 1px solid var(--border-strong);
+}
+.sl-picker-bar {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 0;
+  width: 100%;
+  background-color: var(--text-muted);
+  transform: scaleX(var(--len, 0));
+  transform-origin: left center;
+}
+.sl-picker-row[data-selected="true"] .sl-picker-bar {
+  background-color: var(--text);
+}
+.sl-num {
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right;
+}
+.sl-picker-count {
+  min-width: 4ch;
+  color: var(--text);
+}
+
+/* Narrow: a native select, so the choice and the drawing it changes share one screen. */
+.sl-picker-compact {
+  display: none;
+}
+@container sl-root (max-width: 560px) {
+  .sl-picker {
+    display: none;
+  }
+  .sl-picker-compact {
+    display: grid;
+    gap: 4px;
+  }
+}
+.sl-picker-compact label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.sl-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 32px 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+}
+.sl-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.sl-picker-compact-file {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+}
+.plate .sl-picker-compact-file code {
+  padding: 0;
+  background: none;
+  font-family: var(--font-mono);
+}
+
+/* --------------------------------------------------------------------------
+   The sequences.
+   -------------------------------------------------------------------------- */
+
+.sl-panels {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.sl-panel {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.sl-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.plate.plate .sl-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-stretch: 95%;
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+.sl-panel-total {
+  margin: 0;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.sl-panel-count {
+  color: var(--text);
+  font-weight: 600;
+}
+.sl-panel-count::after {
+  content: " tokens";
+  font-weight: 500;
+}
+.sl-shape-label {
+  margin-left: 4px;
+}
+.plate .sl-shape {
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.sl-panel-sub {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.sl-bridge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 0 4px 2px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.sl-bridge-arrow {
+  flex: none;
+  margin-top: 2px;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.sl-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+/* Cells. */
+.sl-cell {
+  stroke-width: 1;
+}
+.sl-cell[data-s="vision"] {
+  fill: var(--vision);
+}
+.sl-cell[data-s="language"] {
+  fill: var(--language);
+}
+/* Drawn taller than its row (Drawing.tsx), so the shape carries the meaning. */
+.sl-cell[data-s="key"] {
+  fill: var(--language);
+}
+.sl-cell[data-s="placeholder"] {
+  fill: var(--surface);
+  stroke: var(--vision);
+}
+.sl-cell[data-s="summary"] {
+  fill: var(--language);
+}
+.sl-cell-half {
+  fill: var(--vision);
+}
+.sl-cell[data-s="time"] {
+  fill: var(--text-muted);
+}
+.sl-cell[data-s="state"] {
+  stroke: var(--text-muted);
+}
+.sl-hatch-ground {
+  fill: var(--surface);
+}
+.sl-hatch-line {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.sl-cell[data-s="action"] {
+  fill: var(--action);
+}
+.sl-cell[data-s="clean"] {
+  fill: var(--surface);
+  stroke: var(--action);
+}
+.sl-cell[data-s="empty"] {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+}
+.sl-cell[data-s="unsplit"] {
+  fill: var(--surface-2);
+  stroke: var(--text-faint);
+}
+
+/* Loss targets: the scored tokens keep their colour and get a bar under them;
+   the tokens the loss does not score are faded. */
+.sl-muted {
+  opacity: 0.35;
+}
+.sl-target-bar {
+  fill: var(--text);
+}
+
+/* The tokens that changed with the instruction: an ink frame around each run. */
+.sl-changed {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.sl-hover {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+/* For one beat after a change of config or instruction, cells glide to their
+   new place and new cells fade in. The global reduced-motion rule cuts both
+   short; the component also never sets .sl-animate then. */
+.sl-animate .sl-slot {
+  transition:
+    transform 600ms var(--ease-standard),
+    opacity 400ms var(--ease-standard);
+}
+/* Only cells that were not there before start transparent. */
+@starting-style {
+  .sl-animate .sl-slot {
+    opacity: 0;
+  }
+}
+
+/* Labels and brackets. */
+.sl-label {
+  fill: var(--text-muted);
+}
+.sl-bracket {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.sl-bracket-text {
+  fill: var(--text);
+}
+
+/* The token under the cursor and its counterpart: the highlighter behind, an ink outline. */
+.sl-mark {
+  fill: var(--mark);
+  stroke: var(--text);
+  stroke-width: 1;
+}
+.sl-block-outline {
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+/* --------------------------------------------------------------------------
+   Key and table.
+   -------------------------------------------------------------------------- */
+
+.sl-legend {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* What changed with the instruction, beside the prompt. */
+.sl-change {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.sl-change strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.sl-tables {
+  display: grid;
+  gap: 20px;
+}
+.sl-table-wrap {
+  overflow-x: auto;
+}
+.plate .sl-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+}
+.plate .sl-table caption {
+  padding-bottom: 6px;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+.plate .sl-table th,
+.plate .sl-table td {
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.plate .sl-table th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.plate .sl-table .sl-num {
+  padding-right: 0;
+  text-align: right;
+}
+.sl-num-cell {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.sl-table-note {
+  color: var(--text-muted);
+}

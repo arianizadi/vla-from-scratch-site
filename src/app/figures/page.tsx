@@ -119,14 +119,14 @@ export default function FiguresPage() {
               <li key={id}>
                 <a
                   href={`#${id}`}
-                  className="inline-flex rounded-control py-1 font-mono text-13 text-ink-muted no-underline hover:text-ink"
+                  className="touch-target inline-flex rounded-control py-1 font-mono text-13 text-ink-muted no-underline hover:text-ink"
                 >
                   {id}
                 </a>
               </li>
             ))}
             <li className="lg:mt-3 lg:border-t lg:border-line lg:pt-3">
-              <a href="#kit" className="inline-flex rounded-control py-1 text-14 text-ink-muted no-underline hover:text-ink">
+              <a href="#kit" className="touch-target inline-flex rounded-control py-1 text-14 text-ink-muted no-underline hover:text-ink">
                 Kit specimen
               </a>
             </li>

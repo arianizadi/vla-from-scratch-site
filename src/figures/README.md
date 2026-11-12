@@ -20,7 +20,7 @@ src/figures/
   FigureNotice.tsx    the frame shown in place of a figure that failed to load or draw
   kit/                the frame, the controls, the hooks and the chart primitives
   placeholder/        the stand-in used by every figure that is not built yet
-  <id>/index.tsx      one folder per figure: 17 of them
+  <id>/index.tsx      one folder per figure, one per id of catalog.ts
 ```
 
 ## Building a figure
@@ -89,8 +89,12 @@ inside the frame) to the 960 px figure column. It never causes the page to scrol
 drawing that cannot shrink scrolls inside its own stage (`stageClassName="overflow-x-auto"`). Size
 from the container, not the window: `useElementSize(ref)` gives the stage's width, and an SVG drawn
 with `viewBox` set to that width keeps 13 px text at 13 px. Until the first measurement, and in the
-static HTML, the width is 0, so fall back to a default (the specimen uses 640). Controls are 32 px
-high and 44 px on touch screens; the kit's controls already are.
+static HTML, the width is 0, so fall back to a default (the specimen uses 640). Give the drawing its
+final height from the start, or the page jumps when it is redrawn at the measured width: a fixed
+pixel height, or, for a height that follows the width, `chartHeight({ min, ratio, max })` on the
+`<svg>` inside a `[container-type:inline-size]` box, with the same numbers in the drawing (the
+specimen does this). Controls are 32 px high and 44 px on touch screens; the kit's controls already
+are.
 
 **Motion.** Motion shows a process or confirms an action; nothing moves for decoration.
 - Autoplay at most once, when the figure has arrived: `useInView(ref, { amount: 0.6, once: true })`.

@@ -1,0 +1,419 @@
+/* The field notes page (/notes). Tokens and the prose styles are in src/app/globals.css. */
+
+@layer components {
+  .notes-sections > * + * {
+    margin-top: 64px;
+  }
+  .notes-further {
+    margin-top: 64px;
+  }
+
+  /* ----------------------------------------------------------------------
+     Headings: Archivo 28/34 under a hairline, the entry number in the gutter
+     from 1024px, stamps in the margin column from 1344px (as a chapter's
+     provenance callouts).
+     ---------------------------------------------------------------------- */
+
+  .notes-head {
+    position: relative;
+    max-width: var(--measure);
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .notes-headrow {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .notes-heading {
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-stretch: 95%;
+    line-height: 2.125rem;
+    text-wrap: balance;
+  }
+  .notes-heading code {
+    padding: 0 4px;
+    border-radius: 2px;
+    background-color: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    font-weight: 500;
+  }
+  .notes-number {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-faint);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-stretch: 80%;
+    line-height: 1.0625rem;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  @media (min-width: 1024px) {
+    .notes-number {
+      position: absolute;
+      top: 0;
+      right: 100%;
+      margin: 0 14px 0 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+      font-stretch: 90%;
+      line-height: 2.125rem;
+    }
+  }
+  .notes-tone {
+    display: inline-flex;
+    margin-right: 10px;
+    vertical-align: -1px;
+  }
+  .notes-anchor {
+    flex: none;
+    color: var(--text-faint);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--duration-micro) var(--ease-standard);
+  }
+  .notes-headrow:hover .notes-anchor,
+  .notes-anchor:focus-visible {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .notes-anchor {
+      opacity: 1;
+    }
+  }
+
+  .notes-aside {
+    margin-top: 10px;
+  }
+  @media (min-width: 1344px) {
+    .notes-aside {
+      position: absolute;
+      top: 30px;
+      left: calc(100% + 32px);
+      width: 248px;
+      margin: 0;
+      padding-left: 12px;
+      border-left: 2px solid var(--border-strong);
+    }
+  }
+  .notes-stamps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+  @media (min-width: 1344px) {
+    .notes-stamps {
+      flex-direction: column;
+    }
+  }
+  .notes-body {
+    margin-top: 16px;
+  }
+  /* A table too wide for the column scrolls in its own box rather than squeezing a column to a word. */
+  .notes-body .table-scroll :is(th, td) {
+    min-width: 7.5rem;
+  }
+  .notes-body .table-scroll :is(th, td):first-child {
+    min-width: 9rem;
+  }
+
+  /* A stamp: glyph and word in the label face; colour only repeats the word. */
+  .notes-stamp {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-stretch: 80%;
+    line-height: 1.0625rem;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .notes-stamp > svg {
+    flex: none;
+    margin-top: 2.5px;
+  }
+  .notes-stamp-word {
+    font-weight: 600;
+  }
+  .notes-stamp-qualifier {
+    color: var(--text-muted);
+  }
+  .notes-stamp code {
+    padding: 0 3px;
+    border-radius: 2px;
+    background-color: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    font-stretch: 100%;
+  }
+
+  /* ----------------------------------------------------------------------
+     Intro: the file's own caveats and the key to the stamps.
+     ---------------------------------------------------------------------- */
+
+  .notes-intro {
+    display: grid;
+    gap: 16px;
+    max-width: var(--measure);
+    margin-block: 40px 64px;
+    padding: 4px 0 4px 16px;
+    border-left: 2px solid var(--border-strong);
+  }
+  .notes-intro-text.prose {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  .notes-key {
+    display: grid;
+    gap: 6px;
+  }
+  .notes-key > div {
+    display: grid;
+    grid-template-columns: 124px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+  .notes-key dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  @media (max-width: 479px) {
+    .notes-key > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+    .notes-key > div + div {
+      margin-top: 6px;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Summary ledger: one row per item; what, evidence and entries line up
+     across rows through a subgrid. Under 768px each row stacks.
+     ---------------------------------------------------------------------- */
+
+  .notes-ledger {
+    max-width: var(--wide);
+    margin-top: 16px;
+  }
+  .notes-ledger-head {
+    display: none;
+  }
+  .notes-ledger-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .notes-ledger-row {
+    padding-block: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .notes-ledger-row p {
+    margin: 0;
+  }
+  /* The ledger is a table: one face, Archivo at 88% width, 15/21 (DESIGN.md, section 3). */
+  .notes-ledger-what {
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-stretch: 88%;
+    line-height: 1.3125rem;
+  }
+  .notes-ledger-text {
+    margin-top: 4px !important;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-stretch: 88%;
+    line-height: 1.3125rem;
+  }
+  .notes-ledger-refs {
+    margin-top: 6px !important;
+    color: var(--text-faint);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .notes-ledger code {
+    padding: 0 4px;
+    border-radius: 2px;
+    background-color: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    font-weight: 400;
+  }
+  .notes-ledger a:not(.text-link) {
+    color: var(--accent);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  @media (min-width: 768px) {
+    .notes-ledger {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) repeat(var(--columns, 1), minmax(0, 1.35fr)) auto;
+      column-gap: 24px;
+    }
+    .notes-ledger-head,
+    .notes-ledger-rows,
+    .notes-ledger-row {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+    }
+    .notes-ledger-head .notes-ledger-refs {
+      font-size: inherit;
+      line-height: inherit;
+    }
+    .notes-ledger-head {
+      padding-bottom: 6px;
+      color: var(--text-faint);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      font-stretch: 80%;
+      line-height: 1.0625rem;
+    }
+    .notes-ledger-text,
+    .notes-ledger-refs {
+      margin-top: 0 !important;
+    }
+    .notes-ledger-refs {
+      min-width: 48px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .notes-ledger-row .notes-ledger-refs {
+      padding-top: 1px;
+    }
+    .notes-ledger-refs-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Index of entries: number, title, stamps; a contents page, not cards.
+     ---------------------------------------------------------------------- */
+
+  .notes-index {
+    max-width: var(--wide);
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .notes-index-row {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 4px;
+    padding-block: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .notes-index-number {
+    color: var(--text-faint);
+    font-size: 1rem;
+    line-height: 1.375rem;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .notes-index-title {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.375rem;
+    text-decoration: none;
+  }
+  .notes-index-title:hover {
+    color: var(--accent);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .notes-index-title code {
+    padding: 0 4px;
+    border-radius: 2px;
+    background-color: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    font-weight: 500;
+  }
+  .notes-index-status {
+    display: flex;
+    grid-column: 2;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+  }
+  @media (min-width: 640px) {
+    .notes-index-row {
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+    }
+    .notes-index-status {
+      grid-column: 3;
+      justify-content: flex-end;
+      max-width: 280px;
+      padding-top: 2px;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Still training, under the open questions.
+     ---------------------------------------------------------------------- */
+
+  .notes-running {
+    max-width: var(--measure);
+    margin-top: 32px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background-color: var(--surface);
+  }
+  .notes-running-list {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9375rem;
+    line-height: 1.3125rem;
+  }
+  .notes-running-list li {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .notes-running-list li > :last-child {
+    grid-column: 2;
+    font-size: 0.8125rem;
+    line-height: 1.0625rem;
+  }
+
+  .notes-further-links {
+    display: grid;
+    gap: 8px;
+    max-width: var(--measure);
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.75rem;
+  }
+}

@@ -32,15 +32,15 @@ robot arm over a table. from left to right: a red cube, a green can and a blue h
 
 Most of these words follow from the words before them; a language model with no image can learn
 `from left to right: a`. The next object cannot be read from the text: three of four objects are on
-the table, ordered by where they are in the picture. Only the image settles that token. Every
-scored token after the image sends a gradient through the language model and the projector into
-the ViT's weights, but for the template words the loss can be driven down without the image. For
-this token it falls only if the patch tokens carry which object is where. The dataset decides
-which tokens have that property, and so what the vision side is trained to see.
+the table, ordered by where they are in the picture. Every scored token after the image sends a
+gradient through the language model and the projector into the ViT, but for the template words
+the loss falls without the image. For this token it falls only if the patch tokens carry which
+object is where. The dataset decides which tokens have that property, and so what the vision side
+is trained to see.
 
 <!-- interactive: sequence-layout -->
-*Figure: the stage-2 sequence as a row of 321 cells, from prompt to padding, with the cells that
-count as loss targets highlighted.*
+*Figure: the stage-2 sequence as a row of 321 cells, from prompt to padding, with the loss
+targets highlighted.*
 
 ## How it works
 
@@ -56,8 +56,8 @@ With `sim/pickup/configs/custom_vlm.yaml` (batch 32, `seq_len: 320`, `img_num_to
 | ViT output, then projector | `[32, 256, 256]`, `[32, 256, 512]` | (224 / 14)² = 256 patch tokens, 256 wide, then the language model's width |
 | logits | `[32, 320, 49280]` | one score per vocabulary entry, per position |
 
-One row of ids, wrapped by the tokenizer's chat template ([Tokens](10-tokens.md)); `c` is the
-caption's token count:
+One row of ids, wrapped by the tokenizer's chat template
+([Text becomes tokens](10-tokens.md)); `c` is the caption's token count:
 
 | Positions | Content | Counts as a target |
 |---|---|---|
@@ -72,9 +72,9 @@ The row scores c + 4 targets out of 320.
 
 ### The masked loss
 
-Positions are numbered from 0, as in the table above. Let $S$ be the set of (row, position) pairs
-$(b, t)$ whose target, id $t+1$ of row $b$, is neither the padding id nor the image-placeholder
-id. The loss is
+With positions numbered from 0 as above, let $S$ be the set of (row, position) pairs $(b, t)$
+whose target, id $t+1$ of row $b$, is neither the padding id nor the image-placeholder id. The
+loss is
 
 $$L = -\frac{1}{|S|}\sum_{(b,t)\in S} \log p_\theta\left(x_{b,t+1} \mid x_{b,0..t}\right)$$
 
@@ -84,38 +84,37 @@ image; padding because it is not text.
 
 ### Where the weights come from, and what to freeze
 
-Stage 2 loads the stage-1 **checkpoint**, a file of saved weights, into the language model (91.4M
-parameters) only. The ViT (4,955,392 parameters) and the projector (one linear layer 256 -> 512
-without bias, 131,072) start random; those two counts are arithmetic on the config's layer sizes,
-and the three sum to the lab notebook's 96.5M. At step 0 the language model therefore receives
-three prompt tokens, then 256 vectors that are a random function of the image, then text. The
-image information is in those vectors, but in no form the language model can use yet.
+A **checkpoint** is the training state saved at one point: weights, optimiser state and position
+in the data. Stage 2 takes only the weights of the last stage-1 checkpoint, and only into the
+language model (91.4M parameters). The ViT (4,955,392 parameters) and the projector (one linear
+layer 256 -> 512 without bias, 131,072) start random; those two counts are arithmetic on the
+config's layer sizes, and the three sum to the lab notebook's 96.5M. At optimiser step 0 the
+language model therefore receives three prompt tokens, then 256 vectors that are a random function
+of the image, then text: the image information is there, in no form it can use yet.
 
-To **freeze** a part is to exclude its weights from the update. Background: early in training a
-randomly initialised part sends uninformative gradients into its neighbours, and those updates can
-overwrite what a long-trained neighbour knows. Freezing the pretrained part until the new part
-has settled, or warming up its learning rate slowly, avoids that. What to freeze, and for how
-long, depends on which parts hold something worth protecting.
+To **freeze** a part is to exclude its weights from the update. Background: early on, the
+gradients of a random part can overwrite what a pretrained neighbour knows; freezing that
+neighbour for a while, or warming up its learning rate slowly, avoids it.
 
 | Starting point | Choice | Reason |
 |---|---|---|
 | Pretrained encoder and language model. Background: LLaVA (Liu, 2023) | vision encoder frozen throughout; train only the projector, then the projector and the language model | the projector becomes a visual tokenizer for an already good language model |
-| The same. Background: PaliGemma (Beyer, 2024) | nothing frozen, with a slow linear warm-up of the image encoder's learning rate; in its ablation every option that froze the language model was significantly worse, and freezing only the image encoder changed nothing after transfer but worsened validation perplexity on spatial tasks | a captioning loss can teach the encoder spatial skills |
+| The same. Background: PaliGemma (Beyer, 2024) | nothing frozen, the image encoder's learning rate warmed up slowly; in its ablation, freezing the language model was significantly worse, and freezing only the image encoder changed nothing after transfer but worsened validation perplexity on spatial tasks | a captioning loss can teach the encoder spatial skills |
 | Stage 2 here: random ViT and projector, a language model trained for about 15 minutes | nothing frozen | a frozen random ViT cannot learn to see, and the language model must learn a new kind of text |
 
-Freezing the language model was not run here; the second exercise shows the switch.
+Freezing the language model was not run here; exercise 2 shows the switch.
 
 ### Captions from a scene you control
 
 A simulator knows the 3-D position of every object, so a caption that says where things are can
-be computed. Background: CLEVR (Johnson, 2016) built a question-answering dataset the same way,
-generating the language from the renderer's record of each scene.
+be computed. Background: CLEVR (Johnson, 2016) generated its questions the same way, from the
+renderer's record of each scene.
 [`sim/pickup/caption_data.py`](../../sim/pickup/caption_data.py) does it in three steps.
 
 1. **Make a scene.** For each seed from 2,000,000 the script picks `pick_target` with probability
-   0.8, otherwise `pick_cube`, resets the environment, and with probability 0.7 advances the
-   scripted expert by 0 to 69 control steps, so the arm appears in poses that occur during a
-   pick. Both cameras are rendered: two samples per scene.
+   0.8, otherwise `pick_cube` (one red cube), resets the environment, and with probability 0.7
+   advances the scripted expert by 0 to 69 control steps, so the arm appears in poses that occur
+   during a pick. Both cameras are rendered: two image-caption pairs per scene.
 2. **Project each object into the camera.** `project` subtracts the camera's position from the
    object's and rotates the result into the camera frame: $x$ right, $y$ up, the camera looking
    along $-z$ (its **optical axis**), with depth $d$ the distance along that axis. Then
@@ -131,7 +130,7 @@ Worked example, made-up coordinates. The `front` camera has `fovy=45`, so
 $f = 1/\tan 22.5° = 2.414$. A cube 0.10 m right of the optical axis, 0.05 m below it and 1.0 m
 away projects to $u = 0.241$, $v = 0.121$: column $(u+1)/2 \times 224 = 139$, row 126. The
 thresholds at ±0.33 cut the image into bands at columns 75 and 149, so the cube is in the middle
-band both ways, which gives the form-0 example below.
+band both ways: the form-0 example below.
 
 | Form | Example, after the prefix `robot arm over a table` (front camera) or `view from the robot gripper` (wrist) | What the image must supply |
 |---|---|---|
@@ -148,30 +147,29 @@ They can teach the object names used in the task instructions, tied to image reg
 left-to-right order.
 
 They cannot teach what they never state: depth, distance in metres, orientation, where the
-gripper is relative to an object, or which object an instruction means. Position is given to a
+gripper is relative to an object, or which object an instruction means (a policy learns that from
+demonstrations, [Language conditioning](51-language-conditioning.md)). Position is given to a
 third of the image, about 75 pixels. By arithmetic on the front camera's pose in
 `sim/pickup/env.py` (1.05 m from the point it looks at, `fovy=45`), the image spans about 0.87 m
-at that distance and one band about 0.29 m. In the notebook's grasp-tolerance table for machine
-A, the can's success falls from 94% with no offset to 60% when the grasp point is 10 mm off (100%
-to 94% on machine B). One band is about thirty times that offset.
+at that distance and one band about 0.29 m: about thirty times the 10 mm grasp-point error that
+cuts the can's success from 94% to 60% on machine A (one RTX 4090, 24 GB; the notebook's
+grasp-tolerance table).
 
 Form 2 shows why wording matters. If every caption were a list in arbitrary order, like its
 first sentence, the model could reach a low loss knowing only which objects are present, which one
-pooled vector can carry ([Pooled vs patch tokens](21-pooled-vs-patch-tokens.md)). Only tokens that
-depend on position train the model to keep position.
+pooled vector can carry ([One vector or many tokens](21-pooled-vs-patch-tokens.md)).
 
 ## In this repository
 
 **Data.** `work` in `sim/pickup/caption_data.py` writes tar shards (a shard is one file of a
 dataset split into many) holding `<key>.jpg` and `<key>.txt`, with the key
-`<seed, 8 digits>_<camera>` and up to 1,024 samples per shard by default; the main block writes
-`manifest.jsonl`, one `{"shard", "num_sequences"}` line per shard.
+`<seed, 8 digits>_<camera>` and up to 1,024 pairs per shard, listed in `manifest.jsonl`.
 `ImageCaptionPipeline.create_pipeline`
 ([`image_caption.py`](../../vla_foundry/data/pipelines/image_caption.py)) decodes each image to a
 uint8 tensor, wraps the text with `apply_chat_template`, batches, and calls `SimpleVLMProcessor`
 ([`simple_vlm_processor.py`](../../vla_foundry/models/vision_language_backbones/simple_vlm_processor.py))
 with `max_length=seq_len + 1`; it scales the images, expands `<image>` into 256 placeholders and
-tokenizes with `truncation=True`. The tokenizer pads on the right and truncates on the left
+tokenises with `truncation=True`. The tokenizer pads on the right and truncates on the left
 (`truncation_side: left` in its `tokenizer_config.json`): an over-long row loses its first ids.
 
 **Targets and mask.** `VLMBatchHandler.prepare_inputs_and_targets`
@@ -179,14 +177,12 @@ tokenizes with `truncation=True`. The tokenizer pads on the right and truncates 
 `sample_chunk` (`vla_foundry/data/sampler.py`) to split each row into inputs and targets, then
 builds `mask = (targets == cfg.data.pad_token_id) | (targets == cfg.data.image_token_id)`.
 `CrossEntropyLossWithZLoss.forward` ([`vla_foundry/losses.py`](../../vla_foundry/losses.py))
-replaces masked targets with `ignore_index` (-100) before the mean. Its z-loss term, a penalty on
-the squared log of the softmax normaliser, is off: `z_loss_coefficient` in
-`vla_foundry/params/hyper_params.py` defaults to 0.0.
+replaces masked targets with `ignore_index` (-100) before the mean.
 
 **Weights.** If `model.transformer.resume_from_checkpoint` is set, `create_vlm`
-([`vla_foundry/models/vlm.py`](../../vla_foundry/models/vlm.py)) loads that checkpoint's
-`state_dict` into the transformer with `strict=True`, so stage 1 and `model.transformer` must
-describe the same architecture. `ModelParams.freeze` (`vla_foundry/params/model_params.py`)
+([`vla_foundry/models/vlm.py`](../../vla_foundry/models/vlm.py)) loads the `state_dict` (the
+weights) of that file into the transformer with `strict=True`, so stage 1 and `model.transformer`
+must describe the same architecture. `ModelParams.freeze` (`vla_foundry/params/model_params.py`)
 defaults to `False`; when set, `BaseModel._post_init` (`vla_foundry/models/base_model.py`) turns
 off `requires_grad` and `create_optimizer` (`vla_foundry/optimizer.py`) skips those parameters.
 
@@ -200,74 +196,92 @@ sim/pickup/scripts/custom_path.sh check   # held-out captioning check
 ```
 
 The `vlm` stage of [`custom_path.sh`](../../sim/pickup/scripts/custom_path.sh) passes the
-highest-numbered checkpoint in `experiments/pickup/custom_llm/checkpoints` to
-`vla_foundry/main.py` as `--model.transformer.resume_from_checkpoint`, then any extra arguments.
-Checkpoints go to `experiments/pickup/custom_vlm/checkpoints`, the log to
-`experiments/pickup/custom_vlm.train.log`. Budgets: `PICKUP_VLM_SAMPLES` (default 400000) and
+highest-numbered `checkpoint_N.pt` in `experiments/pickup/custom_llm/checkpoints`, the file that
+holds a checkpoint's weights, to `vla_foundry/main.py` as
+`--model.transformer.resume_from_checkpoint`. Checkpoints go to
+`experiments/pickup/custom_vlm/checkpoints`. Budgets: `PICKUP_VLM_SAMPLES` (default 400000) and
 `PICKUP_CAPTION_SCENES` (default 20000), which the `data` stage ignores once
 `data/custom/sim_captions/manifest.jsonl` exists: delete that directory to regenerate.
 
-In [`custom_vlm.yaml`](../../sim/pickup/configs/custom_vlm.yaml), `data.img_num_tokens: 256` must
-equal (`img_size` / `patch_size`)² divided by `projector_pixel_shuffle_factor`², or `VLM.forward`
-(in `vlm.py`) fails its assertion that placeholders and projected patch tokens match in number.
+In [`custom_vlm.yaml`](../../sim/pickup/configs/custom_vlm.yaml),
 `data.allow_multiple_epochs: true` permits the 10 passes that 400,000 samples make over 40,000
-pairs.
+pairs, and `data.img_num_tokens` has to match the ViT's 256 patch tokens
+([Joining vision and language](30-joining-vision-and-language.md)).
 
 ## What we measured
 
-From the lab notebook, on machine A: the 96.5M model, trained on 40,000 captioned sim renders for
-400k samples (about 15 min at 437 samples/s), reached a loss of 0.058. On 300 held-out scenes
-(from seeds the training set never used) it lists the objects in left-to-right order 85% of the
-time (256/300) and names the leftmost object 95% (285/300).
+From the lab notebook: the 96.5M model after 400k samples on 40,000 captioned sim renders,
+checked on 300 held-out scenes (seeds the training set never used).
 
-A loss of 0.058 means the model gives the correct token a probability of $e^{-0.058} = 0.94$ in
-the geometric mean. That mean includes every template word, so it does not show that the image is
-used. The check does: `sim/pickup/vlm_check.py` gives the model a held-out image and a form-1
-caption cut after the colon, and scores the completion ([Testing a VLM](32-testing-a-vlm.md)). For
-a caption that lists three objects, a model that knew which objects were present but not where
-would order them correctly 1 time in 6; for one that lists two, 1 time in 2. The check scores both
-kinds and the notebook does not record the split, so chance for the 300 lies between those values;
-85% is above either.
+| | Final loss | Objects listed in left-to-right order | Leftmost object named |
+|---|---|---|---|
+| Machine A, about 15 min at 437 samples/s | 0.058 | 256/300 = 85% | 285/300 = 95% |
+| Machine B (L40S GPUs, 128 CPU cores) | 0.058 | 249/300 = 83% | 279/300 = 93% |
+| Machine B, after the position fix | 0.059 | 267/300 = 89% | 286/300 = 95% |
 
-Before a pixel-range bug was fixed (the processor scaled the images given at inference to [0, 1]
-but left the uint8 tensors used in training at 0-255), the stage-2 model scored 1/300 on exact
-ordering and 70/300 on the leftmost object ([Train-inference skew](93-train-inference-skew.md)).
+A loss of 0.058, a geometric-mean probability of $e^{-0.058} = 0.94$ for the correct token,
+includes every template word, so it does not show that the image is used. The check does:
+`sim/pickup/vlm_check.py` gives the model a held-out image and a form-1 caption cut after the
+colon, and scores the completion ([Testing a VLM](32-testing-a-vlm.md)). A model that knew
+which objects were present but not where would order three listed objects correctly 1 time in 6, and two 1 time in 2; 83% is above either.
 
-These numbers do not show that the policy benefits. In the first round the VLA built on this
-VLM, with one conditioning vector reaching the action head
-([What the action head sees](50-what-the-action-head-sees.md)), scored 0/100 on `pick_target`, and
-1/100 with a randomly initialised VLM. The rerun that passes every token to the action head has
-no result yet.
+Before a pixel-range bug was fixed the check gave 1/300 and 70/300 on the two scores: the
+processor scaled inference images to [0, 1] but left the uint8 tensors of training at 0-255
+([train/inference skew](93-train-inference-skew.md)).
+
+**Positions.** The first two rows were trained before a second fix. Stage 2 runs in mixed
+precision (`hparams.precision: amp_bf16`), and the table of rotary position angles, which tells attention
+where each token is ([Telling tokens where they are](12-positions.md)), was computed in its
+16-bit format, bfloat16. That holds every whole number up to 256, only the even ones up to 512
+and fewer beyond: 641 distinct positions remained out of 2048. Stage 1's 256-token sequences were
+not affected; the VLM's 320 were. By arithmetic, the first three caption tokens (positions 259 to
+261) all got the angles of position 260, and the example's 24 caption tokens stood on 12
+positions. Trained again with the table fixed, the same VLM scores 89% and 95% against 83% and
+93% (the machine B rows, one seed each, so a few points may be noise). What the old table cost
+a policy built on the VLM was not measured on its own.
+
+**The policy.** The captioning scores alone do not show that a policy benefits. In the first
+round (machine A) the stage-3 policy built on this VLM scored 0/100 on `pick_target`, where the
+instruction names one of three objects, and 1/100 with a randomly initialised VLM. Both closed at
+the named object at chance (33% and 29%); neither could have found it, whatever its backbone
+knew. Each had one conditioning vector reaching the action head
+([What the action head sees](50-what-the-action-head-sees.md)); history (the previous frame, state
+and action), from which another policy here read its target without looking
+([History and shortcuts](52-history-and-shortcuts.md)); and 1M samples on 1500 demonstrations. At
+that budget `dp_vit_lang_reactive`, a patch-token policy with no VLM, scored 3% / 5% (trained /
+averaged weights); with 4000 demonstrations and 5M samples it reached 83% / 85% before the position fix and 93% (trained weights) after it (machine B,
+[How much data and training](71-how-much-data-and-training.md)). Trained again with every token
+passed to the action head, no history, 4000 demonstrations and 3M samples (machine B, after the
+fix), the pair ends at 86% / 87% with the VLM pretrained on these captions and 75% / 85% with a
+randomly initialised one. The pretrained one starts to look after 0.25M samples, the other after
+about 1.0M: what the captions buy is mainly an earlier start
+([The from-scratch path](62-the-from-scratch-path.md); notes: 'Pretraining a backbone: mainly an
+earlier start').
 
 ## Where it goes wrong
 
 | What you see | Why | How to check, what to do |
 |---|---|---|
-| `AssertionError` in `VLM.forward` on the first batch | the start-up check, `TrainExperimentParams.check_asserts` in `vla_foundry/params/train_experiment_params.py`, only requires `seq_len >= img_num_tokens`. A row is 3 + 256 + c + 2 ids and truncation is from the left, so a row more than three ids longer than `seq_len + 1` loses placeholders | keep `seq_len + 1 >= 3 + img_num_tokens + c + 2` |
-| No error, but a caption of 61 to 63 tokens trains on rows that lack `<\|im_start\|>`, then `User`, then `:` | the same truncation takes the prompt tokens first; the caption and `<end_of_utterance>` are never cut. From 64 tokens that `AssertionError` fires | run the last exercise on the longest caption: the row must start with `<\|im_start\|>`; else raise `seq_len` |
-| Low loss, wrong objects in the check | the scored tokens were predictable without position, or without the image | compare the ordering score with chance (1 in 6 for three listed objects, 1 in 2 for two) and the loss with a mismatched image; add forms that state position |
-| A caption can name an object the image does not show | `caption` tests only the projected centre: an object behind the arm is named, and one centred past 0.92 is not, though part of it shows | print a caption with `tar -xOf data/custom/sim_captions/shard-000000.tar 02000000_front.txt` and view the `.jpg` of the same key; accept the wrong captions as label noise, or test visibility with a segmentation render (each pixel holds an object id) |
-| Expected, not tested here: captions fail on a real camera | every training image renders one table under fixed lights; only the layout, the arm pose and which of the two cameras took the picture vary | the simulator cannot show it; test on real images, then add some or randomise appearance (Tobin, 2017) |
+| `AssertionError` in `VLM.forward` on the first batch | the start-up check, `TrainExperimentParams.check_asserts` in `vla_foundry/params/train_experiment_params.py`, only requires `seq_len >= img_num_tokens`. A row is 3 + 256 + c + 2 ids and truncation is from the left: the three prompt tokens go first, without an error, then placeholders | keep `seq_len + 1 >= 3 + img_num_tokens + c + 2`; exercise 3, run on the longest caption, must print `<\|im_start\|>` |
+| Low loss, wrong objects in the check | the scored tokens were predictable without position or without the image; or the check feeds the model other tensors than training did, as with the pixel range | compare the ordering score with chance and the loss with a mismatched image ([Testing a VLM](32-testing-a-vlm.md)); add forms that state position |
+| Nothing: the loss falls and the check passes | until the position table was fixed, tokens above position 256 shared angles ("What we measured"); training and the check built the same table | `RotaryEmbedding._update_cos_sin_tables` in [`vla_foundry/positional_embedding.py`](../../vla_foundry/positional_embedding.py) now computes the angles in float32. A VLM trained before that was fitted to the old table: train it again, or run it with `positional_embedding_type: rotary_legacy_autocast` under `transformer` in its `config_model.yaml` |
+| A caption can name an object the image does not show | `caption` tests only the projected centre: an object behind the arm is named, and one centred past 0.92 is not, though part of it shows | print a caption with `tar -xOf data/custom/sim_captions/shard-000000.tar 02000000_front.txt` and view the `.jpg` of the same key; accept such captions as label noise, or test visibility with a segmentation render (an object id per pixel) |
 
 ## Background and further reading
 
 - Liu, *Visual Instruction Tuning* (LLaVA), 2023. <https://arxiv.org/abs/2304.08485>. A linear
-  projection from a vision encoder into a language model, trained in two stages with the encoder
-  frozen in both.
+  projector between a frozen vision encoder and a language model, trained in two stages.
 - Beyer, *PaliGemma: A versatile 3B VLM for transfer*, 2024. <https://arxiv.org/abs/2407.07726>.
   Trains with nothing frozen and reports an ablation of which parts to freeze.
 - Johnson, *CLEVR: A Diagnostic Dataset for Compositional Language and Elementary Visual
   Reasoning*, 2016. <https://arxiv.org/abs/1612.06890>. Rendered scenes with questions generated
   from the renderer's ground truth.
-- Tobin, *Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real
-  World*, 2017. <https://arxiv.org/abs/1703.06907>. A detector trained only on simulated images
-  with random textures works on real ones.
 
 ## Check yourself
 
-1. With `--data.seq_len 256` the start-up check passes. Left truncation keeps the last 257 ids of
-   a row: 255 - c placeholders, the caption and the two closing tokens (231 for the caption in The
-   idea, which has c = 24). Predict the error, then run:
+1. With `--data.seq_len 256` the start-up check passes, and left truncation keeps the last 257
+   ids of a row: 231 placeholders for the caption in The idea (c = 24). Predict the error, then
+   run:
 
    ```bash
    .venv/bin/python vla_foundry/main.py --config_path sim/pickup/configs/custom_vlm.yaml \

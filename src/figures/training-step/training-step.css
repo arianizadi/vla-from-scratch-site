@@ -1,0 +1,516 @@
+/* ==========================================================================
+   training-step: a stage strip, two drawings (weight space and the batch)
+   and a worked table. Colours come from the design tokens only, so both
+   themes follow. Ink for everything drawn; the highlighter marks the current
+   stage; success and failure appear only with a glyph and a word.
+   ========================================================================== */
+
+.ts-root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+/* --------------------------------------------------------------------------
+   The four stages, in order.
+   -------------------------------------------------------------------------- */
+
+.ts-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+@container (min-width: 600px) {
+  .ts-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.ts-stage {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 6px 10px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+.ts-stage:hover {
+  border-color: var(--text);
+}
+.ts-stage[aria-current="step"] {
+  border-color: var(--text);
+}
+.ts-stage-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-self: start;
+  padding: 0 4px;
+  margin-left: -4px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-stretch: 95%;
+}
+.ts-stage[aria-current="step"] .ts-stage-name {
+  background-color: var(--mark);
+  box-shadow: 0 0 0 1px var(--text);
+  color: var(--on-mark);
+}
+.ts-stage-number {
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ts-stage-result {
+  min-height: 1.0625rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+
+.ts-var {
+  font-family: var(--font-serif);
+  font-size: 1.07em;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   The two drawings.
+   -------------------------------------------------------------------------- */
+
+/* Stacked on narrow plates, side by side from 600 px of stage: decided here, so the
+   static HTML already has the right layout and nothing jumps after measurement. */
+.ts-panels {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+@container (min-width: 600px) {
+  .ts-panels {
+    grid-template-columns: 56fr 44fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
+.ts-drawing {
+  min-width: 0;
+}
+/* A key item that belongs to a later stage: laid out, not shown, so the key does not reflow. */
+.ts-key-later {
+  visibility: hidden;
+}
+.ts-panel {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ts-panel-title {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+  font-stretch: 95%;
+}
+.ts-panel-sub {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-stretch: 88%;
+}
+.ts-legend {
+  min-height: 1.25rem;
+}
+
+.ts-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.ts-plot-area {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.ts-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 88%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ts-label-muted {
+  fill: var(--text-muted);
+}
+.ts-better {
+  fill: var(--success);
+  color: var(--success);
+  font-weight: 700;
+}
+.ts-worse {
+  fill: var(--failure);
+  color: var(--failure);
+  font-weight: 700;
+}
+.ts-same {
+  fill: var(--text-muted);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* Weight space. */
+.ts-contour {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.ts-contour-current {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.ts-contour-after {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.ts-minimum {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.ts-trail {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.ts-trail-point {
+  fill: var(--surface);
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.ts-current {
+  fill: var(--text);
+  stroke: var(--surface);
+  stroke-width: 2;
+  paint-order: stroke;
+}
+.ts-gradient {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.ts-gradient-head {
+  fill: var(--text-muted);
+}
+.ts-gradient-past {
+  opacity: 0.55;
+}
+.ts-step {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.ts-step-head {
+  fill: var(--text);
+}
+.ts-landing {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+/* The batch. */
+.ts-model {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.ts-model-before {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.ts-target {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.ts-prediction {
+  fill: var(--text);
+  stroke: var(--surface);
+  stroke-width: 2;
+  paint-order: stroke;
+}
+.ts-error {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+.ts-square {
+  fill: color-mix(in srgb, var(--text) 10%, transparent);
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.ts-square-before {
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.ts-pull {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.ts-pull-head {
+  fill: var(--text-muted);
+}
+.ts-share {
+  fill: color-mix(in srgb, var(--text) 10%, transparent);
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.ts-strip-base {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+/* --------------------------------------------------------------------------
+   The worked table.
+   -------------------------------------------------------------------------- */
+
+.ts-sheet {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ts-formula {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9375rem;
+  line-height: 1.3125rem;
+}
+.ts-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+.ts-table {
+  width: auto;
+  min-width: min(100%, 560px);
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ts-table th,
+.ts-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+.ts-table thead th {
+  border-bottom-color: var(--border-strong);
+  background-color: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.ts-table th:first-child,
+.ts-table td:first-child {
+  padding-left: 8px;
+  text-align: left;
+}
+.ts-table tbody th {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.ts-table tfoot th,
+.ts-table tfoot td {
+  border-bottom: 0;
+  border-top: 1px solid var(--border-strong);
+}
+.ts-table tfoot th {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.ts-table strong {
+  font-weight: 700;
+}
+@container (max-width: 520px) {
+  .ts-wide-only {
+    display: none;
+  }
+  .ts-table th,
+  .ts-table td {
+    padding-inline: 6px;
+  }
+}
+
+/* The four tables share one place; the tallest sets the height, the current one is shown. */
+.ts-sheets,
+.ts-history-slot,
+.ts-regime-text {
+  display: grid;
+  min-width: 0;
+}
+.ts-sheets > *,
+.ts-history-slot > *,
+.ts-regime-text > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.ts-sheet-hidden,
+.ts-history-ghost,
+.ts-regime-ghost {
+  visibility: hidden;
+}
+
+.ts-outcome,
+.ts-regime p,
+.ts-history {
+  margin: 0;
+  color: var(--text);
+}
+.ts-regime {
+  display: grid;
+  gap: 10px;
+}
+.ts-regime p {
+  color: var(--text-muted);
+}
+
+/* The learning rate's scale: where each step stops short, overshoots and settles, or grows. */
+.ts-rate-scale {
+  display: grid;
+  gap: 4px;
+  max-width: 560px;
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+.ts-rate-track {
+  position: relative;
+  height: 10px;
+}
+.ts-rate-band {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
+}
+.ts-rate-band-1 {
+  background-color: var(--surface-2);
+}
+.ts-rate-band-2 {
+  background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 1px, transparent 1px 5px);
+}
+.ts-rate-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background-color: var(--text-muted);
+}
+.ts-rate-now {
+  position: absolute;
+  top: -5px;
+  width: 4px;
+  height: 20px;
+  margin-left: -2px;
+  border-radius: 1px;
+  background-color: var(--text);
+}
+.ts-rate-names {
+  display: flex;
+  color: var(--text-muted);
+}
+.ts-rate-names span {
+  flex: none;
+  padding-inline: 2px;
+}
+.ts-rate-values {
+  position: relative;
+  height: 1.0625rem;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ts-rate-values span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+/* The stepper sits in the control bar, far below the drawings on a phone: there it moves up here. */
+.ts-stepper-top {
+  display: none;
+}
+@media (max-width: 639px) {
+  .ts-stepper-top {
+    display: flex;
+  }
+  .ts-stepper-bar.fig-stepper {
+    display: none;
+  }
+}
+.ts-history {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ts-history-label {
+  color: var(--text);
+  font-weight: 600;
+}
+.ts-history-item {
+  white-space: nowrap;
+}
+
+/* The stepper's text changes length with the stage name; keep its width. */
+.ts-stepper.fig-stepper output {
+  min-width: 17ch;
+}
+
+/* --------------------------------------------------------------------------
+   Motion: an arrow draws itself (line drawing, DESIGN.md section 6), then its
+   head and the labels fade in (an explanatory beat). Under reduced motion
+   everything is drawn at once.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .ts-draw {
+    stroke-dasharray: 1;
+    animation: ts-draw 800ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+  .ts-fade {
+    animation: ts-fade 500ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .ts-fade-late {
+    animation: ts-fade 300ms cubic-bezier(0.2, 0, 0, 1) 650ms both;
+  }
+}
+@keyframes ts-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ts-fade {
+  from {
+    opacity: 0;
+  }
+}

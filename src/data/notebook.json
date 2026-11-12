@@ -1,0 +1,851 @@
+{
+  "source": "tutorial/lab-notebook.md",
+  "about": "Numbers that exist only in the lab notebook: results from machine A, settings, and tables the experiment export does not carry. Copied by hand, exactly as written. Every entry names the notebook section it comes from and quotes the passages it was copied from; `npm run sync` checks that each quote is still in the notebook and that every number of an entry occurs in its quotes. Numbers the export does carry are not here: they are generated into src/data/generated.",
+
+  "setup": {
+    "section": "Tasks and data",
+    "control": {
+      "hz": 20,
+      "quotes": ["Franka Panda in MuJoCo, 20 Hz control"]
+    },
+    "camera": {
+      "pixels": 224,
+      "stateDimensions": 8,
+      "jointAngles": 7,
+      "quotes": ["`front` and `wrist` RGB cameras at 224x224, 8-D state (7 joint angles, gripper opening in [0, 1])"]
+    },
+    "actions": {
+      "dimensions": 8,
+      "jointPositions": 7,
+      "quotes": ["8-D absolute targets (7 joint positions, gripper command 1 = open, 0 = closed)"]
+    },
+    "pickTarget": {
+      "objectsOnTable": 3,
+      "objects": 4,
+      "quotes": ["3 of 4 objects (red cube, green can, blue hex nut, yellow T block) at random poses"]
+    },
+    "success": {
+      "liftCm": 8,
+      "holdSteps": 10,
+      "holdSeconds": 0.5,
+      "maxSteps": 200,
+      "quotes": ["the named object held 8 cm above its rest height for 10 control steps (0.5 s); episodes end at 200 steps"]
+    },
+    "demonstrations": {
+      "steps": 66,
+      "quotes": ["scripted expert, about 66 steps each, failures discarded"]
+    },
+    "window": {
+      "past": 1,
+      "future": 14,
+      "quotes": ["1 past + current + 14 future low-dimensional steps, images at t-1 and t"]
+    },
+    "chunk": {
+      "actions": 15,
+      "quotes": ["Open-loop test of the first action chunk (15 steps) from the first frame", "| 15 (the whole chunk) |"]
+    },
+    "evaluation": {
+      "seedStart": 1000000,
+      "quotes": ["All success rates are closed-loop on layouts the policy never saw (evaluation seeds `1_000_000+`), one training seed per run, Wilson 95% intervals"]
+    },
+    "chance": {
+      "percent": 33,
+      "quotes": ["the object nearest the gripper when it first closed was the named one (chance 33%)"]
+    }
+  },
+
+  "datasets": {
+    "section": "Datasets",
+    "rows": [
+      {
+        "name": "pick_cube_1k",
+        "episodes": 1000,
+        "windows": 65391,
+        "what": "one red cube",
+        "quotes": ["| `pick_cube_1k` | 1000 | 65,391 | one red cube |"]
+      },
+      {
+        "name": "pick_target_1500",
+        "episodes": 1500,
+        "windows": 98841,
+        "what": "1500 layouts, one instruction each",
+        "quotes": ["| `pick_target_1500` | 1500 | 98,841 | 1500 layouts, one instruction each |"]
+      },
+      {
+        "name": "pick_target_4k",
+        "episodes": 4000,
+        "windows": 263289,
+        "what": "4000 layouts, one instruction each",
+        "quotes": ["| `pick_target_4k` | 4000 | 263,289 | 4000 layouts, one instruction each |"]
+      },
+      {
+        "name": "pick_target_cf",
+        "episodes": 1500,
+        "windows": 98616,
+        "what": "500 layouts, each demonstrated three times, once per object",
+        "quotes": ["| `pick_target_cf` | 1500 | 98,616 | 500 layouts, each demonstrated three times, once per object |"]
+      },
+      {
+        "name": "pick_target_cf4k",
+        "episodes": 4000,
+        "windows": 263552,
+        "what": "about 1333 layouts, each demonstrated once per object",
+        "quotes": ["| `pick_target_cf4k` | 4000 | 263,552 | about 1333 layouts, each demonstrated once per object |"]
+      },
+      {
+        "name": "pick_target_cf_early",
+        "episodes": 1500,
+        "windows": 158616,
+        "what": "`pick_target_cf` with the windows that start in frames 0-7 present 6 times",
+        "quotes": ["| `pick_target_cf_early` | 1500 | 158,616 | `pick_target_cf` with the windows that start in frames 0-7 present 6 times |"]
+      },
+      {
+        "name": "pick_target_4k_early",
+        "episodes": 4000,
+        "windows": 423289,
+        "what": "`pick_target_4k` with the windows that start in frames 0-7 present 6 times",
+        "quotes": ["| `pick_target_4k_early` | 4000 | 423,289 | `pick_target_4k` with the windows that start in frames 0-7 present 6 times |"]
+      },
+      {
+        "name": "pick_target_4k_recover",
+        "episodes": 4000,
+        "windows": 293541,
+        "what": "same seeds as `pick_target_4k`; in 1505 episodes the object is moved once (during the reach or as the gripper closes) and the expert plans again",
+        "quotes": ["| `pick_target_4k_recover` | 4000 | 293,541 | same seeds as `pick_target_4k`; in 1505 episodes the object is moved once (during the reach or as the gripper closes) and the expert plans again |"]
+      },
+      {
+        "name": "pick_target_4k_rs",
+        "episodes": 4000,
+        "windows": 241318,
+        "what": "same seeds; every episode starts from a random gripper pose above the table",
+        "quotes": ["| `pick_target_4k_rs` | 4000 | 241,318 | same seeds; every episode starts from a random gripper pose above the table |"]
+      },
+      {
+        "name": "pick_target_4k_rs_recover",
+        "episodes": 4000,
+        "windows": 275550,
+        "what": "random start poses, and the object is moved once in 1456 episodes",
+        "quotes": ["| `pick_target_4k_rs_recover` | 4000 | 275,550 | random start poses, and the object is moved once in 1456 episodes |"]
+      },
+      {
+        "name": "pick_target_4k_rs_recover_early",
+        "episodes": 4000,
+        "windows": 435550,
+        "what": "`pick_target_4k_rs_recover` with the windows that start in frames 0-7 present 6 times",
+        "quotes": ["| `pick_target_4k_rs_recover_early` | 4000 | 435,550 | `pick_target_4k_rs_recover` with the windows that start in frames 0-7 present 6 times |"]
+      },
+      {
+        "name": "pick_target_4k_hold",
+        "episodes": 4000,
+        "windows": 267075,
+        "what": "same seeds; every episode begins with one frame of the robot at rest",
+        "quotes": ["| `pick_target_4k_hold` | 4000 | 267,075 | same seeds; every episode begins with one frame of the robot at rest |"]
+      }
+    ],
+    "epochs": [
+      {
+        "dataset": "pick_target_1500",
+        "samples": "1M",
+        "epochs": 10.1,
+        "quotes": ["1M samples on `pick_target_1500` are 10.1 epochs"]
+      },
+      {
+        "dataset": "pick_target_1500",
+        "samples": "3M",
+        "epochs": 30.4,
+        "quotes": ["1M samples on `pick_target_1500` are 10.1 epochs, 3M are 30.4"]
+      },
+      {
+        "dataset": "pick_target_4k",
+        "samples": "5M",
+        "epochs": 19.0,
+        "quotes": ["5M samples on `pick_target_4k` are 19.0 epochs"]
+      },
+      {
+        "dataset": "pick_cube_1k",
+        "samples": "1.5M",
+        "epochs": 22.9,
+        "quotes": ["1.5M on `pick_cube_1k` are 22.9"]
+      }
+    ]
+  },
+
+  "expert": {
+    "section": "The scripted expert",
+    "machineA": {
+      "task": "pick_target",
+      "successes": 99,
+      "episodes": 100,
+      "quotes": ["| Same on machine A | 99/100 |"]
+    },
+    "pickCube": {
+      "task": "pick_cube",
+      "successes": 49,
+      "episodes": 50,
+      "quotes": ["| Expert spot check, `pick_cube` | 49/50 |"]
+    }
+  },
+
+  "toleranceMachineA": {
+    "section": "Grasp tolerance",
+    "task": "pick_target",
+    "simulator": "an earlier MuJoCo 4.0 build",
+    "episodesPerOffset": 320,
+    "quotes": [
+      "Expert with a fixed sideways offset added to its grasp point, random direction, 320 episodes per offset",
+      "Machine A (an earlier MuJoCo 4.0 build; the exact version was not recorded)"
+    ],
+    "rows": [
+      {
+        "offsetMm": 0,
+        "cube": 100,
+        "tblock": 100,
+        "can": 94,
+        "hex": 89,
+        "all": 96,
+        "quotes": ["| 0 mm | 100% | 100% | 94% | 89% | 96% |"]
+      },
+      {
+        "offsetMm": 5,
+        "cube": 97,
+        "tblock": 100,
+        "can": 87,
+        "hex": 83,
+        "all": 92,
+        "quotes": ["| 5 mm | 97% | 100% | 87% | 83% | 92% |"]
+      },
+      {
+        "offsetMm": 10,
+        "cube": 99,
+        "tblock": 100,
+        "can": 60,
+        "hex": 61,
+        "all": 80,
+        "quotes": ["| 10 mm | 99% | 100% | 60% | 61% | 80% |"]
+      },
+      {
+        "offsetMm": 15,
+        "cube": 95,
+        "tblock": 100,
+        "can": 35,
+        "hex": 37,
+        "all": 67,
+        "quotes": ["| 15 mm | 95% | 100% | 35% | 37% | 67% |"]
+      },
+      {
+        "offsetMm": 20,
+        "cube": 93,
+        "tblock": 98,
+        "can": 18,
+        "hex": 25,
+        "all": 58,
+        "quotes": ["| 20 mm | 93% | 98% | 18% | 25% | 58% |"]
+      },
+      {
+        "offsetMm": 25,
+        "cube": 73,
+        "tblock": 89,
+        "can": 11,
+        "hex": 21,
+        "all": 49,
+        "quotes": ["| 25 mm | 73% | 89% | 11% | 21% | 49% |"]
+      },
+      {
+        "offsetMm": 30,
+        "cube": 32,
+        "tblock": 76,
+        "can": 0,
+        "hex": 10,
+        "all": 30,
+        "quotes": ["| 30 mm | 32% | 76% | 0% | 10% | 30% |"]
+      }
+    ]
+  },
+
+  "toleranceMachineB": {
+    "section": "Grasp tolerance",
+    "simulator": "MuJoCo 4.0.1",
+    "quotes": ["Machine B (MuJoCo 4.0.1), the machine all second-round results come from"]
+  },
+
+  "pickCube": {
+    "section": "`pick_cube` (machine A)",
+    "machine": "A",
+    "policies": {
+      "clip_pooled": {
+        "label": "Diffusion policy + CLIP ViT-B/32, one pooled vector per image and one for the text",
+        "parametersM": 245,
+        "quotes": ["Diffusion policy + CLIP ViT-B/32, one pooled vector per image and one for the text, 245M"]
+      },
+      "dp_vit": {
+        "label": "Diffusion policy + small ViT from scratch, every patch a token",
+        "parametersM": 36,
+        "quotes": ["Diffusion policy + small ViT from scratch, every patch a token, 36M (`dp_vit`)"]
+      }
+    },
+    "rows": [
+      {
+        "policy": "clip_pooled",
+        "demos": 200,
+        "samples": "300k",
+        "epochs": 23,
+        "finalLoss": 0.040,
+        "successes": 2,
+        "episodes": 50,
+        "percent": 4,
+        "interval": [1, 14],
+        "quotes": ["| Diffusion policy + CLIP ViT-B/32, one pooled vector per image and one for the text, 245M | 200 | 300k (23) | 0.040 | 2/50 = 4% | 1-14% |"]
+      },
+      {
+        "policy": "dp_vit",
+        "demos": 200,
+        "samples": "300k",
+        "epochs": 23,
+        "finalLoss": 0.091,
+        "successes": 15,
+        "episodes": 50,
+        "percent": 30,
+        "interval": [19, 44],
+        "quotes": ["| Diffusion policy + small ViT from scratch, every patch a token, 36M (`dp_vit`) | 200 | 300k (23) | 0.091 | 15/50 = 30% | 19-44% |"]
+      },
+      {
+        "policy": "dp_vit",
+        "demos": 1000,
+        "samples": "500k",
+        "epochs": 8,
+        "finalLoss": 0.084,
+        "successes": 20,
+        "episodes": 50,
+        "percent": 40,
+        "interval": [28, 54],
+        "quotes": ["| same | 1000 | 500k (8) | 0.084 | 20/50 = 40% | 28-54% |"]
+      },
+      {
+        "policy": "dp_vit",
+        "demos": 1000,
+        "samples": "1.5M",
+        "epochs": 23,
+        "finalLoss": 0.058,
+        "successes": 37,
+        "episodes": 50,
+        "percent": 74,
+        "interval": [60, 84],
+        "quotes": ["| same | 1000 | 1.5M (23) | 0.058 | 37/50 = 74% | 60-84% |"]
+      }
+    ],
+    "inference": {
+      "about": "Inference settings on the last row's checkpoint.",
+      "episodes": 50,
+      "quotes": ["Inference settings on the last row's checkpoint, 50 episodes each", "All intervals overlap."],
+      "settings": [
+        {
+          "label": "default",
+          "actionsPerChunk": 8,
+          "flowSteps": 10,
+          "percent": 74,
+          "quotes": ["default (8 actions executed per chunk, 10 flow steps) 74%"]
+        },
+        {
+          "label": "4 actions per chunk",
+          "actionsPerChunk": 4,
+          "percent": 84,
+          "quotes": ["4 actions per chunk 84%"]
+        },
+        {
+          "label": "15 actions per chunk",
+          "actionsPerChunk": 15,
+          "percent": 78,
+          "quotes": ["15 actions per chunk 78%"]
+        },
+        {
+          "label": "4 flow steps",
+          "flowSteps": 4,
+          "percent": 86,
+          "quotes": ["4 flow steps 86%"]
+        },
+        {
+          "label": "25 flow steps",
+          "flowSteps": 25,
+          "percent": 84,
+          "quotes": ["25 flow steps 84%"]
+        }
+      ]
+    },
+    "ownTrainingLayouts": {
+      "policy": "clip_pooled",
+      "successes": 0,
+      "episodes": 20,
+      "quotes": ["The pooled-CLIP policy scored 0/20 on its own training layouts"]
+    }
+  },
+
+  "firstRound": {
+    "section": "`pick_target`, first round (machine A)",
+    "machine": "A",
+    "rows": [
+      {
+        "id": "dp_vit",
+        "policy": "dp_vit",
+        "label": "ViT patch tokens, no language",
+        "parametersM": 36,
+        "demos": 1500,
+        "samples": "1.0M",
+        "epochs": 10,
+        "lossText": "0.069",
+        "loss": 0.069,
+        "successes": 1,
+        "episodes": 100,
+        "quotes": ["| `dp_vit`: ViT patch tokens, no language, 36M | 1500 | 1.0M (10) | 0.069 | 1/100 |"]
+      },
+      {
+        "id": "vla_qwen_100k",
+        "policy": "vla_qwen",
+        "label": "Qwen3-VL-2B, last 4 LLM layers + action head trained (306M of 2.2B), one conditioning vector",
+        "demos": 1500,
+        "samples": "100k",
+        "epochs": 1,
+        "lossText": "0.087",
+        "loss": 0.087,
+        "successes": 0,
+        "episodes": 50,
+        "quotes": ["| `vla_qwen`: Qwen3-VL-2B, last 4 LLM layers + action head trained (306M of 2.2B), one conditioning vector | 1500 | 100k (1) | 0.087 | 0/50 |"]
+      },
+      {
+        "id": "vla_qwen_200k",
+        "policy": "vla_qwen",
+        "label": "same run",
+        "demos": 1500,
+        "samples": "200k",
+        "epochs": 2,
+        "lossText": "0.066",
+        "loss": 0.066,
+        "successes": 1,
+        "episodes": 50,
+        "quotes": ["| same run | 1500 | 200k (2) | 0.066 | 1/50 |"]
+      },
+      {
+        "id": "vla_qwen_300k",
+        "policy": "vla_qwen",
+        "label": "same run",
+        "demos": 1500,
+        "samples": "300k",
+        "epochs": 3,
+        "lossText": "0.039",
+        "loss": 0.039,
+        "successes": 6,
+        "episodes": 50,
+        "quotes": ["| same run | 1500 | 300k (3) | 0.039 | 6/50 |"]
+      },
+      {
+        "id": "vla_qwen_final",
+        "policy": "vla_qwen",
+        "label": "same run, final",
+        "demos": 1500,
+        "samples": "400k",
+        "epochs": 4,
+        "lossText": "0.03-0.04",
+        "lossRange": [0.03, 0.04],
+        "successes": 6,
+        "episodes": 100,
+        "quotes": ["| same run, final | 1500 | 400k (4) | 0.03-0.04 | 6/100 |"]
+      },
+      {
+        "id": "vla_custom",
+        "policy": "vla_custom",
+        "label": "91M LLM -> 96M VLM -> 130M VLA, all trained here, one conditioning vector",
+        "parametersM": 130,
+        "demos": 1500,
+        "samples": "1.0M",
+        "epochs": 10,
+        "lossText": "~0.03",
+        "lossAbout": 0.03,
+        "successes": 0,
+        "episodes": 100,
+        "quotes": ["| `vla_custom`: 91M LLM -> 96M VLM -> 130M VLA, all trained here, one conditioning vector | 1500 | 1.0M (10) | ~0.03 | 0/100 |"]
+      },
+      {
+        "id": "vla_custom_random",
+        "policy": "vla_custom",
+        "label": "same architecture, VLM randomly initialised",
+        "demos": 1500,
+        "samples": "1.0M",
+        "epochs": 10,
+        "lossText": "~0.03",
+        "lossAbout": 0.03,
+        "successes": 1,
+        "episodes": 100,
+        "quotes": ["| same architecture, VLM randomly initialised | 1500 | 1.0M (10) | ~0.03 | 1/100 |"]
+      }
+    ],
+    "qwenWrongObject": {
+      "episodes": 150,
+      "quotes": ["The Qwen policy never lifted an object other than the named one in 150 episodes."]
+    },
+    "grasp": {
+      "about": "Where the gripper was when it first closed, same checkpoints.",
+      "episodes": 100,
+      "quotes": ["Where the gripper was when it first closed (same checkpoints, 100 episodes)"],
+      "rows": [
+        {
+          "id": "dp_vit",
+          "label": "`dp_vit`, no language",
+          "closed": 100,
+          "named": 32,
+          "missNamedMm": 185,
+          "missNearestMm": 110,
+          "quotes": ["| `dp_vit`, no language | 100% | 32% | 185 mm | 110 mm |"]
+        },
+        {
+          "id": "vla_custom",
+          "label": "`vla_custom`, pretrained VLM",
+          "closed": 100,
+          "named": 33,
+          "missNamedMm": 175,
+          "missNearestMm": 89,
+          "quotes": ["| `vla_custom`, pretrained VLM | 100% | 33% | 175 mm | 89 mm |"]
+        },
+        {
+          "id": "vla_custom_random",
+          "label": "`vla_custom`, random-init VLM",
+          "closed": 100,
+          "named": 29,
+          "missNamedMm": 174,
+          "missNearestMm": 89,
+          "quotes": ["| `vla_custom`, random-init VLM | 100% | 29% | 174 mm | 89 mm |"]
+        }
+      ],
+      "chance": {
+        "percent": 33,
+        "quotes": ["Chance for \"nearest object was the named one\" is 33%"]
+      },
+      "height": {
+        "withinMm": 3,
+        "closeStepFrom": 34,
+        "closeStepTo": 44,
+        "quotes": ["All three closed at the right height (within about 3 mm) around step 34-44, as the expert does."]
+      }
+    }
+  },
+
+  "stages": {
+    "section": "The from-scratch stages (machine A unless noted)",
+    "machine": "A",
+    "rows": [
+      {
+        "stage": "1",
+        "name": "Language model",
+        "model": "12 layers, 8 heads, 512 wide, vocabulary 49,280, 91.4M parameters",
+        "data": "61,000 DCLM-baseline web documents",
+        "budget": "500k samples, batch 32, about 15 min at 550 samples/s",
+        "result": "loss 6.3 -> 4.1, grammatical English. Machine B: final loss 4.15",
+        "layers": 12,
+        "heads": 8,
+        "width": 512,
+        "vocabulary": 49280,
+        "parametersM": 91.4,
+        "documents": 61000,
+        "batch": 32,
+        "minutes": 15,
+        "samplesPerSecond": 550,
+        "lossStart": 6.3,
+        "lossEnd": 4.1,
+        "quotes": ["| 1. Language model | 12 layers, 8 heads, 512 wide, vocabulary 49,280, 91.4M parameters | 61,000 DCLM-baseline web documents | 500k samples, batch 32, about 15 min at 550 samples/s | loss 6.3 -> 4.1, grammatical English. Machine B: final loss 4.15 |"]
+      },
+      {
+        "stage": "2",
+        "name": "VLM",
+        "model": "stage 1 + ViT (224 px, patch 14, 256 wide, 6 layers) + linear projector, 96.5M",
+        "data": "40,000 captioned sim renders",
+        "budget": "400k samples, about 15 min at 437 samples/s",
+        "result": "loss 0.058; on 300 held-out scenes it lists the objects in left-to-right order 85% of the time (256/300) and names the leftmost object 95% (285/300)",
+        "vit": { "pixels": 224, "patch": 14, "width": 256, "layers": 6 },
+        "parametersM": 96.5,
+        "renders": 40000,
+        "minutes": 15,
+        "samplesPerSecond": 437,
+        "loss": 0.058,
+        "heldOutScenes": 300,
+        "ordering": { "successes": 256, "episodes": 300, "percent": 85 },
+        "leftmost": { "successes": 285, "episodes": 300, "percent": 95 },
+        "quotes": ["| 2. VLM | stage 1 + ViT (224 px, patch 14, 256 wide, 6 layers) + linear projector, 96.5M | 40,000 captioned sim renders | 400k samples, about 15 min at 437 samples/s | loss 0.058; on 300 held-out scenes it lists the objects in left-to-right order 85% of the time (256/300) and names the leftmost object 95% (285/300) |"]
+      },
+      {
+        "stage": "3",
+        "name": "VLA",
+        "model": "stage 2 + flow-matching action transformer, 130.0M, everything trainable",
+        "data": "1500 `pick_target` demos",
+        "budget": "1.0M samples, about 1.7 h at 165 samples/s",
+        "result": "0/100 (see above)",
+        "parametersM": 130.0,
+        "demos": 1500,
+        "hours": 1.7,
+        "samplesPerSecond": 165,
+        "successes": 0,
+        "episodes": 100,
+        "quotes": ["| 3. VLA | stage 2 + flow-matching action transformer, 130.0M, everything trainable | 1500 `pick_target` demos | 1.0M samples, about 1.7 h at 165 samples/s | 0/100 (see above) |"]
+      }
+    ],
+    "outOfMemory": {
+      "batch": 128,
+      "tokens": 256,
+      "vocabulary": 49280,
+      "gigabytesPerTensor": 6.5,
+      "quotes": ["Stage 1 ran out of memory at batch 128: the float32 logits for 128 x 256 tokens over a 49,280-word vocabulary are 6.5 GB per tensor."]
+    },
+    "beforePixelRangeFix": {
+      "heldOutScenes": 300,
+      "ordering": { "successes": 1, "episodes": 300 },
+      "leftmost": { "successes": 70, "episodes": 300 },
+      "lossFedAsPil": { "rightImage": 1.93, "mismatchedImage": 1.89 },
+      "lossFedAsTensors": { "rightImage": 0.10, "mismatchedImage": 1.18 },
+      "quotes": [
+        "Before the pixel-range fix (below) the stage-2 model scored 1/300 on exact ordering and 70/300 on the leftmost object.",
+        "A teacher-forced check on that model gave the same loss with the right and with a mismatched image when images were fed as PIL (1.93 vs 1.89), and 0.10 vs 1.18 when fed as the unscaled uint8 tensors it was trained on."
+      ]
+    },
+    "machineB": {
+      "section": "From-scratch stages on machine B",
+      "machine": "B",
+      "languageModelLoss": 4.15,
+      "vlmLoss": 0.058,
+      "heldOutScenes": 300,
+      "ordering": { "successes": 249, "episodes": 300, "percent": 83 },
+      "leftmost": { "successes": 279, "episodes": 300, "percent": 93 },
+      "sequenceTokens": { "languageModel": 256, "vlm": 320 },
+      "quotes": [
+        "Language model final loss 4.15. VLM final loss 0.058; held-out captioning check 249/300 = 83% exact ordering and 279/300 = 93% leftmost object.",
+        "Both were trained before the position fix. The language model's sequences are 256 tokens long: no two of its positions were merged (the old table rounded their angles to 8 significant bits). The VLM's are 320 tokens long, and positions above 256 were merged in pairs."
+      ],
+      "vlmAfterFix": {
+        "about": "The VLM retrained after the position fix, same data and budget. The VLAs after the fix are built on it.",
+        "loss": 0.059,
+        "heldOutScenes": 300,
+        "ordering": { "successes": 267, "episodes": 300, "percent": 89 },
+        "leftmost": { "successes": 286, "episodes": 300, "percent": 95 },
+        "quotes": [
+          "The VLM retrained after the fix (same data and budget): final loss 0.059, captioning check 267/300 = 89% exact ordering and 286/300 = 95% leftmost object."
+        ]
+      }
+    }
+  },
+
+  "positionTable": {
+    "section": "Bugs found and fixed",
+    "significantBits": 8,
+    "distinct": 641,
+    "positions": 2048,
+    "collapse": [
+      { "above": 256, "onto": "even numbers" },
+      { "above": 512, "onto": "multiples of 4" }
+    ],
+    "noHistory": {
+      "tokensBeforeActions": 426,
+      "actionTokens": 15,
+      "positionsShared": 8,
+      "instructionTokens": 32,
+      "patchTokens": 392,
+      "firstActionPosition": 426,
+      "lastActionPosition": 440
+    },
+    "history": { "tokensBeforeActions": 820, "actionTokens": 16, "positionsShared": 4 },
+    "quotes": [
+      "The rotary position table was computed in bfloat16 under autocast, which keeps 8 significant bits",
+      "positions above 256 collapse onto even numbers, above 512 onto multiples of 4: 641 distinct positions out of 2048.",
+      "In the no-history policy (426 tokens before the actions: one for the noise level, 32 for the instruction, 392 patches, one for the joint state) the 15 action-step tokens, at positions 426-440, shared 8 positions; with history (about 820) 16 shared 4",
+      "the table is computed in float32 and then cast; test added. Effect: see 'The same run before and after the fix' (one seed each; a second pair is running) and the single cube with history"
+    ]
+  },
+
+  "remainingFailures": {
+    "section": "The failures that remain",
+    "run": "dp_vit_lang_reactive_pt4k",
+    "evaluations": 12,
+    "layoutsEach": 100,
+    "quotes": ["`dp_vit_lang_reactive_pt4k`, checkpoints from 3.0M samples on (raw and EMA, 12 evaluations of 100 layouts pooled)"],
+    "rows": [
+      {
+        "object": "can",
+        "successes": 311,
+        "episodes": 336,
+        "percent": 93,
+        "missSuccessMm": 5,
+        "missFailureMm": 12,
+        "yawSuccessDeg": null,
+        "yawFailureDeg": null,
+        "heightFailureMm": 3,
+        "quotes": ["| green can | 311/336 = 93% | 5 mm | 12 mm | - | - | 3 mm |"]
+      },
+      {
+        "object": "hex",
+        "successes": 283,
+        "episodes": 300,
+        "percent": 94,
+        "missSuccessMm": 7,
+        "missFailureMm": 30,
+        "yawSuccessDeg": null,
+        "yawFailureDeg": null,
+        "heightFailureMm": -0,
+        "quotes": ["| blue hex nut | 283/300 = 94% | 7 mm | 30 mm | - | - | -0 mm |"]
+      },
+      {
+        "object": "cube",
+        "successes": 236,
+        "episodes": 288,
+        "percent": 82,
+        "missSuccessMm": 8,
+        "missFailureMm": 16,
+        "yawSuccessDeg": 20,
+        "yawFailureDeg": 32,
+        "heightFailureMm": -1,
+        "quotes": ["| red cube | 236/288 = 82% | 8 mm | 16 mm | 20 deg | 32 deg | -1 mm |"]
+      },
+      {
+        "object": "tblock",
+        "successes": 153,
+        "episodes": 276,
+        "percent": 55,
+        "missSuccessMm": 9,
+        "missFailureMm": 15,
+        "yawSuccessDeg": 35,
+        "yawFailureDeg": 64,
+        "heightFailureMm": 9,
+        "quotes": ["| yellow T block | 153/276 = 55% | 9 mm | 15 mm | 35 deg | 64 deg | 9 mm |"]
+      }
+    ],
+    "yawNote": {
+      "text": "Yaw error is measured against the grasp the expert uses (cube: any of four, T block: across the stem, either way round). The can and the hex nut can be grasped at any yaw.",
+      "quotes": [
+        "Yaw error is measured against the grasp the expert uses (cube: any of four, T block: across the stem, either way round).",
+        "The can and the hex nut can be grasped at any yaw."
+      ]
+    }
+  },
+
+  "openLoop": {
+    "section": "First action chunk, open loop",
+    "policy": "dp_vit_lang_reactive",
+    "run": "dp_vit_lang_reactive_pt1500",
+    "demos": 1500,
+    "samples": "0.9M",
+    "weights": "raw",
+    "chunkSteps": 15,
+    "layouts": 60,
+    "trainingSeeds": [0, 59],
+    "unseenSeeds": [1000000, 1000059],
+    "quotes": [
+      "Open-loop test of the first action chunk (15 steps) from the first frame of an episode; the chunk is not executed. `dp_vit_lang_reactive_pt1500` (1500 demonstrations, the 1M-sample run) at 0.9M samples, trained weights, 60 layouts per column: seeds 0-59, which are in its demonstrations, and seeds 1,000,000-1,000,059, which are not."
+    ],
+    "expertHeadsForNamed": {
+      "training": 100,
+      "unseen": 100,
+      "quotes": ["| Expert's chunk heads for the named object | 100% | 100% |"]
+    },
+    "policyHeadsForNamed": {
+      "training": 35,
+      "unseen": 48,
+      "quotes": ["| Policy's chunk heads for the named object | 35% | 48% |"]
+    },
+    "otherNamedHeadsForIt": {
+      "about": "With another object of the layout named instead, the policy's chunk heads for that one.",
+      "training": 42,
+      "unseen": 43,
+      "quotes": ["| With another object of the layout named instead, the policy's chunk heads for that one | 42% | 43% |"]
+    },
+    "endpointDistanceCm": {
+      "training": 12.1,
+      "unseen": 11.2,
+      "quotes": ["| Distance between the policy's and the expert's chunk end point (median) | 12.1 cm | 11.2 cm |"]
+    },
+    "instructionSpreadCm": {
+      "about": "Distance between the policy's end points for the two instructions, one draw each (median).",
+      "training": 10.9,
+      "unseen": 10.8,
+      "quotes": ["| Distance between the policy's end points for the two instructions, one draw each (median) | 10.9 cm | 10.8 cm |"]
+    },
+    "expertTravel": {
+      "cm": 30,
+      "quotes": ["The expert moves the gripper 30 cm in that chunk."]
+    },
+    "noLanguage": {
+      "headsForNamedFrom": 32,
+      "headsForNamedTo": 42,
+      "endpointDistanceCm": 12.9,
+      "run": "dp_vit_reactive_pt1500",
+      "quotes": ["The policy without a language input (`dp_vit_reactive_pt1500`, final checkpoint) gives the same picture: 32-42% heading for the named object, end points 12.9 cm from the expert's."]
+    }
+  },
+
+  "disturbances": {
+    "section": "Disturbances",
+    "move": {
+      "distanceMm": 80,
+      "turnRad": 0.5,
+      "quotes": ["The named object is moved once per episode, 80 mm in a random direction unless stated, and turned by up to 0.5 rad"]
+    },
+    "expertCloses": {
+      "step": 40,
+      "quotes": ["The expert closes the gripper around step 40."]
+    },
+    "expert": {
+      "about": "The scripted expert under the same disturbances: reported after the position fix, 100 layouts per condition. Its results are expertBattery() in probes.ts.",
+      "layouts": 100,
+      "quotes": [
+        "The scripted expert under the same disturbances is in the section after the position fix (100 layouts per condition): with its one plan per episode it fails as the policy does; planning again it succeeds every time."
+      ]
+    }
+  },
+
+  "inference": {
+    "section": "Inference settings",
+    "run": "dp_vit_lang_reactive_pt4k",
+    "defaultLatency": {
+      "flowSteps": 10,
+      "ms": 71,
+      "quotes": ["| 10 | 85/100, 83/100 | 71 ms |"]
+    },
+    "latencyNote": {
+      "text": "Latencies were measured while the same GPU was training another model.",
+      "quotes": ["Latencies were measured while the same GPU was training another model."]
+    }
+  },
+
+  "throughput": {
+    "section": "Throughput",
+    "rows": [
+      {
+        "model": "`dp_vit` / `dp_vit_lang` (4 images)",
+        "machineA": "about 620 samples/s",
+        "machineB": "about 540 samples/s",
+        "quotes": ["| `dp_vit` / `dp_vit_lang` (4 images) | about 620 samples/s | about 540 samples/s |"]
+      },
+      {
+        "model": "`dp_vit_reactive` / `dp_vit_lang_reactive` (2 images)",
+        "machineA": "not run",
+        "machineB": "about 1100 samples/s alone on a GPU; 570-700 while 4-5 policy servers evaluate on the same GPU",
+        "quotes": ["| `dp_vit_reactive` / `dp_vit_lang_reactive` (2 images) | not run | about 1100 samples/s alone on a GPU; 570-700 while 4-5 policy servers evaluate on the same GPU |"]
+      },
+      {
+        "model": "`vla_custom` (130M)",
+        "machineA": "165 samples/s",
+        "machineB": "not yet run",
+        "quotes": ["| `vla_custom` (130M) | 165 samples/s | not yet run |"]
+      },
+      {
+        "model": "`vla_qwen` (2.2B, 306M trainable, batch 16)",
+        "machineA": "49 samples/s",
+        "machineB": "45-48 samples/s",
+        "quotes": ["| `vla_qwen` (2.2B, 306M trainable, batch 16) | 49 samples/s | 45-48 samples/s |"]
+      },
+      {
+        "model": "Language model stage (91M, batch 32, 256 tokens)",
+        "machineA": "550 samples/s",
+        "machineB": "520-545 samples/s",
+        "quotes": ["| Language model stage (91M, batch 32, 256 tokens) | 550 samples/s | 520-545 samples/s |"]
+      }
+    ],
+    "inferencePerChunk": {
+      "text": "Policy inference per chunk: 20-65 ms for the 36M policy (`dp_vit`), about 190 ms for the Qwen VLA (machine A).",
+      "quotes": ["Policy inference per chunk: 20-65 ms for the 36M policy (`dp_vit`), about 190 ms for the Qwen VLA (machine A)."]
+    }
+  }
+}

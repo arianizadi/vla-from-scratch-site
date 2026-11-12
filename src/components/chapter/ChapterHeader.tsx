@@ -39,7 +39,7 @@ export function ChapterHeader({ chapter, editUrl }: ChapterHeaderProps) {
         {editUrl ? (
           <li>
             <a href={editUrl} className="text-link">
-              Edit on GitHub
+              View source on GitHub
             </a>
           </li>
         ) : null}

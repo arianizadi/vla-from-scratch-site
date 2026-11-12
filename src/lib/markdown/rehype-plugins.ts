@@ -36,16 +36,50 @@ function fencedCode(pre: Element): { code: Element; language?: string } | undefi
   return { code, language };
 }
 
+/** Longest paragraph, in characters, read as the sentence that introduces a diagram. */
+const DIAGRAM_LEAD_LENGTH = 320;
+
+/**
+ * What a diagram is about, from the chapter around it: the nearest heading
+ * above it (its title) and the paragraph just above it when that is a short
+ * lead-in ("the forward pass of one optimiser step has these shapes:").
+ */
+function diagramContext(parent: Element | Root, index: number): { title?: string; lead?: string } {
+  let lead: string | undefined;
+  let nearest = true;
+  for (let at = index - 1; at >= 0; at -= 1) {
+    const node = parent.children[at];
+    if (!isElement(node)) continue;
+    if (nearest && node.tagName === "p") {
+      const text = toString(node).trim().replace(/\s+/g, " ").replace(/[:.]$/, "");
+      if (text && text.length <= DIAGRAM_LEAD_LENGTH) lead = text;
+    }
+    nearest = false;
+    if (/^h[2-4]$/.test(node.tagName)) return { title: toString(node).trim(), lead };
+  }
+  return { lead };
+}
+
 export function rehypeMermaid() {
   return (tree: Root) => {
+    const titles = new Map<string, number>();
     visit(tree, "element", (node, index, parent) => {
       if (node.tagName !== "pre" || index === undefined || !parent) return;
       const fenced = fencedCode(node);
       if (fenced?.language !== "mermaid") return;
+      const chart = toString(fenced.code).trim();
+      const context = diagramContext(parent as Element | Root, index);
+      // A title the diagram gives itself (Mermaid's accTitle) wins over the heading above it.
+      const own = /^\s*accTitle\s*:\s*(.+)$/m.exec(chart)?.[1]?.trim();
+      const description = /^\s*accDescr\s*:\s*(.+)$/m.exec(chart)?.[1]?.trim();
+      let title = own ?? context.title ?? "Diagram";
+      const seen = (titles.get(title) ?? 0) + 1;
+      titles.set(title, seen);
+      if (seen > 1) title = `${title}, diagram ${seen}`;
       const diagram: Element = {
         type: "element",
         tagName: "mermaid-diagram",
-        properties: { chart: toString(fenced.code).trim() },
+        properties: { chart, title, lead: description ?? context.lead ?? "" },
         children: [],
       };
       parent.children[index] = diagram;
@@ -117,10 +151,49 @@ function rows(section: ElementContent | undefined): Element[] {
   return section.children.filter((child): child is Element => isElement(child, "tr"));
 }
 
+/** Longest paragraph, in characters, read as a table's lead ("Measured. Machine A, 1500 demonstrations."). */
+const LEAD_LENGTH = 160;
+
+/**
+ * A name for a table from what stands before it: the paragraph just above it
+ * when that is short (a table's lead), or else the nearest heading above it.
+ */
+function tableName(parent: Element | Root | undefined, index: number | undefined): string | undefined {
+  if (!parent || index === undefined) return undefined;
+  for (let at = index - 1; at >= 0; at -= 1) {
+    const node = parent.children[at];
+    if (!isElement(node)) continue;
+    if (at === index - 1 || parent.children.slice(at + 1, index).every((between) => !isElement(between))) {
+      if (node.tagName === "p") {
+        const lead = toString(node).trim().replace(/[:.]$/, "");
+        if (lead && lead.length <= LEAD_LENGTH) return lead;
+      }
+    }
+    if (/^h[2-4]$/.test(node.tagName)) return toString(node).trim();
+  }
+  return undefined;
+}
+
 export function rehypeTables() {
   return (tree: Root) => {
-    visit(tree, "element", (table) => {
+    const used = new Map<string, number>();
+    visit(tree, "element", (table, index, parent) => {
       if (table.tagName !== "table") return;
+
+      // Name the table (a visually hidden caption) so a screen reader's list of tables tells them apart.
+      const base = tableName(parent as Element | Root | undefined, index) ?? "Table";
+      const count = (used.get(base) ?? 0) + 1;
+      used.set(base, count);
+      const name = count > 1 ? `${base} (table ${count})` : base;
+      table.properties.dataLabel = name;
+      if (!table.children.some((child) => isElement(child, "caption"))) {
+        table.children.unshift({
+          type: "element",
+          tagName: "caption",
+          properties: { className: ["sr-only"] },
+          children: [{ type: "text", value: name }],
+        });
+      }
       const headRows = rows(table.children.find((child) => isElement(child, "thead")));
       const bodyRows = rows(table.children.find((child) => isElement(child, "tbody")));
       if (bodyRows.length === 0) return;
@@ -229,6 +302,7 @@ export function rehypeHeadings(options: HeadingOptions) {
       const text = toString(node).trim();
       const id = slugger.slug(text);
       node.properties.id = id;
+      node.properties.dataTitle = text;
 
       const heading: Heading = { depth, id, text };
       if (depth === 2) {

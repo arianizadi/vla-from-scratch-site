@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { ChapterRow } from "@/components/curriculum/ChapterRow";
+import { PartFilter } from "@/components/curriculum/PartFilter";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { listChapters, listParts } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -19,6 +21,9 @@ export default function LearnPage() {
   const parts = listParts();
   const chapters = listChapters();
   const minutes = chapters.reduce((total, chapter) => total + chapter.readingMinutes, 0);
+  // While every chapter has one status, the page says it once instead of badging every row.
+  const statuses = [...new Set(chapters.map((chapter) => chapter.status))];
+  const shared = statuses.length === 1 ? statuses[0] : undefined;
 
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-8 outline-none">
@@ -36,6 +41,12 @@ export default function LearnPage() {
             <>The chapters are being written. This page lists them as soon as the first one is in.</>
           )}
         </p>
+        {shared && chapters.length > 1 ? (
+          <p className="mt-4 flex items-center gap-2 text-14 text-ink-muted">
+            <StatusBadge status={shared} />
+            <span>Every chapter has this status for now; a chapter that changes it is marked in the list.</span>
+          </p>
+        ) : null}
       </header>
 
       {parts.length > 0 ? (
@@ -49,7 +60,9 @@ export default function LearnPage() {
                     href={`#${part.id}`}
                     className="flex gap-2 rounded-control py-1.5 text-14 text-ink-muted no-underline hover:text-ink"
                   >
-                    <span className="w-4 shrink-0 text-ink-faint tabular-nums">{part.number}</span>
+                    <span className="w-5 shrink-0 text-ink-faint tabular-nums" aria-hidden="true">
+                      {part.number}
+                    </span>
                     <span>{part.name}</span>
                   </a>
                 </li>
@@ -57,21 +70,23 @@ export default function LearnPage() {
             </ol>
           </nav>
 
-          <div className="grid max-w-[960px] gap-14">
+          <PartFilter parts={parts.map((part) => ({ id: part.id, number: part.number, name: part.name }))}>
             {parts.map((part) => (
               <section key={part.id} id={part.id} aria-labelledby={`${part.id}-title`}>
                 <h2 id={`${part.id}-title`} className="flex items-baseline gap-3 pb-3 text-28 font-semibold stretch-95">
-                  <span className="text-ink-faint tabular-nums">{part.number}</span>
+                  <span className="text-ink-faint tabular-nums" aria-hidden="true">
+                    {part.number}
+                  </span>
                   <span>{part.name}</span>
                 </h2>
                 <ol className="border-b border-line">
                   {part.chapters.map((chapter) => (
-                    <ChapterRow key={chapter.slug} chapter={chapter} />
+                    <ChapterRow key={chapter.slug} chapter={chapter} showStatus={!shared} />
                   ))}
                 </ol>
               </section>
             ))}
-          </div>
+          </PartFilter>
         </div>
       ) : null}
     </main>

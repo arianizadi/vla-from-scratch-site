@@ -1,0 +1,49 @@
+{
+  "source": "python -m sim.pickup.export",
+  "exportedAt": "2026-11-12T06:25:43Z",
+  "machine": "B",
+  "defaults": {
+    "execHorizon": 8,
+    "flowSteps": 10,
+    "seedStart": 1000000,
+    "episodes": 100,
+    "controlHz": 20
+  },
+  "runs": {
+    "finished": 29,
+    "inProgress": 0,
+    "leftOut": 4
+  },
+  "awaited": [],
+  "inProgressList": [],
+  "leftOut": [
+    "custom_vlm_legacy",
+    "dp_vit_lang_pt4k_posfix",
+    "vla_tokens_pt1500_legacy",
+    "vla_tokens_scratch_pt1500_legacy"
+  ],
+  "unreported": {
+    "checkpoints": {
+      "dp_vit_lang_pt1500": [1,2,3,4,5,6,7,8,9,10],
+      "dp_vit_lang_reactive_cf": [1,2,3,4,5,6,7,8,9,10],
+      "dp_vit_lang_reactive_cf4k_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_cf_early": [1,2,3,4,5,6,7,8,9,10],
+      "dp_vit_lang_reactive_pt1500": [1,3,5,7,9],
+      "dp_vit_lang_reactive_pt4k_early_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_pt4k_posfix": [10],
+      "dp_vit_lang_reactive_pt4k_recover_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_pt4k_rs_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_pt4k_rs_recover_early_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_pt4k_rs_recover_posfix": [5,7,9,10],
+      "dp_vit_lang_reactive_pt4k_seed43_legacy": [10],
+      "dp_vit_lang_reactive_pt4k_seed43_posfix": [10],
+      "dp_vit_pt1500": [1,2,3,4,5,6,7,8,9,10],
+      "dp_vit_reactive_pt1500": [1,2,3,4,5,6,7,8,9,10]
+    },
+    "probes": {
+      "dp_vit_lang_pt4k": ["probe_prefix10_distractor","probe_prefix25_distractor","probe_prefix25_named","probe_stale_images"],
+      "dp_vit_lang_reactive_pt4k": ["noise_episode_h1","noise_episode_h8_s4","sweep_h1_s10"]
+    },
+    "expert": []
+  }
+}

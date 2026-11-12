@@ -1,0 +1,379 @@
+/* ==========================================================================
+   The onset figure: a run picker that is also the legend, three panels on
+   one training axis, the values under the cursor, and the full table.
+   Colours come from the tokens only; series hues mark lines and swatches,
+   never text.
+   ========================================================================== */
+
+.onset-root {
+  container: onset / inline-size;
+  min-width: 0;
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   Toolbar over the chart, and the timeline under it
+   -------------------------------------------------------------------------- */
+
+.onset-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.onset-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 4px;
+}
+.onset-timeline .onset-slider {
+  max-width: none;
+}
+.onset-lead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+/* The key to the dotted leaders: a short dotted rule ending in a dot. */
+.onset-lead-key {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 0;
+  border-top: 1px dashed var(--text-faint);
+  transform: translateY(-4px);
+}
+.onset-lead-key::after {
+  position: absolute;
+  top: -4px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-faint);
+  content: "";
+}
+
+/* --------------------------------------------------------------------------
+   Run picker
+   -------------------------------------------------------------------------- */
+
+.onset-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px 24px;
+  margin: 20px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+/* A rendered legend sits above the fieldset's grid, not in it. */
+.onset-picker-legend {
+  display: block;
+  margin: 0 0 8px;
+  padding: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+@container onset (min-width: 560px) {
+  .onset-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container onset (min-width: 840px) {
+  .onset-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.onset-family {
+  min-width: 0;
+}
+.onset-family-label {
+  margin: 0 0 2px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+
+.onset-run {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.onset-run {
+  cursor: pointer;
+}
+.onset-run svg {
+  margin-top: 3px;
+}
+.onset-run input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.onset-run input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.onset-run.is-unavailable {
+  color: var(--text-faint);
+  cursor: default;
+}
+.onset-run.is-unavailable input {
+  cursor: default;
+}
+@media (pointer: coarse) {
+  .onset-run {
+    min-height: 44px;
+    padding: 12px 0;
+  }
+}
+
+.onset-run-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.onset-run-hint {
+  display: block;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+
+.onset-pending {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.onset-pending ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+.onset-pending li:not(:last-child)::after {
+  margin: 0 8px;
+  color: var(--text-faint);
+  content: "/";
+}
+.onset-pending-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.onset-aside {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+/* --------------------------------------------------------------------------
+   Chart
+   -------------------------------------------------------------------------- */
+
+.onset-plot {
+  position: relative;
+  margin-top: 12px;
+  min-width: 0;
+}
+.onset-chart {
+  overflow: visible;
+}
+.onset-scrub {
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+.onset-panel-title {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: 88%;
+}
+.onset-panel-hint {
+  fill: var(--text-faint);
+  font-weight: 500;
+}
+.onset-halo {
+  stroke: var(--surface);
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+.onset-end-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 88%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.onset-pill-text.onset-pill-ghost {
+  fill: var(--text-muted);
+}
+.onset-pill-text {
+  fill: var(--on-mark);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: 88%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.onset-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.onset-overlay {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: min(80%, 360px);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+/* --------------------------------------------------------------------------
+   Readout under the cursor, and the full table
+   -------------------------------------------------------------------------- */
+
+.onset-readout,
+.onset-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.onset-readout {
+  margin-top: 12px;
+}
+.onset-readout th,
+.onset-readout td,
+.onset-table th,
+.onset-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  vertical-align: top;
+}
+.onset-readout th:first-child,
+.onset-table th:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+.onset-readout th:last-child,
+.onset-readout td:last-child,
+.onset-table th:last-child,
+.onset-table td:last-child {
+  padding-right: 0;
+}
+.onset-readout thead th,
+.onset-table thead th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.onset-readout tbody th {
+  font-weight: 500;
+}
+.onset-readout-run {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.onset-readout-run svg {
+  margin-top: 3px;
+}
+.onset-readout td .onset-run-hint {
+  white-space: nowrap;
+}
+.onset-readout tr.is-faded td {
+  color: var(--text-muted);
+}
+/* An earlier checkpoint of the run above, at the same stop. */
+.onset-readout tr.is-also th,
+.onset-readout tr.is-also td {
+  color: var(--text-muted);
+}
+.onset-readout-also {
+  display: block;
+  padding-left: 22px;
+}
+.onset-readout tr.is-also th {
+  font-weight: 400;
+}
+
+.onset-narrow {
+  display: none;
+}
+@container onset (max-width: 479px) {
+  .onset-wide {
+    display: none;
+  }
+  .onset-narrow {
+    display: inline;
+  }
+  .onset-readout th,
+  .onset-readout td {
+    padding-inline: 4px;
+  }
+}
+
+.onset-table-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+.onset-table caption {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-align: left;
+}
+.onset-table tbody th {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.onset-table td {
+  white-space: nowrap;
+}
+.onset-table th.onset-table-run {
+  padding-top: 14px;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+  white-space: normal;
+}

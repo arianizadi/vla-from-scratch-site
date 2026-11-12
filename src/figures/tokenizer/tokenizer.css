@@ -1,0 +1,890 @@
+/* ==========================================================================
+   The tokenizer figure. Everything is HTML laid out by CSS, so the figure
+   needs no measuring and its static HTML is already the finished drawing.
+   Colours come from the tokens in globals.css only: the language hue for
+   tokens, the highlighter for the selected token or the pair merged next,
+   ink and hairlines for the rest.
+   ========================================================================== */
+
+.tk-root {
+  container: tokenizer / inline-size;
+  min-width: 0;
+  color: var(--text);
+}
+
+.tk-blocks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+
+.tk-block {
+  min-width: 0;
+}
+
+/* The name of a part of the drawing: label type, faint. */
+.tk-label {
+  margin: 0 0 10px;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.tk-label b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* A sentence of explanation under a part. */
+.tk-aside {
+  max-width: 62ch;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-stretch: 88%;
+  line-height: 1.125rem;
+}
+
+.tk-mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  white-space: pre;
+}
+
+/* --------------------------------------------------------------------------
+   A token: a chip in Plex Mono, outlined in the language hue (as in the hero
+   plate). A single character of the toy corpus has a plain hairline instead.
+   -------------------------------------------------------------------------- */
+
+.tk-chip {
+  display: inline-flex;
+  box-sizing: border-box;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 28px;
+  padding: 0 5px;
+  border: 1.5px solid var(--language);
+  border-radius: 2px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-variant-ligatures: none;
+  line-height: 1;
+  white-space: pre;
+}
+.tk-chip[data-kind="char"] {
+  border-width: 1px;
+  border-color: var(--border-strong);
+}
+
+/* A space, drawn as the open box typographers use for it. One character wide. */
+.tk-space {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 0.72ch;
+  height: 0.36em;
+  margin: 0 0.14ch;
+  border: 1px solid currentColor;
+  border-top: 0;
+  opacity: 0.6;
+  vertical-align: -0.14em;
+}
+
+/* A chip with its id under it. */
+.tk-token-body {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-radius: 2px;
+}
+.tk-token-id {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.0625rem;
+}
+
+/* The tokens of the real sentence are a radio group: one is selected. */
+.tk-token {
+  display: inline-flex;
+  cursor: pointer;
+}
+.tk-token:hover .tk-chip {
+  background-color: var(--surface-2);
+}
+.tk-token input:checked + .tk-token-body .tk-chip {
+  border-color: var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+}
+.tk-token input:checked + .tk-token-body .tk-token-id {
+  color: var(--text);
+}
+.tk-token input:focus-visible + .tk-token-body {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Dimension line: extension ticks, arrowheads, the value and its unit.
+   -------------------------------------------------------------------------- */
+
+.tk-dim {
+  display: flex;
+  align-items: center;
+  height: 17px;
+  margin: 8px 0 0;
+  color: var(--border-strong);
+}
+.tk-dim::before,
+.tk-dim::after {
+  flex: none;
+  width: 1px;
+  height: 11px;
+  background-color: currentColor;
+  content: "";
+}
+.tk-dim-line {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 10px;
+  height: 1px;
+  background-color: currentColor;
+}
+.tk-dim-line::before {
+  position: absolute;
+  top: -2.5px;
+  border-block: 3px solid transparent;
+  content: "";
+}
+.tk-dim-line[data-end="start"]::before {
+  left: 0;
+  border-right: 7px solid currentColor;
+}
+.tk-dim-line[data-end="end"]::before {
+  right: 0;
+  border-left: 7px solid currentColor;
+}
+.tk-dim-text {
+  flex: none;
+  padding: 0 8px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.0625rem;
+  white-space: nowrap;
+}
+
+/* A box as wide as the row inside it, so the dimension line under the row
+   has the row's length. When the row wraps, both take the full width. */
+.tk-fit {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+/* --------------------------------------------------------------------------
+   Real tokenizer: the string, with one graduation per character.
+   -------------------------------------------------------------------------- */
+
+.tk-string {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+.tk-string-line {
+  margin: 0;
+  padding-left: 1ch;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-variant-ligatures: none;
+  line-height: 30px;
+  text-indent: -1ch;
+  overflow-wrap: anywhere;
+}
+.tk-quote {
+  color: var(--text-faint);
+}
+/* One graduation at the left edge of every character, and a closing one after the last. */
+.tk-string-text {
+  padding-bottom: 6px;
+  background-image:
+    linear-gradient(var(--border-strong), var(--border-strong)),
+    repeating-linear-gradient(to right, var(--border-strong) 0, var(--border-strong) 1px, transparent 1px, transparent 1ch);
+  background-position:
+    right bottom,
+    left bottom;
+  background-repeat: no-repeat;
+  background-size:
+    1px 5px,
+    100% 5px;
+  white-space: pre-wrap;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.tk-string .tk-dim {
+  margin-top: 4px;
+}
+/* Inset by the width of a quote on each side: the dimension spans the characters, not the quotes. */
+.tk-string-dim {
+  margin-inline: 1ch;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+}
+
+/* The tokens: chips in reading order, the pieces of one word kept together. */
+.tk-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 4px;
+}
+.tk-strip .tk-chip {
+  height: 32px;
+  font-size: 0.8125rem;
+}
+.tk-group {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+/* A word cut into several tokens is bracketed and says so. */
+.tk-group[data-split] {
+  padding-top: 26px;
+}
+.tk-group[data-split]::before {
+  position: absolute;
+  top: 19px;
+  right: 0;
+  left: 0;
+  height: 4px;
+  border: 1px solid var(--text-faint);
+  border-bottom: 0;
+  content: "";
+}
+.tk-group-note {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* The vocabulary as a line from the first id to the last. */
+.tk-track {
+  position: relative;
+  height: 52px;
+  margin-bottom: 24px;
+}
+/* Round ids along the line: a short graduation under it and the id below. */
+.tk-grad {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: var(--at);
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.0625rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.tk-grad::before {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 1px;
+  height: 5px;
+  background-color: var(--border-strong);
+  content: "";
+}
+.tk-grad[data-end="start"] {
+  transform: none;
+}
+.tk-grad[data-end="start"]::before {
+  left: 0;
+}
+.tk-grad[data-end="end"] {
+  transform: translateX(-100%);
+}
+.tk-grad[data-end="end"]::before {
+  right: 0;
+  left: auto;
+}
+/* On a narrow line the round id next to the last one would touch it: keep its graduation, drop its number. */
+@container tokenizer (max-width: 479px) {
+  .tk-grad[data-near-end] {
+    color: transparent;
+  }
+}
+.tk-track-base {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background-color: var(--border-strong);
+}
+.tk-tick {
+  position: absolute;
+  bottom: 0;
+  left: var(--at);
+  width: 1.5px;
+  height: 9px;
+  margin-left: -0.75px;
+  background-color: var(--language);
+}
+/* The ids of the selected word stand taller, so the selection reads where marks overlap. */
+.tk-tick[data-group] {
+  width: 2px;
+  height: 15px;
+  margin-left: -1px;
+}
+/* The selected token's id: a leader from its place on the line to a flag. */
+.tk-stem {
+  position: absolute;
+  bottom: 0;
+  left: var(--at);
+  width: 1px;
+  height: 26px;
+  margin-left: -0.5px;
+  background-color: var(--text);
+}
+.tk-stem::after {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--text);
+  content: "";
+}
+.tk-flag {
+  position: absolute;
+  bottom: 26px;
+  left: clamp(28px, var(--at), calc(100% - 28px));
+  box-sizing: border-box;
+  min-width: 56px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  outline: 1px solid var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.0625rem;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+/* --------------------------------------------------------------------------
+   Toy merges.
+   -------------------------------------------------------------------------- */
+
+.tk-merges {
+  display: grid;
+  /* Narrow: one column in source order. What changes at every merge (corpus, pair counts, ledger) comes first,
+     next to the controls under the stage; the vocabulary and the encoded words follow a button that shows
+     them. A part that is folded away takes no row and no gap. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.tk-area-more {
+  justify-self: start;
+}
+
+.tk-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+}
+.tk-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tk-key .tk-chip {
+  min-width: 20px;
+  height: 22px;
+  padding: 0 4px;
+  font-size: 0.8125rem;
+}
+
+/* The corpus: each word once, with how often it occurs. */
+.tk-corpus {
+  display: grid;
+  gap: 6px;
+}
+.tk-word {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.tk-word-count {
+  flex: none;
+  min-width: 3ch;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.tk-symbols {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The pair that will be merged next: the highlighter behind both tokens. */
+.tk-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: -2px;
+  padding: 2px;
+  border-radius: 2px;
+  outline: 1px solid var(--text);
+  background-color: var(--mark);
+}
+.tk-pair .tk-chip {
+  border-color: var(--on-mark);
+  background-color: transparent;
+  color: var(--on-mark);
+}
+
+/* Pair counts: a ranked list of bars from one baseline, each with its count. */
+.tk-pairs {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tk-pairs th {
+  height: 32px;
+  padding: 0 12px 0 2px;
+  font-weight: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+.tk-pairs td {
+  width: 100%;
+  height: 32px;
+  padding: 0;
+  border-left: 1px solid var(--border-strong);
+}
+.tk-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tk-bar {
+  flex: none;
+  width: calc((100% - 36px) * var(--share));
+  min-width: 2px;
+  height: 10px;
+  background-color: var(--border-strong);
+}
+.tk-pairs tr[data-next] .tk-bar {
+  outline: 1px solid var(--text);
+  background-color: var(--mark);
+}
+.tk-bar-count {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.tk-pairs tr[data-next] .tk-bar-count {
+  font-weight: 600;
+}
+.tk-pairs-box {
+  min-height: calc(var(--rows) * 32px);
+}
+.tk-none {
+  margin: 0;
+  padding: 6px 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* Two layers in one cell: an invisible copy of the largest state keeps the
+   height the same at every step, so the controls below do not move. */
+.tk-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.tk-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.tk-ghost {
+  visibility: hidden;
+}
+
+.tk-vocabulary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 4px;
+}
+.tk-vocabulary li {
+  display: inline-flex;
+}
+
+/* New words, encoded with the merges learned so far. */
+.tk-encodings {
+  display: grid;
+  gap: 8px;
+}
+.tk-encoding {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 48px;
+}
+.tk-plain {
+  flex: none;
+  min-width: 7ch;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-variant-ligatures: none;
+  line-height: 28px;
+}
+.tk-arrow {
+  display: grid;
+  flex: none;
+  height: 28px;
+  color: var(--text-faint);
+  place-items: center;
+}
+
+/* The ledger: vocabulary size and corpus length after every number of merges.
+   Two rows of columns, each scaled from zero to its own largest value, on a
+   shared baseline per row; the current step wears the highlighter. */
+.tk-ledger-frame {
+  position: relative;
+}
+/* A fade over the edge where columns are scrolled out of sight. */
+.tk-ledger-frame::after {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 28px;
+  background-image: linear-gradient(to right, transparent, var(--surface) 85%);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-micro) var(--ease-standard);
+}
+.tk-ledger-frame[data-hidden-end]::after {
+  opacity: 1;
+}
+.tk-ledger-box {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 3px 3px 4px;
+  margin: -3px;
+}
+/* The row names stay at the left edge while the columns scroll under them. */
+.tk-ledger-head {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: var(--surface);
+}
+.tk-ledger-frame[data-hidden-start] .tk-ledger-head {
+  box-shadow: 1px 0 0 var(--border);
+}
+.tk-ledger {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.tk-ledger th,
+.tk-ledger td {
+  padding: 0;
+}
+.tk-ledger-head {
+  padding-right: 12px !important;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.tk-ledger-unit {
+  display: block;
+  color: var(--text-faint);
+}
+.tk-ledger-step {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 30px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  place-items: center;
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard);
+}
+.tk-ledger-step:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.tk-ledger-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.tk-ledger-step[aria-pressed="true"] {
+  border-color: var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-weight: 600;
+}
+.tk-ledger tbody tr + tr td,
+.tk-ledger tbody tr + tr th {
+  padding-top: 6px;
+}
+.tk-ledger td {
+  vertical-align: bottom;
+}
+.tk-ledger-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  height: 52px;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 0;
+}
+.tk-ledger-bar {
+  flex: none;
+  width: 12px;
+  height: calc(30px * var(--share));
+  min-height: 1px;
+  order: 2;
+  background-color: var(--border-strong);
+}
+.tk-ledger-value {
+  order: 1;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+.tk-ledger td[data-current] .tk-ledger-bar {
+  outline: 1px solid var(--text);
+  background-color: var(--mark);
+}
+.tk-ledger td[data-current] .tk-ledger-value {
+  font-weight: 700;
+}
+
+@media (pointer: coarse) {
+  .tk-ledger-step {
+    height: 44px;
+    min-width: 32px;
+  }
+}
+/* Narrow frames: slimmer columns, so a run of eight merges fits in about 300 px. */
+@container tokenizer (max-width: 479px) {
+  .tk-ledger-step {
+    min-width: 26px;
+  }
+  .tk-ledger-head {
+    padding-right: 8px !important;
+  }
+}
+@container tokenizer (max-width: 479px) {
+  @media (pointer: coarse) {
+    .tk-ledger-step {
+      min-width: 28px;
+    }
+  }
+}
+
+/* A token that the last merge has just made settles into place. */
+@keyframes tk-fuse {
+  from {
+    opacity: 0.15;
+    transform: scaleX(1.2);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tk-fresh {
+  animation: tk-fuse 600ms var(--ease-standard) both;
+}
+
+/* --------------------------------------------------------------------------
+   The sentence picker: a native select, drawn like the other controls.
+   -------------------------------------------------------------------------- */
+
+.tk-select {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: min(100%, 420px);
+}
+.tk-select select {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 30px 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background-color: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard);
+}
+.tk-select select:hover {
+  border-color: var(--text);
+  background-color: var(--surface);
+}
+.tk-select svg {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  margin-top: -6px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transform: rotate(90deg);
+}
+
+/* Touch: 44px targets. */
+@media (pointer: coarse) {
+  .tk-select select {
+    height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Wider frames.
+   -------------------------------------------------------------------------- */
+
+@container tokenizer (min-width: 420px) {
+  .tk-strip .tk-chip {
+    font-size: 0.875rem;
+  }
+}
+
+@container tokenizer (min-width: 640px) {
+  .tk-strip {
+    gap: 12px 5px;
+  }
+  .tk-strip .tk-chip {
+    height: 34px;
+    padding: 0 7px;
+    font-size: 0.9375rem;
+  }
+  .tk-group {
+    gap: 5px;
+  }
+  .tk-merges {
+    grid-template-areas:
+      "key key"
+      "corpus pairs"
+      "words vocabulary"
+      "words ledger";
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px 48px;
+  }
+  .tk-area-key {
+    grid-area: key;
+  }
+  .tk-area-corpus {
+    grid-area: corpus;
+  }
+  .tk-area-pairs {
+    grid-area: pairs;
+  }
+  .tk-area-vocabulary {
+    grid-area: vocabulary;
+  }
+  .tk-area-words {
+    grid-area: words;
+  }
+  .tk-area-ledger {
+    grid-area: ledger;
+  }
+  .tk-area-more {
+    display: none;
+  }
+}
+
+/* Narrow frames, toy merges: placed last so that it wins over the rules above. */
+@container tokenizer (max-width: 639px) {
+  .tk-foldable[data-folded] {
+    display: none;
+  }
+  /* Pair rows a little tighter: the box keeps room for the longest list, so the controls stay put. */
+  .tk-pairs th,
+  .tk-pairs td {
+    height: 28px;
+  }
+  .tk-pairs .tk-chip {
+    min-width: 22px;
+    height: 24px;
+  }
+  .tk-pairs-box {
+    min-height: calc(var(--rows) * 28px);
+  }
+  .tk-merges {
+    gap: 16px;
+  }
+  .tk-ledger-cell {
+    height: 44px;
+  }
+  .tk-ledger-bar {
+    height: calc(24px * var(--share));
+  }
+}

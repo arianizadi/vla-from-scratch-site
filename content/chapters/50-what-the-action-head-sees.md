@@ -8,43 +8,47 @@ status: draft
 
 # What the Action Head Sees
 
-The action head is the transformer that turns noise into a chunk of robot actions. It never looks at
-a camera frame or an instruction; it reads one sequence of tokens, part of which is what the
-backbone (the model that encodes the images and the text) hands over. That part is one vector in
-some configs here and more than a thousand tokens in others, and it decides whether the object's
-position reaches the part of the model that moves the arm.
+The action head is the transformer that turns noise into a chunk of robot actions. It never sees
+a camera frame or an instruction, only one sequence of tokens, part of which the backbone (the
+model that encodes the images and the text) hands over: one vector in some configs here, more than
+a thousand tokens in others. That decides whether the object's position can reach the part of the
+model that moves the arm; whether a trained policy uses it is measured below.
 
 ## The idea
 
-**Conditioning** is everything the action head is given besides the noisy actions it has to clean
-up: the noise level, the robot's state and the backbone's description of the scene. This chapter,
-like the code (`get_action_conditioning`), uses *conditioning tokens* for the last of these, the
-part that changes between architectures. All of it arrives in one sequence:
+The **conditioning** is the tensor the backbone hands to the action head, `[batch, tokens, width]`
+(here `[B, N, D]`): `N` tokens of width `D` for each of the `B` rows of a batch (training windows,
+or one served observation). The noise level, the joint state and the noisy
+actions are separate inputs. All four arrive in one sequence:
 
 ```text
-[ time ][ conditioning tokens from the backbone ][ state tokens ][ action tokens ]
-   1                     N                              P               T
+[ time ][ conditioning ][ state ][ action-step tokens ]
+   1          N             P              T
 ```
 
-The **time token** says how noisy the action tokens currently are
-([Flow matching](41-flow-matching.md)). The **state tokens** are the joint angles and gripper
-opening, one per time step. The **action tokens** are one per control step: the previous action,
-given clean, then the noisy chunk being generated.
+The **time token** says how noisy the actions are ([Flow matching](41-flow-matching.md)). The
+**state tokens** hold the joint angles and the gripper opening, one token per control step (one
+command to the arm; 20 per second). The **action-step tokens** are one per action of the
+**chunk**, the 15 future actions the policy predicts in one go. A policy with **history** is also
+given the previous camera frames, the previous state and its previous action: a second state
+token, and a sixteenth action-step token in front of the chunk.
 
-Only `N` changes. Two configs for the same task:
+Two configs for `pick_target` (three objects on the table, an instruction that names one):
 
-- [`dp_vit_lang.yaml`](../../sim/pickup/configs/dp_vit_lang.yaml): `N` = 816 (32 text slots and
-  784 image patches), so 1 + 816 + 2 + 16 = 835 tokens.
-- [`vla_custom.yaml`](../../sim/pickup/configs/vla_custom.yaml): `N` = 1 (one vector summarising
-  four images and the instruction), so 1 + 1 + 2 + 16 = 20 tokens.
+- [`dp_vit_lang_reactive.yaml`](../../sim/pickup/configs/dp_vit_lang_reactive.yaml), the policy
+  that solves the task: `N` = 424 (32 text slots and 2 x 196 image patches, 16-pixel squares of a
+  camera frame), so 1 + 424 + 1 + 15 = 441 tokens.
+- [`vla_custom.yaml`](../../sim/pickup/configs/vla_custom.yaml), a VLA (a policy whose backbone is
+  a vision-language model), with history: `N` = 1 (one vector summarising four images and the
+  instruction), so 1 + 1 + 2 + 16 = 20 tokens.
 
-In the first, the token for the image patch that contains the cube is in the sequence and an
-action token can attend to it. In the second, the backbone has to write the cube's position into
-one vector first.
+In the first, the token of the image patch that contains the cube is in the sequence and an
+action-step token can attend to it. In the second, the backbone has to write the cube's position
+into one vector first.
 
 <!-- interactive: sequence-layout -->
-*Figure: the policy sequence as a row of cells; switching the backbone redraws the conditioning
-block as 1, 5, 784, 816 or 1040 cells.*
+*Figure: the policy sequence as a row of cells: time token, conditioning, state tokens, action-step
+tokens. Switching the config redraws the conditioning block as 1, 5, 424, 816 or 1040 cells.*
 
 ## How it works
 
@@ -52,137 +56,120 @@ block as 1, 5, 784, 816 or 1040 cells.*
 
 `DiffusionPolicy._build_transformer_input` in
 [`vla_foundry/models/diffusion_policy/diffusion_policy.py`](../../vla_foundry/models/diffusion_policy/diffusion_policy.py)
-assembles the sequence. With the numbers of `dp_vit_lang.yaml` (backbone and action transformer
-both 256 wide, batch `B`):
+assembles the sequence. With the numbers of `dp_vit_lang_reactive.yaml` (backbone and action
+transformer both 256 wide):
 
-1. The backbone returns `backbone_embeddings`, `[B, 816, 256]`.
+1. The backbone returns `backbone_embeddings`, `[B, 424, 256]`.
 2. `self.time_encoding`, an embedding table with one row per noise level (1000), gives
    `time_embeddings`, `[B, 1, 256]`.
 3. With the default `model.diffusion_step_conditioning: concat` the two are concatenated, time
    first, and `self.condition_encode`, one linear layer, maps each token to the transformer width:
-   `[B, 817, 256]`. (`add`, which no pickup config sets, adds the time embedding to every
-   conditioning token instead.)
-4. The state `[B, 2, 8]` (steps t-1 and t; `RoboticsProcessor.add_action_and_proprioception_fields`
-   in `vla_foundry/data/processor/robotics_processor.py` keeps `lowdim_past_timesteps + 1` steps)
-   goes through `self.proprioception_encode` and becomes two tokens.
-5. The action window `[B, 16, 8]` goes through `self.action_encode` and becomes 16 tokens. Its
-   first step is the previous action, passed in without noise (`torch.where(future_mask...)` in
-   `forward`, `past_mask` in `generate_actions`); the other 15 (step t and 14 future steps) are the
-   noisy chunk being generated.
-6. `torch.cat(parts, dim=1)` joins them: `[B, 835, 256]`.
+   `[B, 425, 256]`.
+4. The state `[B, 1, 8]` (`lowdim_past_timesteps + 1` control steps, here 1) goes through
+   `self.proprioception_encode` and becomes one token.
+5. The noisy chunk `[B, 15, 8]` goes through `self.action_encode` and becomes 15 action-step
+   tokens.
+6. `torch.cat(parts, dim=1)` joins them: `[B, 441, 256]`.
 
 `DiffusionPolicy.forward` runs the transformer on this sequence and maps the last `T` positions of
-its final hidden state with `self.output_layer` to `[B, 16, 8]`, a predicted direction per action
-token. Every policy config under `sim/pickup/configs/` sets `is_causal: false` on the action
-transformer, directly or through a preset, so each action token attends to every other token
-([The transformer block](11-the-transformer-block.md)). That attention is its only route to the
-scene.
+its last layer's output with `self.output_layer` to `[B, 15, 8]`, a predicted direction per
+action-step token. Every policy config under `sim/pickup/configs/` sets `is_causal: false` on the
+action transformer, so each action-step token attends to every other
+token ([The transformer block](11-the-transformer-block.md)). That attention is its only route to
+the scene; rotary position encoding tells it where in the sequence a token sits
+([Positions](12-positions.md)).
+
+With history (`image_indices: [-1, 0]`, `lowdim_past_timesteps: 1`, as in `dp_vit_lang.yaml`) there
+are four images, the state is `[B, 2, 8]` and the actions are `[B, 16, 8]`: the first row is the
+previous action, passed in without noise (`past_mask` in `generate_actions`). The sequence is
+`[B, 835, 256]`.
 
 ### What each backbone hands over
 
-All four backbone wrappers return a `VisionLanguageBackboneOutput` whose `embeddings` tensor is
-`[B, N, D]`. These configs use two cameras and two frames each (`image_indices: [-1, 0]`): four
-images per sample.
+All four backbone wrappers return a `VisionLanguageBackboneOutput` whose `embeddings` tensor is the
+conditioning. The four `*_reactive` configs have no history: two images (one per camera) and
+1 + `N` + 1 + 15 tokens. The others have four images and 1 + `N` + 2 + 16 tokens.
 
-| `vision_language_backbone.type` | Config | What `embeddings` holds | Shape | Sequence length |
+| `vision_language_backbone.type` | Config (`.yaml`) | What `embeddings` holds | Shape | Sequence length |
 |---|---|---|---|---|
-| `clip_backbone` | `dp_clip.yaml` | one pooled vector for the text, one per image | `[B, 5, 512]` | 24 |
-| `vit_backbone` | `dp_vit.yaml` | every patch of every image (4 x 196) | `[B, 784, 256]` | 803 |
-| `vit_backbone`, `text_tokens: 32` | `dp_vit_lang.yaml` | 32 text slots (the tokenized prompt), then every patch | `[B, 816, 256]` | 835 |
-| `vlm_foundry_backbone` | `vla_custom.yaml` | hidden states of one appended action token | `[B, 1, 2048]` | 20 |
-| `vlm_foundry_backbone`, `conditioning: all_tokens` | `vla_custom_tokens.yaml` | hidden states of every image and text token, zero-padded in front to `conditioning_len` | `[B, 1040, 2048]` | 1059 |
-| `vlm_backbone` | `vla_qwen.yaml` | hidden states of one appended action token | `[B, 1, 4 x LM width]` | 20 |
+| `clip_backbone` | `dp_clip` | one pooled vector for the text, one per image | `[B, 5, 512]` | 24 |
+| `vit_backbone` | `dp_vit`, `dp_vit_reactive` | every patch of every image (196 each) | `[B, 784, 256]`, `[B, 392, 256]` | 803, 409 |
+| `vit_backbone`, `text_tokens: 32` | `dp_vit_lang`, `dp_vit_lang_reactive` | 32 text slots, then every patch | `[B, 816, 256]`, `[B, 424, 256]` | 835, 441 |
+| `vlm_foundry_backbone` | `vla_custom` | hidden states of the action token | `[B, 1, 2048]` | 20 |
+| `vlm_foundry_backbone`, `conditioning: all_tokens` | `vla_custom_tokens`, `vla_custom_tokens_reactive` | hidden states of every prompt token | `[B, 1040, 2048]`, `[B, 528, 2048]` | 1059, 545 |
+| `vlm_backbone` | `vla_qwen` | hidden states of the action token | `[B, 1, 4 x LM width]` | 20 |
+| `vlm_backbone`, `conditioning: all_tokens` | `vla_qwen_tokens_reactive` | hidden states of every prompt token | `[B, 128, 4 x LM width]` | 145 |
 
-512 is CLIP ViT-B/32's projection size (background, from its published configuration).
-[One vector or many tokens](21-pooled-vs-patch-tokens.md) covers the first two rows. The last three
-use the hidden states of a VLM (the vector each layer holds for each token), explained next.
+(A hidden state is the vector a layer holds for a token.)
 
-### The action-token probe
+### The action token
 
 A vision-language model (VLM) reads a prompt of image tokens followed by the instruction
 ([Joining vision and language](30-joining-vision-and-language.md)): for `vla_custom.yaml`, four
-images at 256 tokens each plus the instruction, each token with a 512-wide hidden state per layer.
-The default recipe reads the result out at one place:
+images at 256 tokens each and the instruction, each token with a 512-wide hidden state per layer.
+The default, `conditioning: action_token`, reads the result out at one place:
 
-1. One new token, the **action token**, is added to the VLM's vocabulary and appended to the prompt.
-2. The VLM runs. The from-scratch language model is causal
-   (`vla_foundry/config_presets/models/transformer_100m.yaml`, `is_causal: true`), so the action
-   token, being last, can attend to every image and instruction token.
+1. One new token, the **action token**, is added to the VLM's vocabulary and inserted directly
+   after the last real token of each prompt.
+2. The VLM runs. The from-scratch language model is causal (`is_causal: true` in
+   `vla_foundry/config_presets/models/transformer_100m.yaml`), so the action token, being last,
+   can attend to every image and instruction token.
 3. The hidden states at the action token's position are taken from the last
    `num_vlm_layers_to_use` layers (4) and concatenated: 4 x 512 = 2048 numbers. That vector,
    `[B, 1, 2048]`, is the whole conditioning.
 
-The class docstring of `VLMHFBackboneWrapper` calls this an action token probe. The word is used
-loosely: a probe usually means a small model trained on frozen activations to test what they
-contain ([Pretrained vision encoders](22-pretrained-vision-encoders.md)), whereas this token is
-part of the policy and is trained with it. Background: the VLA Foundry report (Mercat et al., 2026)
-calls it an observation token; Octo calls the same device a readout token and compares it to the
-[CLS] token of BERT (Octo Model Team, 2024).
+With `conditioning: all_tokens` no token is added: the last four layers' hidden states at every
+real prompt position go to the action head, right-aligned in `conditioning_len` slots, so that the
+sequence is as long in a training batch as when one prompt is served.
 
-With `conditioning: all_tokens` no token is added. The last four layers' hidden states at every
-real prompt position, roughly a thousand tokens each 2048 wide, go to the action head. The price
-is attention over 1059 x 1059 token pairs per layer instead of 20 x 20, at every denoising step.
+The image states among them never depend on the instruction: `apply_chat_template`
+(`vla_foundry/data/processor/__init__.py`) puts the images first and the language model is causal,
+so "which object" and "where" meet only at the few text positions or in the action head. The
+price: attention over 1059 x 1059 token pairs per layer instead of 20 x 20, at each of the 10 flow
+steps (passes of the action head) per chunk.
 
 ### Why one vector can carry a position, and why that is hard to learn
 
-Capacity is not the obstacle. The positions of three objects on a table are six numbers and the
-vector has 2048, so a network could in principle write them into the action token's state.
-Background: Octo conditions its diffusion action head on the embedding of a readout token, one per
-time step, that attends to the observation and task tokens; it was trained on 800k robot
-trajectories.
+Capacity is not the obstacle: three objects' positions are six numbers and the vector has 2048.
+The difficulty is where the work happens and what trains it (an argument, not a measurement).
 
-The difficulty is where the work has to happen and what trains it. This is an argument, not a
-measurement:
+With patch tokens, position arrives laid out: each token starts as one 16 x 16 pixel cell,
+`ViTPatchEmbeddings` (`vla_foundry/models/vit.py`) adds a learned embedding that says which cell,
+and the cube changes a few tokens at known places.
 
-- With patch tokens, position arrives already laid out. Each patch token carries what is in one
-  16 x 16 pixel cell, and which cell it is: `ViTPatchEmbeddings` (`vla_foundry/models/vit.py`) adds
-  a learned position embedding to every patch, and the action transformer's rotary position
-  encoding ([Positions](12-positions.md)) makes attention depend on where a token sits in the
-  sequence. The cube changes the values of a few tokens at known places. The action head still has
-  to learn the map from image location to joint targets, but from tokens that keep the image's
-  spatial layout.
-- With one vector, position must be in the *values*. The backbone has to turn "the cube is in these
-  patches" into coordinates, pick the object the instruction names, and encode the result precisely
-  enough for a grasp.
-- The only signal that teaches the backbone this is the action loss, passed back through that one
-  token.
-
-How precise is precise enough was measured (machine A, where these VLAs were trained and evaluated,
-320 episodes per offset): a 10 mm sideways offset drops the expert from 94% to 60% on the can and
-from 100% to 99% on the cube. On machine B the can drops from 100% to 94%.
+With one vector, position must be in the *values*: the backbone has to turn "the cube is in these
+patches" into coordinates, pick the named object, and encode the result precisely enough for a
+grasp, taught only by the action loss passed back through that one token. On machine A (one RTX
+4090, 24 GB), where the first-round single-vector VLAs ran, a 10 mm sideways offset takes the
+scripted expert (the hand-written controller that recorded the demonstrations) from 94% to 60% on
+the can; on machine B, from 100% to 94% ([Measuring failure](92-measuring-failure.md)).
 
 ## In this repository
 
-**`clip_backbone`.** `CLIPBackboneWrapper._concatenate_for_conditioning` in
-[`clip_hf_backbone.py`](../../vla_foundry/models/vision_language_backbones/clip_hf_backbone.py)
-stacks the text vector and the image vectors.
+**`clip_backbone`, `vit_backbone`.** `CLIPBackboneWrapper._concatenate_for_conditioning`
+([`clip_hf_backbone.py`](../../vla_foundry/models/vision_language_backbones/clip_hf_backbone.py))
+stacks the text vector and the image vectors. `ViTBackboneWrapper.get_action_conditioning`
+([`vit_backbone.py`](../../vla_foundry/models/vision_language_backbones/vit_backbone.py)) flattens
+cameras and patches into one sequence; with `text_tokens > 0`, `_embed_text` puts the prompt's
+token ids in front of them as exactly that many embedded slots
+([Language conditioning](51-language-conditioning.md)).
 
-**`vit_backbone`.** `ViTBackboneWrapper.get_action_conditioning` in
-[`vit_backbone.py`](../../vla_foundry/models/vision_language_backbones/vit_backbone.py) flattens
-cameras and patches into one sequence. With `text_tokens > 0`, `_embed_text` moves the prompt's
-real token ids to the front (three chat-template tokens, one `<image>` placeholder per image
-because `img_num_tokens: 1`, the instruction, two closing tokens), pads or truncates them to
-`text_tokens` slots, embeds them (learned table and position, layer norm), zeroes the unused slots
-and prepends the result to the patches.
+**`vlm_backbone` and `vlm_foundry_backbone`.** `VLMHFBackboneWrapper`
+([`vlm_hf_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_hf_backbone.py),
+Hugging Face VLMs) and `VLMFoundryBackboneWrapper`
+([`vlm_foundry_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_foundry_backbone.py),
+VLMs trained here) share two functions in
+[`base.py`](../../vla_foundry/models/vision_language_backbones/base.py):
 
-**`vlm_backbone`** (Hugging Face VLMs). `_extract_action_token_embeddings` in
-[`vlm_hf_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_hf_backbone.py) reads
-`layer_hidden[:, -1, :]`. This backbone has no `conditioning` key and always returns one vector.
+- `insert_after_last_real_token` puts the action token directly after each prompt's last real
+  token, so that padding ends up behind it; `all_tokens` mode does not call it.
+- `conditioning_from_hidden_states` builds the conditioning. `action_token`: the states at each
+  row's last real token, the action token. `all_tokens`: the real tokens moved to the right end,
+  the padding zeroed and, with `conditioning_len > 0`, zeros added in front (or slots cut from the
+  front) to that length; a prompt with more real tokens raises a `ValueError`.
 
-**`vlm_foundry_backbone`** (VLMs trained here). `VLMFoundryBackboneWrapper` in
-[`vlm_foundry_backbone.py`](../../vla_foundry/models/vision_language_backbones/vlm_foundry_backbone.py)
-has two modes:
-
-- `action_token` (default): `_prepare_inputs_for_action_token` inserts the token after each sample's
-  last real token; `_extract_action_conditioning` reads that position.
-- `all_tokens`: `__init__` returns before adding a token; `_extract_action_conditioning` moves the
-  real tokens to the right end, zeroes the padding and, with `conditioning_len > 0`, pads in front
-  with zeros (or crops from the front) to that length. A prompt with more real tokens than
-  `conditioning_len` raises a `ValueError`.
-
-**Config keys.** All sit under `model.vision_language_backbone`. For patches plus text slots, the
-keys that set the conditioning shape (excerpt of `dp_vit_lang.yaml`; `inter_dim`, `n_heads` and
-`n_layers` omitted):
+**Config keys.** The conditioning's shape is set under `model.vision_language_backbone`. For
+patches plus text slots (from `dp_vit_lang_reactive.yaml`):
 
 ```yaml
 type: vit_backbone
@@ -193,147 +180,180 @@ text_tokens: 32          # default 0: image-only
 text_vocab_size: 49280   # required when text_tokens > 0
 ```
 
-For every token of the from-scratch VLM (`vla_custom_tokens.yaml`; `vla_custom.yaml` omits the last
-two keys, leaving the default `conditioning: action_token`):
+For every token of the from-scratch VLM (`vla_custom_tokens_reactive.yaml`; `vla_custom.yaml` omits
+the last two keys, leaving the default `conditioning: action_token`):
 
 ```yaml
 type: vlm_foundry_backbone
 num_vlm_layers_to_use: 4
 conditioning: all_tokens
-# 3 template tokens + 4 x 256 image tokens + the instruction with its 2 closing
-# tokens (at most 8): 1035, with 5 spare
-conditioning_len: 1040
+# 3 template tokens + 2 x 256 image tokens + the instruction with its 2 closing
+# tokens (at most 8): 523, with 5 spare
+conditioning_len: 528
 ```
 
-**Running it.** With a `pick_target_1500` dataset and a stage-2 VLM in
-`experiments/pickup/custom_vlm` ([The from-scratch path](62-the-from-scratch-path.md)):
+The number of images, state tokens and action-step tokens follows from `data.camera_names`,
+`data.image_indices` and `data.lowdim_past_timesteps`.
+
+**Running it.** The policy of the table below, on plain demonstrations (the
+[README](../../README.md) adds `--random_start --disturb_prob 0.5` to the first line, for a policy
+that copes when the object moves); the config switches averaged weights on itself:
 
 ```bash
-sim/pickup/scripts/custom_path.sh vla pick_target_1500 vla_all_tokens 1000000 pretrained vla_custom_tokens
-sim/pickup/scripts/eval.sh experiments/pickup/vla_all_tokens pick_target 100
+sim/pickup/scripts/make_dataset.sh pick_target 4000 pick_target_4k
+sim/pickup/scripts/train_resilient.sh dp_vit_lang_reactive pick_target_4k my_run 5000000
+sim/pickup/scripts/eval_checkpoints.sh experiments/pickup/my_run pick_target
+.venv/bin/python -m sim.pickup.summarize --task pick_target --runs my_run
+```
+
+The all-token VLA needs a stage-2 VLM in `experiments/pickup/custom_vlm`
+([The from-scratch path](62-the-from-scratch-path.md)). On 4000 demonstrations and 3M samples it
+ends at 86% / 87% (trained / averaged weights) with the caption-pretrained backbone, 75% / 85% with
+a randomly initialised one (`scratch`; [field notes](../notes.md), "Pretraining a backbone: mainly
+an earlier start"):
+
+```bash
+sim/pickup/scripts/custom_path.sh vla pick_target_4k my_vla_tokens 3000000 pretrained vla_custom_tokens_reactive
 ```
 
 ## What we measured
 
-**One task, one object.** `pick_cube`, machine A, 200 demonstrations, 300k training samples (23
-epochs), 50 closed-loop episodes on unseen layouts:
+All numbers are from the [lab notebook](../lab-notebook.md): closed-loop success (the policy drives
+the simulated arm) on **layouts** the policy never saw (what a seed fixes: the objects, their poses,
+the named one and the arm's start pose), one training seed per run. A **sample** is one training window (one frame's observations and the actions that follow) drawn by
+the data loader.
 
-| What the action head receives | Final loss | Success | 95% CI |
-|---|---|---|---|
-| CLIP ViT-B/32: one pooled vector per image and one for the text (245M) | 0.040 | 2/50 = 4% | 1-14% |
-| Small ViT from scratch: every patch a token (`dp_vit`, 36M) | 0.091 | 15/50 = 30% | 19-44% |
+**One vector, one object.** On `pick_cube` (machine A, 200 demonstrations, 300k samples, 50
+episodes) one pooled vector per image from a pretrained CLIP encoder gave 2/50 = 4% and every
+patch as a token 15/50 = 30%; the two policies differ in more than that
+([One vector or many tokens](21-pooled-vs-patch-tokens.md)).
 
-The pooled-CLIP policy also scored 0/20 on its own training layouts. It ran a plausible
-reach-descend-close-lift a few centimetres from the cube.
+**One vector, three objects.** The two first-round VLAs with one conditioning vector
+(`vla_custom`, VLM pretrained or randomly initialised; machine A, 1500 demonstrations, 1.0M
+samples, with history) scored 0/100 and 1/100 on `pick_target`. They **closed at the named
+object** (the object nearest the gripper when it first closed was the one the instruction named)
+in 33% and 29% of episodes (chance 33%), a median 89 mm from the nearest object. These are neither
+near misses nor reaches toward a point between the objects: where the gripper closed did not
+depend on the scene ([field notes](../notes.md), "A failing policy ignores the scene; it does not
+average"). `vla_qwen` (pretrained Qwen3-VL-2B, one vector, 400k samples) scored 6/100.
 
-**Three objects, one named.** `pick_target`, machine A, 1500 demonstrations, 1.0M samples, 100
-episodes. The last three columns describe the moment the gripper first closed (it did in every
-episode):
+**Tokens, three objects.** `pick_target` on machine B (L40S GPUs, 128 CPU cores), 100 layouts
+per row, the 48.9M-parameter patch-token policy with the instruction (12.6M of it the instruction
+embedding table), every row trained with the old position table (below). Each pair is the trained
+weights / their running average (raw / EMA, [The training loop](80-the-training-loop.md)).
+**Slope** is the least-squares slope of where the gripper first closed against where the named
+object was: 1 if it closes where the object is, 0 if where it closes does not depend on the scene.
 
-| Policy | Conditioning | Success | Nearest object was the named one | Median miss to named | Median miss to nearest |
+| Policy | Demos | Samples | Success | Closed at the named object | Slope |
 |---|---|---|---|---|---|
-| `vla_custom`, pretrained VLM | one vector | 0/100 | 33% | 175 mm | 89 mm |
-| `vla_custom`, random-init VLM | one vector | 1/100 | 29% | 174 mm | 89 mm |
-| `dp_vit`, no language | 784 patch tokens | 1/100 | 32% | 185 mm | 110 mm |
-
-Chance for the named-object column is 33%. All three closed at the right height (within about
-3 mm) around step 34-44, as the expert does. The expert scored 99/100 on machine A; on machine B,
-the run that also reports where it closed, 100/100, closing 5 mm (median) from the object.
+| `dp_vit_lang` (history) | 4000 | 3.0M (stopped) | 2% / 2% | 30% / 35% | 0.11 / 0.08 |
+| `dp_vit_lang_reactive` (no history) | 1500 | 1.0M | 3% / 5% | 49% / 41% | 0.29 / 0.18 |
+| same | 1500 | 3.0M | 64% / 62% | 99% / 100% | 0.96 / 0.97 |
+| same | 4000 | 5.0M | 83% / 85% | 100% / 100% | 0.98 / 0.98 |
 
 What this shows:
 
-- Both single-vector VLAs learned the motion and not the place. They closed about 9 cm from *any*
-  object: neither the named object's position nor any other's reached the action head.
-- One vector is not always empty. `vla_qwen` (pretrained Qwen3-VL-2B, last 4 language-model layers
-  trained, 400k samples) scored 6/100 and never lifted an object other than the named one in 150
-  episodes. Where its gripper closed is not in the lab notebook.
+- **Tokens carry the place and the instruction.** In the last row the gripper closed at the named
+  object in every episode, 7 mm (median) from it, against the expert's 5 mm. That run's
+  remaining failures, mostly grasp angles on the T block (55%), were mainly the position bug: after the fix
+  the T block is at 87-93% and the rest is spread thinly over the objects
+  ([the `pick_target` case study](101-case-pick-target.md)).
+- **Being in the sequence is not being used.** The 424 conditioning tokens were there from the
+  first optimiser step, yet the last row's run stood at 0% / 1% after 1.0M samples (slope 0.11 /
+  0.14) and 4% / 36% after 2.0M (slope 0.81 / 0.96). Rows two and three are one policy on one
+  dataset: the 1.0M-sample run ended inside that transition
+  ([How much data and training](71-how-much-data-and-training.md)).
+- **The old position table delayed the start and lowered the end.** Computed in half precision, it held 641 distinct
+  positions out of 2048, and the 15 action-step tokens of the no-history policy shared 8. Trained
+  again with the fix, the last row's recipe ends at 93% (trained weights) and starts to look earlier
+  (58% against 4% at 1.5M samples). A second pair of runs with other seeds, differing in the table
+  alone, ends at 96% / 96% against 90% / 89% ([Positions](12-positions.md)).
+- **An input that holds the answer displaces the image.** The history policy reads the target
+  from its previous action. At 2.5M samples (EMA) it succeeded in 1/100 layouts as served, 22/100
+  when the previous action sent with its first query was the expert's first command, and 77/100
+  when the expert drove the first 10 control steps. In training, the previous-action slot of a
+  window that starts at the first frame holds a copy of that command; when served, the hold command
+  ([History and shortcuts](52-history-and-shortcuts.md)).
+- **A policy that succeeds may read the images once.** Sent the first frame's images for the whole
+  episode (`eval.py --stale_images`), the 85% policy still closed at the named object in 99% of
+  episodes, 17 mm (median) from it, and succeeded in 1/100: after its first look the state token
+  says where the arm is heading ([What a policy looks at](95-what-a-policy-looks-at.md)).
 
 What it does not show:
 
-- That the single vector is the cause on `pick_target`. The patch-token policy without language is
-  no better (third row), nor, at the same budget, are patch tokens plus instruction tokens. On
-  machine B (1500 demonstrations, 1M samples, 100 layouts; each pair is the raw weights / the EMA
-  weights, an exponential moving average of the weights kept during training,
-  [The training loop](80-the-training-loop.md)), `dp_vit_lang` scored 3% / 2% with the named object
-  nearest in 35% / 29% of episodes; `dp_vit_lang_reactive` (no history) scored 3% / 5% and
-  49% / 41%, median miss to the nearest object 71 / 75 mm.
-- That tokens fare no better than one vector. On 4000 demonstrations, at the 2.0M-sample checkpoint
-  of a run still training toward 5M, `dp_vit_lang_reactive` scored 4% / 36% with the named object
-  nearest in 95% / 98% and a median miss to it of 32 / 18 mm
-  ([Measuring failure](92-measuring-failure.md)). The final result is not in, and no single-vector
-  VLA was trained on that data, so this is not a like-for-like comparison.
-- That the token-conditioned rows had usable token positions. The action transformer uses rotary
-  position embeddings, and `RotaryEmbedding._update_cos_sin_tables` in
-  `vla_foundry/positional_embedding.py` now computes their angles in float32 because, under the
-  bfloat16 autocast these configs train with (`precision: amp_bf16`), positions above 256 were not
-  all distinguishable. Every many-token sequence here is longer than that; the single-vector
-  action-head sequences are not, though the from-scratch VLM's prompt is. The lab notebook records
-  neither which runs predate the change nor its effect on success.
-- That `all_tokens` fixes it. The all-token VLA has not been measured: the lab notebook lists its
-  runs, with and without a pretrained VLM, as still in progress.
-- Anything about pretraining. The stage-2 VLM behind the first row lists a held-out scene's objects
-  in left-to-right order 85% of the time (256/300), but neither VLA localised an object, so 0/100
-  against 1/100 compares nothing.
-- A controlled ablation on `pick_cube`: the two policies also differ in pretraining, patch size
-  and model size.
+- That the single vector caused the first-round failures, or that `all_tokens` alone fixes them.
+  Those VLAs also had history and 1.0M samples on 1500 demonstrations, each of which alone kept a
+  patch-token policy with the instruction at 2% to 5%. With every token, no history and 4000
+  demonstrations the from-scratch VLA reaches 86% / 87% (3M samples) and the Qwen VLA 70% / 72%
+  (0.5M samples), against 0-6% with one vector; no run changes only the conditioning.
 
 ## Where it goes wrong
 
-**Low loss, a complete grasp motion, an empty gripper.** The `vla_custom` runs ended at a loss of
-about 0.03 and 0-1% success. `sim/pickup/eval.py` prints the named-object rate and the median miss
-at first close; a rate near chance with a miss of several centimetres means the conditioning is not
-being used for position ([Measuring failure](92-measuring-failure.md)). No measurement here settles
-what to do next: the candidate is `conditioning: all_tokens`, not yet evaluated, and the control is
-the same evaluation of a patch-token policy trained on the same data.
+**Low loss, a complete grasp motion, an empty gripper.** `vla_custom` ended at a loss of about
+0.03. `sim/pickup/eval.py` prints how often the gripper closed at the named object and the
+median miss; `sim/pickup/summarize.py` adds the slope. Near 1 with a miss of a few
+centimetres, the policy is imprecise ([Measuring failure](92-measuring-failure.md)). Near 0, it is
+not looking: check that the conditioning is more than a few vectors, that the policy is not given
+its previous action, and that training did not end before the slope moved in a comparable run
+(the evidence for each, with its limits, is above).
 
-**The probe moves with the padding.** `VLMHFBackboneWrapper._prepare_inputs_for_action_token`
-appends the action token after the last column of the batch. With right padding, a short
-instruction has padding between its last word and the action token in a training batch and none
-when served alone. Nothing shows in the loss, and the effect on success was not measured. To check,
-print the tokenizer's `padding_side` and count the padding tokens in front of the action token for
-a short instruction batched with a longer one, and alone; with left padding or equal-length prompts
-the count is zero both times.
+**The previous action in the sequence.** If a policy with history scores near zero, run
+`eval.py --first_prev_action expert` and `--expert_prefix 10`: a policy that scores far better
+with them than without reads its target from its own past. Start without
+history. `collect.py --hold_steps 1`, a frame of the robot at rest at the start of every
+demonstration, closes the leak at the first frame but did not help: trained on such demonstrations
+with the fixed position table, the history policy ends at 0% / 4% after 5M samples, and where it
+closes never depends on the scene. From the second step on the previous action still predicts the
+next one ([History and shortcuts](52-history-and-shortcuts.md)).
 
-**`conditioning_len` does not match the prompt.** With `conditioning_len: 0` the conditioning keeps
-the batch's padded length, so the action head sees a different sequence length in a training batch
-than when one prompt is served. Set it to the prompt's maximum length: each added image adds 256
-tokens in `vla_custom_tokens.yaml`, and too small a value raises the `ValueError` above.
-
-**Image tokens do not know the instruction.** `apply_chat_template` in
-`vla_foundry/data/processor/__init__.py` puts the images before the text, and the from-scratch
-language model is causal, so in `all_tokens` mode the 1,024 image states never say which object was
-asked for. The instruction tokens can attend to every image token, so "which object" and "where"
-can be combined in two places: at the few text positions inside the VLM, or in the action head,
-which is not causal and attends to image and text states together
-([Joining vision and language](30-joining-vision-and-language.md)).
+**The action token behind padding.** Appended after the batch padding, it read a short
+instruction one position later in a training batch than when served alone. Both wrappers now place
+it after the last real token; the effect on success was not measured
+([Train and inference must see the same thing](93-train-inference-skew.md)).
 
 ## Background and further reading
 
 - Mercat et al., "VLA Foundry: A Unified Framework for Training Vision-Language-Action Models",
-  2026. [arXiv:2604.19728](https://arxiv.org/abs/2604.19728). The framework this repository builds
-  on. Its flow transformer is conditioned on the last N layers' hidden features (4 in its
-  experiments) at an observation token.
+  2026. [arXiv:2604.19728](https://arxiv.org/abs/2604.19728). Its flow transformer is conditioned
+  on the last N layers' hidden features (4 in its experiments) at what it calls an observation
+  token: the action token here.
 - Octo Model Team (Ghosh et al.), "Octo: An Open-Source Generalist Robot Policy", 2024.
-  [arXiv:2405.12213](https://arxiv.org/abs/2405.12213). Readout tokens attend to the observation and
-  task tokens without being attended to by them.
+  [arXiv:2405.12213](https://arxiv.org/abs/2405.12213). Its diffusion action head reads the embeddings of readout tokens, the same device, which attend to
+  the observation and task tokens without being attended to by them.
 - Black et al., "π0: A Vision-Language-Action Flow Model for General Robot Control", 2024.
-  [arXiv:2410.24164](https://arxiv.org/abs/2410.24164). The other design: the noisy action tokens
-  attend to the full input sequence, image and language tokens, through self-attention shared with
-  the VLM. `all_tokens` here is looser: a separate action transformer attends to the hidden states
-  of the VLM's last layers.
+  [arXiv:2410.24164](https://arxiv.org/abs/2410.24164). The other design: the tokens of the noisy
+  chunk attend to the full input sequence through self-attention shared with the VLM. `all_tokens`
+  here is looser: a separate action transformer attends to the VLM's last hidden states.
 
 ## Check yourself
 
-1. `dp_vit_lang_reactive.yaml` sets `image_indices: [0]` and `lowdim_past_timesteps: 0`. Compute
-   `N`, `P`, `T` and the sequence length by hand. (Answer: 32 + 2 x 196 = 424, 1, 15, and 441.)
+1. `dp_vit_reactive.yaml` has no text slots, `image_indices: [0]` and `lowdim_past_timesteps: 0`.
+   Compute `N`, `P`, `T` and the sequence length. (Answer: 392, 1, 15 and 409.)
 
-2. Find the assertion that shows `action_token` mode returns exactly one vector:
+2. Predict the two shapes and the six values this prints, then run it:
 
    ```bash
-   uv run pytest tests/essential/models/test_vlm_foundry_backbone_conditioning.py -q
+   .venv/bin/python - <<'EOF'
+   import torch
+   from vla_foundry.models.vision_language_backbones.base import conditioning_from_hidden_states
+
+   mask = torch.tensor([[1, 1, 1, 0, 0], [1, 1, 1, 1, 1]])  # a short prompt next to a long one
+   layers = [torch.randn(2, 5, 512) for _ in range(4)]      # hidden states of the last four layers
+   one = conditioning_from_hidden_states(layers, mask, "action_token")
+   every = conditioning_from_hidden_states(layers, mask, "all_tokens", conditioning_len=6)
+   print(one.shape, every.shape)
+   print((every[0].abs().sum(-1) == 0).tolist())            # zero slots of the short prompt
+   EOF
    ```
 
-3. Work out `conditioning_len` for `vla_custom_tokens.yaml` with three cameras, two frames each and
-   an instruction of at most 8 tokens, and the resulting sequence length. (Answer:
-   3 + 6 x 256 + 8 = 1547, and 1 + 1547 + 2 + 16 = 1566. The shipped 1040 is the same sum for four
-   images, 1035, plus 5 spare slots.)
+3. Find the assertion that shows `action_token` mode returns exactly one vector, and the test that
+   shows where the Hugging Face wrapper puts the action token in a padded batch:
+
+   ```bash
+   .venv/bin/python -m pytest tests/essential/models/test_vlm_foundry_backbone_conditioning.py \
+       tests/essential/models/test_backbone_conditioning.py -q
+   ```
+
+4. A policy with history scores 2% after 3.0M samples, with a slope of 0.08. Name two changes
+   to make before touching the backbone, and the two `eval.py` options that test whether it reads
+   its target from its previous action.

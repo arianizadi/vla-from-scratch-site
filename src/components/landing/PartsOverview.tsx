@@ -42,7 +42,7 @@ export function PartsOverview({ parts }: { parts: Part[] }) {
                   {part.number}
                 </span>
                 <h4 className="text-20 font-semibold">
-                  <Link href={`/learn#${part.id}`} className="text-ink no-underline hover:text-accent">
+                  <Link href={`/learn#${part.id}`} className="touch-target text-ink no-underline hover:text-accent">
                     {part.name}
                   </Link>
                 </h4>
@@ -54,7 +54,7 @@ export function PartsOverview({ parts }: { parts: Part[] }) {
                     <span className="text-ink-faint tabular-nums" aria-hidden="true">
                       {chapter.orderLabel}
                     </span>
-                    <Link href={`/learn/${chapter.slug}`} className="text-link">
+                    <Link href={`/learn/${chapter.slug}`} className="text-link touch-target">
                       {chapter.title}
                     </Link>
                   </li>

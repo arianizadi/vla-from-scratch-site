@@ -2,6 +2,7 @@ import type { Root } from "hast";
 import { toJsxRuntime, type Components } from "hast-util-to-jsx-runtime";
 import Link from "next/link";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
+import { ScrollBox } from "@/components/ui/ScrollBox";
 import { Figure } from "@/figures/Figure";
 import { CodeBlock } from "./CodeBlock";
 import { Heading3, Heading4, SectionHeading } from "./Heading";
@@ -24,11 +25,12 @@ function MarkdownLink({ href = "", children, ...rest }: React.ComponentProps<"a"
   );
 }
 
-function MarkdownTable({ children, ...rest }: React.ComponentProps<"table">) {
+/** A table in its own scrolling box; the pipeline names it (rehypeTables) from the lead or heading above it. */
+function MarkdownTable({ children, "data-label": label, ...rest }: React.ComponentProps<"table"> & { "data-label"?: string }) {
   return (
-    <div className="table-scroll" role="group" aria-label="Table" tabIndex={0}>
+    <ScrollBox label={label ?? "Table"}>
       <table {...rest}>{children}</table>
-    </div>
+    </ScrollBox>
   );
 }
 
@@ -53,8 +55,8 @@ function FigureEmbed({ id = "", caption = "", number, children }: FigureEmbedPro
   );
 }
 
-function MermaidDiagram({ chart = "" }: { chart?: string }) {
-  return <Mermaid chart={chart} />;
+function MermaidDiagram({ chart = "", title, lead }: { chart?: string; title?: string; lead?: string }) {
+  return <Mermaid chart={chart} title={title} lead={lead} />;
 }
 
 /**

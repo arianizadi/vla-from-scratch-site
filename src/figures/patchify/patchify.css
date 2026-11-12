@@ -1,0 +1,501 @@
+/* ==========================================================================
+   patchify: a camera frame at its own pixels under a patch grid, the focused
+   patch up close, and the frame as a sequence of tokens. Colours come from the
+   design tokens only. Vision hue marks what belongs to the object's patches
+   (their tokens); the highlighter marks the focused patch and nothing else.
+   ========================================================================== */
+
+.pf-root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Above the frame: the choices that change what is cut, next to what they change. */
+.pf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pf-head {
+  display: grid;
+  gap: 6px;
+}
+.pf-grid-sentence {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pf-grid-sentence strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pf-legend {
+  row-gap: 4px;
+}
+
+.pf-main {
+  display: grid;
+  gap: 20px;
+  justify-items: start;
+  min-width: 0;
+}
+.pf-main-wide {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.pf-left {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------- the frame */
+
+/* Laid out in percentages of its own box: it fits any width before the stage is measured. */
+.pf-frame {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.pf-window {
+  position: absolute;
+  overflow: hidden;
+}
+.pf-pixels {
+  position: absolute;
+  display: block;
+  max-width: none;
+  image-rendering: pixelated;
+  user-select: none;
+}
+.pf-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+/* A tap selects a patch; a swipe that starts on the frame still scrolls the page. */
+.pf-hit {
+  position: absolute;
+  cursor: crosshair;
+  touch-action: pan-y pinch-zoom;
+}
+.pf-hit:focus-visible,
+.pf-strip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pf-grid line {
+  stroke: var(--surface);
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.pf-num-on {
+  fill: var(--text);
+  font-weight: 600;
+}
+
+.pf-touched {
+  fill: var(--vision);
+  fill-opacity: 0.16;
+  stroke: var(--vision);
+  stroke-width: 2;
+}
+.pf-outline,
+.pf-outline-halo {
+  fill: none;
+  stroke-linecap: square;
+}
+.pf-outline {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.pf-outline-halo {
+  stroke: var(--surface);
+  stroke-width: 4;
+}
+.pf-focus {
+  fill: var(--mark);
+  fill-opacity: 0.4;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+/* Text over the frame sits on a halo of the surface colour. */
+.pf-halo {
+  fill: var(--text);
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.pf-share {
+  font-size: 12px;
+}
+
+.pf-dim line {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+.pf-dim .pf-extension {
+  stroke-dasharray: 2 2;
+  stroke-opacity: 0.8;
+}
+.pf-dim-frame line {
+  stroke: var(--text-faint);
+}
+.pf-dim-gap {
+  fill: var(--surface);
+}
+.pf-dim-text {
+  fill: var(--text-muted);
+}
+.pf-dim-text.pf-halo {
+  fill: var(--text);
+}
+
+/* ---------------------------------------------------------------- beside the frame */
+
+.pf-side {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  width: 100%;
+}
+
+.pf-small {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.pf-small strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.pf-step-label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.0625rem;
+}
+
+.pf-object {
+  display: grid;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--vision);
+}
+.pf-object-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.375rem;
+}
+.pf-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+}
+.pf-facts div {
+  display: grid;
+  gap: 0;
+}
+.pf-facts dt {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.pf-facts dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-stretch: 90%;
+  line-height: 1.625rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pf-facts dd span {
+  color: var(--text-faint);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pf-readout {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.pf-token-head {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.pf-token-number {
+  margin-right: 4px;
+  padding: 0 4px;
+  outline: 1px solid var(--text);
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-stretch: 90%;
+  line-height: 1.875rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pf-formula {
+  margin: 0;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------- the patch up close */
+
+.pf-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.pf-zoom-pixels {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.pf-zoom-box {
+  position: relative;
+  outline: 1px solid var(--border-strong);
+}
+.pf-zoom-image {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.pf-zoom-overlay {
+  position: absolute;
+  inset: 0;
+}
+.pf-zoom-dim {
+  display: block;
+  overflow: visible;
+}
+.pf-zoom-steps {
+  display: grid;
+  flex: 1 1 200px;
+  gap: 6px;
+  min-width: 0;
+}
+.pf-zoom-more summary {
+  min-height: 32px;
+  padding: 6px 0;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+.pf-zoom-more summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pf-zoom-more[open] summary {
+  margin-bottom: 6px;
+}
+@media (pointer: coarse) {
+  .pf-zoom-more summary {
+    min-height: 44px;
+    padding: 12px 0;
+  }
+}
+.pf-planes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.plate.plate .pf-plane {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.pf-plane canvas {
+  display: block;
+  image-rendering: pixelated;
+  outline: 1px solid var(--border);
+}
+.pf-plane figcaption {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.pf-vector-wrap {
+  width: 100%;
+  max-width: 288px;
+  margin-bottom: 6px;
+}
+.pf-vector {
+  display: block;
+  width: 100%;
+  height: 16px;
+  image-rendering: pixelated;
+  outline: 1px solid var(--border);
+}
+/* R, G and B under the thirds of the one list, each with a tick at its start. */
+.pf-vector-ticks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-stretch: 80%;
+  line-height: 1.0625rem;
+}
+.pf-vector-ticks span {
+  padding-left: 3px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.pf-ranges {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.plate.plate .pf-ranges li {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.pf-configs {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.pf-outside {
+  padding-left: 8px;
+  border-left: 2px solid var(--border-strong);
+}
+.pf-cut {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.pf-shape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------- the sequence */
+
+.pf-sequence {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.pf-strip {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  cursor: crosshair;
+  touch-action: pan-y pinch-zoom;
+}
+.pf-row-number {
+  fill: var(--text-faint);
+}
+.pf-token {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.pf-token-object {
+  fill: var(--vision);
+  stroke: var(--vision);
+}
+.pf-row-break {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.pf-token-focus {
+  fill: var(--mark);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.pf-token-focus-object {
+  fill: var(--vision);
+}
+
+/* ---------------------------------------------------------------- both patch sizes */
+
+.pf-table-wrap {
+  overflow-x: auto;
+}
+.pf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  font-stretch: 88%;
+  line-height: 1.3125rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pf-table caption {
+  padding-bottom: 6px;
+  text-align: left;
+}
+.pf-table th,
+.pf-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  vertical-align: baseline;
+}
+.pf-table td {
+  white-space: nowrap;
+}
+.pf-table th:first-child {
+  padding-left: 10px;
+  text-align: left;
+}
+.pf-table thead th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.pf-table tbody th {
+  font-weight: 500;
+}
+.pf-row-on {
+  background-color: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}

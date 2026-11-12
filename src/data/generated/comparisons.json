@@ -1,0 +1,393 @@
+{
+  "beforeAfter": [
+    {
+      "section": "The same run before and after the fix",
+      "before": "dp_vit_lang_reactive_pt4k",
+      "after": "dp_vit_lang_reactive_pt4k_posfix",
+      "weights": [
+        "raw"
+      ],
+      "rows": [
+        {"samples":"0.5M","before":1,"after":1},
+        {"samples":"1.0M","before":2,"after":2},
+        {"samples":"1.5M","before":3,"after":3},
+        {"samples":"2.0M","before":4,"after":4},
+        {"samples":"2.5M","before":5,"after":5},
+        {"samples":"3.0M","before":6,"after":6},
+        {"samples":"3.5M","before":7,"after":7},
+        {"samples":"4.0M","before":8,"after":8},
+        {"samples":"4.5M","before":9,"after":9},
+        {"samples":"5.0M","before":11,"after":11}
+      ],
+      "perObject": {
+        "weights": "raw",
+        "before": {"checkpoint":11,"counts":{"can":{"successes":26,"episodes":28},"cube":{"successes":18,"episodes":24},"hex":{"successes":24,"episodes":25},"tblock":{"successes":15,"episodes":23}}},
+        "after": {"checkpoint":11,"counts":{"can":{"successes":25,"episodes":28},"cube":{"successes":23,"episodes":24},"hex":{"successes":25,"episodes":25},"tblock":{"successes":20,"episodes":23}}}
+      }
+    },
+    {
+      "section": "A second seed, with and without the fix",
+      "before": "dp_vit_lang_reactive_pt4k_seed43_legacy",
+      "after": "dp_vit_lang_reactive_pt4k_seed43_posfix",
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "rows": [
+        {"samples":"0.5M","before":1,"after":1},
+        {"samples":"1.0M","before":2,"after":2},
+        {"samples":"1.5M","before":3,"after":3},
+        {"samples":"2.0M","before":4,"after":4},
+        {"samples":"2.5M","before":5,"after":5},
+        {"samples":"3.0M","before":6,"after":6},
+        {"samples":"3.5M","before":7,"after":7},
+        {"samples":"4.0M","before":8,"after":8},
+        {"samples":"4.5M","before":9,"after":9},
+        {"samples":"5.0M","before":11,"after":11}
+      ],
+      "perObject": null
+    }
+  ],
+  "pooled": {
+    "dp_vit_lang_reactive_pt4k": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":156,"episodes":168},
+        "cube": {"successes":122,"episodes":144},
+        "hex": {"successes":144,"episodes":150},
+        "tblock": {"successes":74,"episodes":138}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw"
+      ],
+      "perObject": {
+        "can": {"successes":76,"episodes":84},
+        "cube": {"successes":68,"episodes":72},
+        "hex": {"successes":74,"episodes":75},
+        "tblock": {"successes":60,"episodes":69}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_early_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw"
+      ],
+      "perObject": {
+        "can": {"successes":79,"episodes":84},
+        "cube": {"successes":72,"episodes":72},
+        "hex": {"successes":72,"episodes":75},
+        "tblock": {"successes":64,"episodes":69}
+      }
+    },
+    "dp_vit_lang_reactive_cf4k_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":164,"episodes":168},
+        "cube": {"successes":138,"episodes":144},
+        "hex": {"successes":148,"episodes":150},
+        "tblock": {"successes":88,"episodes":138}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_recover_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":130,"episodes":168},
+        "cube": {"successes":141,"episodes":144},
+        "hex": {"successes":144,"episodes":150},
+        "tblock": {"successes":109,"episodes":138}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_rs_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":168,"episodes":168},
+        "cube": {"successes":144,"episodes":144},
+        "hex": {"successes":149,"episodes":150},
+        "tblock": {"successes":127,"episodes":138}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_rs_recover_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":163,"episodes":168},
+        "cube": {"successes":138,"episodes":144},
+        "hex": {"successes":146,"episodes":150},
+        "tblock": {"successes":106,"episodes":138}
+      }
+    },
+    "dp_vit_lang_reactive_pt4k_rs_recover_early_posfix": {
+      "section": "What the demonstrations contain",
+      "checkpoints": [
+        9,
+        10,
+        11
+      ],
+      "weights": [
+        "raw",
+        "ema"
+      ],
+      "perObject": {
+        "can": {"successes":115,"episodes":168},
+        "cube": {"successes":126,"episodes":144},
+        "hex": {"successes":147,"episodes":150},
+        "tblock": {"successes":123,"episodes":138}
+      }
+    }
+  },
+  "tables": {
+    "demonstrations": {
+      "section": "What the demonstrations contain",
+      "columns": [
+        "0.5M",
+        "1.0M",
+        "1.5M",
+        "2.0M",
+        "3.0M",
+        "4.0M",
+        "5.0M",
+        "Best checkpoint"
+      ],
+      "rows": [
+        {"run":"dp_vit_lang_reactive_pt4k_posfix","words":"one instruction per layout"},
+        {"run":"dp_vit_lang_reactive_pt4k_early_posfix","words":"early windows repeated"},
+        {"run":"dp_vit_lang_reactive_cf4k_posfix","words":"every object named"},
+        {"run":"dp_vit_lang_reactive_pt4k_recover_posfix","words":"recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_posfix","words":"random starts"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_posfix","words":"random starts and recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_early_posfix","words":"random starts, recoveries, early windows repeated"}
+      ]
+    },
+    "demonstrationsNamed": {
+      "section": "What the demonstrations contain",
+      "columns": [
+        "0.5M",
+        "1.0M",
+        "1.5M",
+        "2.0M",
+        "3.0M"
+      ],
+      "rows": [
+        {"run":"dp_vit_lang_reactive_pt4k_posfix","words":"one instruction per layout"},
+        {"run":"dp_vit_lang_reactive_pt4k_early_posfix","words":"early windows repeated"},
+        {"run":"dp_vit_lang_reactive_cf4k_posfix","words":"every object named"},
+        {"run":"dp_vit_lang_reactive_pt4k_recover_posfix","words":"recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_posfix","words":"random starts"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_posfix","words":"random starts and recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_early_posfix","words":"random starts, recoveries, early windows repeated"}
+      ]
+    },
+    "demonstrationsObjects": {
+      "section": "What the demonstrations contain",
+      "columns": [
+        "Can",
+        "Cube",
+        "Hex nut",
+        "T block"
+      ],
+      "rows": [
+        {"run":"dp_vit_lang_reactive_pt4k","words":"before the fix, one instruction per layout"},
+        {"run":"dp_vit_lang_reactive_pt4k_posfix","words":"one instruction per layout"},
+        {"run":"dp_vit_lang_reactive_pt4k_early_posfix","words":"early windows repeated"},
+        {"run":"dp_vit_lang_reactive_cf4k_posfix","words":"every object named"},
+        {"run":"dp_vit_lang_reactive_pt4k_recover_posfix","words":"recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_posfix","words":"random starts"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_posfix","words":"random starts and recoveries"},
+        {"run":"dp_vit_lang_reactive_pt4k_rs_recover_early_posfix","words":"random starts, recoveries, early windows repeated"}
+      ]
+    }
+  },
+  "battery": {
+    "section": "How each policy copes outside the conditions it was trained in",
+    "columns": [
+      {
+        "variant": "plain",
+        "words": "Standard",
+        "table": "outside"
+      },
+      {
+        "variant": "seeds2_h8_s10",
+        "words": "Second set of layouts",
+        "table": "outside"
+      },
+      {
+        "variant": "random_start",
+        "words": "Random start",
+        "table": "outside"
+      },
+      {
+        "variant": "disturb_reach10",
+        "words": "Moved at step 10",
+        "table": "outside"
+      },
+      {
+        "variant": "disturb_reach20",
+        "words": "Moved at step 20",
+        "table": "outside"
+      },
+      {
+        "variant": "disturb_reach30",
+        "words": "Moved at step 30",
+        "table": "outside"
+      },
+      {
+        "variant": "disturb_grasp",
+        "words": "Moved at the grasp",
+        "table": "outside"
+      },
+      {
+        "variant": "random_start_disturb_reach20",
+        "words": "Random start, moved at step 20",
+        "table": "outside"
+      },
+      {
+        "variant": "random_start_disturb_grasp",
+        "words": "Random start, moved at the grasp",
+        "table": "outside"
+      },
+      {
+        "variant": "probe_stale_images",
+        "words": "Cameras frozen on the first frame",
+        "table": "dependsOn"
+      },
+      {
+        "variant": "probe_prefix10_distractor",
+        "words": "Expert drives 10 steps toward another object",
+        "table": "dependsOn"
+      },
+      {
+        "variant": "probe_prefix25_distractor",
+        "words": "Expert drives 25 steps toward another object",
+        "table": "dependsOn"
+      },
+      {
+        "variant": "sweep_h8_s2",
+        "words": "2 flow steps",
+        "table": "dependsOn"
+      }
+    ],
+    "runs": [
+      {
+        "run": "dp_vit_lang_reactive_pt4k",
+        "words": "before the fix, plain demonstrations",
+        "checkpoint": 11,
+        "weights": "ema"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_posfix",
+        "words": "one instruction per layout",
+        "checkpoint": 11,
+        "weights": "raw"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_early_posfix",
+        "words": "early windows repeated",
+        "checkpoint": 11,
+        "weights": "raw"
+      },
+      {
+        "run": "dp_vit_lang_reactive_cf4k_posfix",
+        "words": "every object named",
+        "checkpoint": 11,
+        "weights": "ema"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_recover_posfix",
+        "words": "recoveries",
+        "checkpoint": 11,
+        "weights": "ema"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_rs_posfix",
+        "words": "random starts",
+        "checkpoint": 11,
+        "weights": "ema"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_rs_recover_posfix",
+        "words": "random starts and recoveries",
+        "checkpoint": 11,
+        "weights": "ema"
+      },
+      {
+        "run": "dp_vit_lang_reactive_pt4k_rs_recover_early_posfix",
+        "words": "random starts, recoveries, early windows repeated",
+        "checkpoint": 11,
+        "weights": "ema"
+      }
+    ],
+    "expert": {
+      "columns": [
+        {"variant":"plain","words":"Standard"},
+        {"variant":"random_start","words":"Random start"},
+        {"variant":"disturb_reach10","words":"Moved at step 10"},
+        {"variant":"disturb_reach20","words":"Moved at step 20"},
+        {"variant":"disturb_reach30","words":"Moved at step 30"},
+        {"variant":"disturb_grasp","words":"Moved at the grasp"},
+        {"variant":"random_start_disturb_reach20","words":"Random start, moved at step 20"},
+        {"variant":"random_start_disturb_grasp","words":"Random start, moved at the grasp"}
+      ],
+      "rows": [
+        {"words":"one plan per episode","plansAgain":false,"cells":[{"column":"plain","variant":"plain"},{"column":"random_start","variant":"random_start"},{"column":"disturb_reach10","variant":"disturb_reach10"},{"column":"disturb_reach20","variant":"disturb_reach20"},{"column":"disturb_reach30","variant":"disturb_reach30"},{"column":"disturb_grasp","variant":"disturb_grasp"}]},
+        {"words":"plans again","plansAgain":true,"cells":[{"column":"plain","variant":"plans_again"},{"column":"random_start","variant":"plans_again_random_start"},{"column":"disturb_reach10","variant":"plans_again_disturb_reach10"},{"column":"disturb_reach20","variant":"plans_again_disturb_reach20"},{"column":"disturb_reach30","variant":"plans_again_disturb_reach30"},{"column":"disturb_grasp","variant":"plans_again_disturb_grasp"},{"column":"random_start_disturb_reach20","variant":"plans_again_random_start_disturb_reach20"},{"column":"random_start_disturb_grasp","variant":"plans_again_random_start_disturb_grasp"}]}
+      ]
+    }
+  }
+}

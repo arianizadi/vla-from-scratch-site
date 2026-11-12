@@ -110,6 +110,18 @@ export const FIGURES = {
     shows: "the papers and systems that led to VLAs, on a time axis",
     stamp: "schematic",
   },
+  onset: {
+    title: "When a policy starts to look",
+    shows:
+      "success, how often the gripper closed at the named object, and the slope, against training samples, for several runs side by side: the point where a policy starts to look at the scene",
+    stamp: "measured",
+  },
+  disturbance: {
+    title: "The object is moved during the reach",
+    shows:
+      "a top-down replay of an episode in which the object is moved during the reach: the old place, the new place, and where the gripper closed",
+    stamp: "measured",
+  },
 } as const satisfies Record<string, FigureInfo>;
 
 export type FigureId = keyof typeof FIGURES;

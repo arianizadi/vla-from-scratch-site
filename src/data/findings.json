@@ -228,13 +228,13 @@
         }
       ],
       "note": {
-        "text": "The 36M-parameter policy with instruction tokens and no history. It stays at 2% or less for the first 1.5M samples, then covers most of the way within the next million; the final checkpoint scored 83/100 on a second set of layouts. With 1500 demonstrations and 1.0M samples the same policy ends at 5%, so a budget that ends too early reads as a design that does not work.",
+        "text": "The patch-token policy with instruction tokens and no history, 48.9M parameters. It stays at 2% or less for the first 1.5M samples, then covers most of the way within the next million; the final checkpoint scored 83/100 on a second set of layouts. With 1500 demonstrations and 1.0M samples the same policy ends at 5%, so a budget that ends too early reads as a design that does not work.",
         "quotes": [
           "| 0.5M | 0% / 0% | 34% / 26% | 0.02 / -0.06 | 166 / 167 mm |",
           "| 1.5M | 4% / 2% | 61% / 49% | 0.47 / 0.37 | 102 / 104 mm |",
           "A second set of 100 layouts (seeds 1,000,100-1,000,199), same checkpoint: 83/100",
           "`dp_vit_lang_reactive`: language, no history | 1500 | 1.0M | 3% / 5%",
-          "All policies in this section are the 36M-parameter one"
+          "\"Language\" adds the instruction as tokens and, with their embedding table (49,280 x 256), 12.6M parameters: 48.9M (`dp_vit_lang`, `dp_vit_lang_reactive`)."
         ]
       }
     }
@@ -301,9 +301,121 @@
     }
   },
   "status": {
-    "text": "Several training runs were in progress when the notebook was last written. Their results are not shown here.",
+    "text": "Every run of this round has finished; the lab notebook reports all of them.",
     "quotes": [
-      "Runs in progress when this was written"
+      "Every number measured in this repository, in one place."
+    ]
+  },
+  "statements": {
+    "about": "The findings the landing page states in a sentence or two each, below the hero. Each names the chapter that explains it (its file name without .md) and the notebook heading its numbers are under (the results page anchors its sections by that heading). Every number in a text is in its quotes, word for word.",
+    "items": [
+      {
+        "id": "looking-arrives-late",
+        "title": "Looking at the scene arrives late, and all at once",
+        "text": "The same policy, on the same 4000 demonstrations, succeeded 1% of the time after 1.0M training samples, 36% after 2.0M and 85% after 5.0M (averaged weights). Nothing in its training loss announces the change, so a budget that ends too early reads as a design that does not work.",
+        "chapter": "71-how-much-data-and-training",
+        "section": "4000 demonstrations, no history (`dp_vit_lang_reactive_pt4k`)",
+        "quotes": [
+          "### 4000 demonstrations, no history (`dp_vit_lang_reactive_pt4k`)",
+          "| 1.0M | 0% / 1% |",
+          "| 2.0M | 4% / 36% |",
+          "| 5.0M (final) | 83% / 85% |",
+          "\"EMA\" = their running average"
+        ]
+      },
+      {
+        "id": "previous-action",
+        "title": "The previous action as an input lets a policy stop looking",
+        "text": "Given its previous action as an input, the policy read the target from that input instead of from the cameras. As served it succeeded in 1/100 episodes; told the expert’s first command as its previous action, in 22/100; with the expert driving the first 10 steps, in 77/100. In training that slot held the expert’s first command, which already points at the target.",
+        "chapter": "52-history-and-shortcuts",
+        "section": "What the history policy depends on",
+        "quotes": [
+          "### What the history policy depends on",
+          "| as served: the previous action sent with the first query is the hold command | 1/100 |",
+          "| the previous action sent with the first query is the expert's first command | 22/100 |",
+          "| the expert drives the first 10 steps, then the policy takes over | 77/100 |",
+          "the expert's first command, which already points at the target, is an input in training"
+        ]
+      },
+      {
+        "id": "looks-once",
+        "title": "A policy that succeeds may look only once",
+        "text": "Sent only the first camera frame for the whole episode, the policy that succeeds in 85/100 still closed nearest the named object in 99% of episodes, though only 1/100 succeeded. When the object is moved 80 mm at step 20 of the reach, it closes a median 8 mm from where the object was and 78 mm from where it is: 0/96.",
+        "chapter": "95-what-a-policy-looks-at",
+        "section": "What the no-history policy depends on",
+        "quotes": [
+          "### What the no-history policy depends on",
+          "| as trained | 85/100 | 100% | 7 mm |",
+          "| the first frame's images are sent for the whole episode | 1/100 | 99% | 17 mm |",
+          "The named object is moved once per episode, 80 mm in a random direction unless stated",
+          "| at step 20 | 0/96 | 8 mm | 78 mm | 31/96 |"
+        ]
+      },
+      {
+        "id": "demonstrations-decide",
+        "title": "What the demonstrations contain decides what the policy looks at",
+        "text": "Same policy, same 4000 episodes, different content. Trained on one clean pass per layout from a single start pose, it succeeded in 93/100, and in 9/100 when each episode began from a random pose. Trained on demonstrations from random start poses, it succeeded in 98/100, and in 97/100 from random poses.",
+        "chapter": "70-demonstrations",
+        "section": "How each policy copes outside the conditions it was trained in",
+        "quotes": [
+          "### How each policy copes outside the conditions it was trained in",
+          "4000 demonstrations, 5M samples, 100 unseen layouts per evaluation",
+          "| one instruction per layout | 93/100 | 96/100 | 9/100 |",
+          "| random starts | 98/100 | 97/100 | 97/100 |",
+          "every episode starts from a random gripper pose above the table"
+        ]
+      },
+      {
+        "id": "self-correction",
+        "title": "Self-correction has to be in the data",
+        "text": "Trained on demonstrations in which the object is moved and the expert recovers, the policy follows a moved object (79/96 when it is moved at step 20 of the reach) and tries again after a missed grasp: with the object moved as the gripper closes, it succeeded in 78/99 and made a second attempt in all 99.",
+        "chapter": "43-imitation-learning",
+        "section": "How each policy copes outside the conditions it was trained in",
+        "quotes": [
+          "in 1505 episodes the object is moved once (during the reach or as the gripper closes) and the expert plans again",
+          "| recoveries | 84/100 | 93/100 | 68/100 | 88/100 | 79/96 | 85/100 | 78/99 (99 retried) |"
+        ]
+      },
+      {
+        "id": "position-table",
+        "title": "A position table in half precision merged most positions",
+        "text": "The rotary position table was computed in bfloat16, which keeps 8 significant bits: 641 distinct positions out of 2048, and the policy’s 15 action tokens shared 8 of them. Computed in float32, the same recipe ends at 93% instead of 83% (trained weights), and at 96% instead of 90% with a second pair of seeds, and starts to look earlier: after 1.0M samples it closed at the named object in 65% of episodes instead of 35%.",
+        "chapter": "12-positions",
+        "section": "The same run before and after the fix",
+        "quotes": [
+          "### The same run before and after the fix",
+          "The rotary position table was computed in bfloat16 under autocast, which keeps 8 significant bits",
+          "641 distinct positions out of 2048",
+          "the 15 action-step tokens, at positions 426-440, shared 8 positions",
+          "| 5.0M | 83% / 93% |",
+          "| 1.0M | 0% / 8% | 35% / 65% |",
+          "Trained weights (the run after the fix did not save averaged weights)",
+          "(and the second pair of seeds in 'A second seed, with and without the fix')",
+          "| second pair (seed 43) | 90/100 (89/100) | 96/100 (96/100) |"
+        ]
+      }
+    ],
+    "smaller": [
+      {
+        "id": "averaged-weights",
+        "text": "Averaged weights lead during the transition: 36% against 4% for the trained weights after 2.0M samples.",
+        "chapter": "80-the-training-loop",
+        "section": "4000 demonstrations, no history (`dp_vit_lang_reactive_pt4k`)",
+        "quotes": [
+          "| 2.0M | 4% / 36% |"
+        ]
+      },
+      {
+        "id": "two-flow-steps",
+        "text": "Two sampling steps were enough for the 85% policy: 89/100 and 90/100 with 2 flow steps, 85/100 and 83/100 with 10.",
+        "chapter": "41-flow-matching",
+        "section": "Inference settings",
+        "quotes": [
+          "### Inference settings",
+          "| 2 | 89/100, 90/100 | 25 ms |",
+          "| 10 | 85/100, 83/100 | 71 ms |"
+        ]
+      }
     ]
   }
 }

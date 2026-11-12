@@ -14,7 +14,7 @@ import { Slider } from "./controls/Slider";
 import { Stepper } from "./controls/Stepper";
 import { Toggle } from "./controls/Toggle";
 import { FigureFrame } from "./FigureFrame";
-import { useElementSize, useInView, usePageVisible, useReducedMotion } from "./hooks";
+import { chartHeight, useElementSize, useInView, usePageVisible, useReducedMotion } from "./hooks";
 import type { FigureProps } from "./index";
 
 const LAST = 12;
@@ -37,6 +37,9 @@ function curveValue(step: number, timeConstant: number): number {
  * reduced-motion behaviour, in about 200 lines. Its data is a formula, so it
  * is stamped "computed".
  */
+/** The chart's height: 42% of its width, between 220 and 320 px. */
+const HEIGHT = { min: 220, ratio: 0.42, max: 320 } as const;
+
 export function KitSpecimen({ caption }: FigureProps) {
   const [timeConstant, setTimeConstant] = useState(3);
   const [curve, setCurve] = useState<Curve>("linear");
@@ -59,9 +62,11 @@ export function KitSpecimen({ caption }: FigureProps) {
     return () => clearInterval(timer);
   }, [running]);
 
-  // Until the container is measured (and in the static HTML) the chart is drawn 640 wide and scaled.
+  // Until the container is measured (and in the static HTML) the chart is drawn 640 wide. Its box
+  // already has its final height, from the same rule in CSS (chartHeight), so nothing below the
+  // figure moves when it is redrawn at the real width; until then the drawing sits inside that box.
   const width = measured || 640;
-  const height = Math.round(Math.min(320, Math.max(220, width * 0.42)));
+  const height = Math.round(Math.min(HEIGHT.max, Math.max(HEIGHT.min, width * HEIGHT.ratio)));
   const margin = { top: 30, right: 20, bottom: 54, left: 44 };
   const x = scaleLinear([0, LAST], [margin.left, width - margin.right]);
   const y = scaleLinear([0, 1], [height - margin.bottom, margin.top]);
@@ -131,10 +136,11 @@ export function KitSpecimen({ caption }: FigureProps) {
           { label: "Floor", color: REFERENCE.color, dashed: true },
         ]}
       />
-      <div ref={stage} className="mt-2">
+      <div ref={stage} className="mt-2 [container-type:inline-size]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="block h-auto w-full"
+          className="block w-full"
+          style={chartHeight(HEIGHT)}
           role="img"
           aria-label={`A toy curve falling from 1 towards ${FLOOR} over ${LAST} steps. At step ${current.step} its value is ${current.value.toFixed(2)}.`}
         >

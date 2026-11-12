@@ -1,18 +1,26 @@
 /**
- * Measured numbers shown on the site, copied from the tutorial's lab notebook
- * (tutorial/lab-notebook.md, synced to content/lab-notebook.md). This file is
- * the one place a number may enter the site: tables, charts and figures import
- * from here and never state a number of their own. A run that is still in
- * progress gets an entry without a value.
+ * The numbers the landing page shows: the findings and stages of
+ * findings.json, and the two runs, the chunking and the camera of the hero
+ * plate.
  *
- * It holds what the landing page shows: the hero plate's two runs (below) and
- * the findings and stages of findings.json. That file carries, next to every
- * number, the passage of the notebook it was copied from; `npm run sync`
- * checks that each passage is still there. The lab page will replace this
- * with a module generated from the notebook.
+ * findings.json carries, next to every number, the passage of the lab
+ * notebook it was copied from; `npm run sync` checks that each passage is
+ * still there. The hero's values are not typed here: they come from the
+ * experiment export (src/data/generated) where it has them, and from the
+ * hand-copied notebook numbers (notebook.json) where only the notebook does.
+ *
+ * Every other table, chart and figure reads the modules next to this file:
+ * runs.ts, checkpoints.ts, probes.ts, curves.ts, tolerance.ts, tokens.ts,
+ * files.ts, notebook.ts, with labels.ts and format.ts for the words and the
+ * rounding. src/data/README.md describes them. No component states a
+ * measured number of its own.
  */
 
 import data from "./findings.json";
+import expertRows from "./generated/expert.json";
+import meta from "./generated/meta.json";
+import { fixed } from "./notebook-format.mjs";
+import notebook from "./notebook.json";
 
 /** One measured row of a finding: a policy, or one checkpoint of a policy. */
 export interface FindingRow {
@@ -85,40 +93,69 @@ export interface GraspRun {
   source: string;
 }
 
-export const heroRuns = {
+/** A value the hero cannot do without; the build stops when the data no longer has it. */
+function need<Value>(value: Value | undefined, what: string): Value {
+  if (value === undefined) throw new Error(`src/data/lab.ts: the data has no ${what}. Run "npm run sync".`);
+  return value;
+}
+
+// The scripted expert through the evaluation loop: from the export.
+const expert = need(
+  expertRows.find((row) => row.variant === "plain"),
+  "evaluation of the scripted expert",
+);
+// The first-round policy without language ran on machine A: only the notebook has it.
+const firstRound = notebook.firstRound;
+const noLanguage = need(
+  firstRound.rows.find((row) => row.id === "dp_vit"),
+  "first-round row for dp_vit",
+);
+const noLanguageGrasp = need(
+  firstRound.grasp.rows.find((row) => row.id === "dp_vit"),
+  "first-round grasp row for dp_vit",
+);
+// "pick_target, first round": the heading without its code marks and its machine.
+const firstRoundSection = firstRound.section.replace(/`/g, "").replace(/\s*\(machine [AB]\)$/, "");
+// The vision transformer of the from-scratch VLM: the stage that has one.
+const vit = need(notebook.stages.rows.find((row) => row.vit)?.vit, "vision transformer among the from-scratch stages");
+
+export const heroRuns: Record<"expert" | "noLanguage", GraspRun> = {
   expert: {
     label: "Scripted expert",
     policy: "scripted expert",
-    task: "pick_target",
-    medianMissMm: 5,
-    successes: 100,
-    episodes: 100,
-    source: "The scripted expert",
+    task: expert.task,
+    // As the notebook writes it: a whole number of millimetres.
+    medianMissMm: Number(fixed(expert.missMm)),
+    successes: expert.successes,
+    episodes: expert.episodes,
+    source: expert.sections[0],
   },
   noLanguage: {
     label: "Policy without language",
-    policy: "dp_vit",
+    policy: noLanguage.policy,
     task: "pick_target",
-    medianMissMm: 185,
-    successes: 1,
-    episodes: 100,
-    source: "pick_target, first round",
+    medianMissMm: noLanguageGrasp.missNamedMm,
+    successes: noLanguage.successes,
+    episodes: noLanguage.episodes,
+    source: firstRoundSection,
   },
-} as const satisfies Record<string, GraspRun>;
+};
 
 export type HeroRunId = keyof typeof heroRuns;
 
 /** Action chunking used by every policy in the notebook's default settings. */
-export const chunking = {
-  predicted: 15,
-  executed: 8,
-  flowSteps: 10,
-  controlHz: 20,
-} as const;
+export const chunking: { predicted: number; executed: number; flowSteps: number; controlHz: number } = {
+  // A policy predicts the current action and 14 more: only the notebook says so.
+  predicted: notebook.setup.chunk.actions,
+  // The evaluation defaults and the control rate come with the export.
+  executed: meta.defaults.execHorizon,
+  flowSteps: meta.defaults.flowSteps,
+  controlHz: meta.defaults.controlHz,
+};
 
 /** The front camera and the from-scratch vision transformer's patch grid (224 px, patch 14). */
-export const camera = {
-  pixels: 224,
-  patch: 14,
-  grid: 16,
-} as const;
+export const camera: { pixels: number; patch: number; grid: number } = {
+  pixels: notebook.setup.camera.pixels,
+  patch: vit.patch,
+  grid: notebook.setup.camera.pixels / vit.patch,
+};

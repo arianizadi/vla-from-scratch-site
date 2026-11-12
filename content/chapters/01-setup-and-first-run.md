@@ -2,7 +2,7 @@
 title: Setup and a First Run
 part: 0 Orientation
 order: 01
-summary: Install the repository and run the whole loop on the single-cube task, from demonstrations to a closed-loop success rate and a grasp map.
+summary: Install the repository, run the whole loop once on the single-cube task as a smoke test, then start the three-object run (93% here after the position fix; 83% / 85% before it) and read its success curve and grasp map.
 status: draft
 ---
 
@@ -10,16 +10,17 @@ status: draft
 
 A robot policy is judged by what the robot does, so the unit of work in this repository is a loop:
 collect demonstrations, train, run the trained policy in the simulator, count successes. This
-chapter installs the environment and runs that loop once on the easiest task, `pick_cube`. The
-policy and evaluation chapters change one thing in this loop and measure the difference, so it has
-to run on your machine first.
+chapter installs the environment, runs that loop once on the easiest task as a smoke test, a quick
+check that every stage works, and then starts the three-object run, which reached 93% here.
+Later chapters change one thing in this loop and measure the difference, so it has to run on
+your machine first.
 
 ## The idea
 
 A **policy** is a function from observations to actions. Here the observations are two 224x224 RGB
 camera images (`front` and `wrist`) and an 8-number state (7 joint angles and the gripper opening).
-An action is 8 numbers (7 joint position targets and a gripper command, 1 = open, 0 = closed), sent
-20 times per second to a simulated Franka Panda arm.
+An action is 8 numbers (7 joint position targets and a gripper command, 1 = open, 0 = closed),
+sent to a simulated Franka Panda arm once per **control step**, 20 times per second.
 
 A **demonstration** is one recorded episode of something that already solves the task: here a
 scripted expert, a hand-written program that reads the object's true position from the simulator
@@ -29,10 +30,13 @@ and plans a grasp. Training makes the policy imitate the demonstrations.
 next observation, and counts how often the task succeeds. The training loss cannot stand in for
 that count ([91-loss-is-not-success.md](91-loss-is-not-success.md)).
 
-The worked example is `pick_cube`: one red cube at a random pose on a table, the instruction "pick
-up the red cube", and success when the cube is held 8 cm above its rest height for 10 control steps
-(0.5 s). An episode ends at 200 steps. Demonstrations use seeds `0..` and evaluation uses seeds
-`1_000_000+`, so every evaluated layout is one the policy has not seen.
+Two tasks are used. `pick_cube` has one red cube on a table and the instruction "pick up the red
+cube". `pick_target` has three of four objects (red cube, green can, blue hex nut, yellow T
+block) and an instruction that names one. Success is the named object held 8 cm above its rest
+height for 10 control steps (0.5 s); an episode ends at 200 control steps. A **layout** is which
+objects are on the table, where they are, which one the instruction names and the arm's start
+pose; the seed fixes it. Demonstrations use seeds `0..` and evaluation seeds `1_000_000+`, so
+every evaluated layout is one the policy has not seen.
 
 ```mermaid
 flowchart LR
@@ -46,16 +50,15 @@ flowchart LR
 ```
 
 <!-- interactive: pipeline -->
-*Figure: the loop as one strip, from the expert's episodes through shards, training and the policy
-server to the simulator's success count.*
+*Figure: the loop as one strip, from the expert's episodes to the simulator's success count.*
 
 ## How it works
 
 ### Install
 
-The scripts assume Linux with an NVIDIA GPU: rendering goes through EGL (an interface that creates
-an OpenGL context on the GPU without a display), the policy server defaults to `--device cuda`, and
-`train_resilient.sh` and `eval_checkpoints.sh` call the Linux tools `setsid` and `stat -c`.
+The scripts assume Linux with an NVIDIA GPU: rendering goes through EGL (OpenGL on the GPU without a
+display), the policy server defaults to `--device cuda`, and `train_resilient.sh` and
+`eval_checkpoints.sh` rely on the Linux tools `setsid` and `stat -c`.
 
 ```bash
 uv sync --group preprocessing --group sim
@@ -63,20 +66,18 @@ sim/pickup/scripts/fetch_assets.sh
 .venv/bin/python -m sim.pickup.smoke_test pick_cube 10
 ```
 
-1. `uv sync` builds one environment in `.venv` for everything. `pyproject.toml` pins Python 3.12
-   and `torch==2.7.0`. A
-   [dependency group](https://docs.astral.sh/uv/concepts/projects/dependencies/) is a named,
-   optional set of packages declared in `pyproject.toml`; `uv sync` installs one only when it is
-   requested with `--group`. The `sim` group adds `mujoco` and `rich`; `preprocessing` adds
-   `pyarrow`, which `collect.py` imports, and `av`, which `eval.py` uses for videos, so both are
-   needed.
-2. `fetch_assets.sh` does a sparse `git clone` of MuJoCo Menagerie at a pinned commit and keeps only
-   `franka_emika_panda`, under `sim/pickup/assets/third_party/`. `sim/pickup/env.py` loads the arm
-   from that path (`PANDA_XML`); the model is not committed.
-3. `smoke_test.py` runs the scripted expert for 10 episodes and prints its success count and the
-   simulator's steps per second.
+1. `uv sync` builds one environment in `.venv` at the versions in `uv.lock` and installs the
+   project into it; `pyproject.toml` pins Python 3.12 and `torch==2.7.0`. The optional
+   [dependency groups](https://docs.astral.sh/uv/concepts/projects/dependencies/) add `mujoco`
+   and `rich` (`sim`), and `pyarrow` and `av` for writing data and videos (`preprocessing`).
+2. `fetch_assets.sh` does a sparse `git clone` of
+   [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) at a pinned commit and
+   keeps only `franka_emika_panda`, under `sim/pickup/assets/third_party/`, where
+   `sim/pickup/env.py` looks for the arm (`PANDA_XML`); the model is not committed.
+3. `smoke_test.py` runs the scripted expert for 10 episodes and prints its success count and
+   speed.
 
-### The six steps
+### The loop in six steps: a smoke test on one cube
 
 ```bash
 # 1. demonstrations -> shards
@@ -99,229 +100,263 @@ sim/pickup/scripts/eval.sh experiments/pickup/dp_vit_pick_cube_1k pick_cube 50
 .venv/bin/python -m sim.pickup.summarize --task pick_cube
 ```
 
-**Step 1, `make_dataset.sh <task> <episodes> [name]`.** `sim/pickup/collect.py` runs
-`ScriptedExpert` in several simulator processes, discards failed episodes, and stops at 1000
-successful ones. It writes them to `data/lerobot/pick_cube_1k` in the dataset layout (v2.0) of
-LeRobot, Hugging Face's robot-learning library: one parquet file (a column-oriented table format)
-per episode, holding per frame the JPEG bytes of both cameras, `state` `[8]` and `action` `[8]`.
-Then `vla_foundry/data/preprocessing/preprocess_robotics_to_tar.py` cuts each episode into training
-windows (`sim/pickup/configs/preprocess.yaml`): the images at `t-1` and `t`, and 16 steps of the
-low-dimensional data, meaning the state and action vectors, not the images (1 past, the current
-one, 14 future; the current and 14 future actions are the 15-action chunk of step 5). Windows are
-packed 256 to a **shard**, a tar file the data loader streams, in
-`data/preprocessed/pick_cube_1k/shards/` next to `manifest.jsonl` (the list of shards) and
-`stats.json` (normalisation statistics). See [70-demonstrations.md](70-demonstrations.md).
+**Step 1, `make_dataset.sh <task> <episodes> [name] [collect.py arguments]`.**
+`sim/pickup/collect.py` runs `ScriptedExpert` in several simulator processes and keeps 1000
+successful episodes in `data/lerobot/pick_cube_1k`, in the dataset layout (v2.0) of LeRobot: one
+parquet file per episode with the JPEG frames of both cameras, `state` `[8]` and `action` `[8]`.
+`vla_foundry/data/preprocessing/preprocess_robotics_to_tar.py` then cuts each episode into
+**windows** (`sim/pickup/configs/preprocess.yaml`). A window is one training example: the images
+at frames `t-1` and `t`, and the states and actions of 16 frames (1 past, the current one, 14
+future). Every frame starts one window. Windows are packed 256 to a **shard**, a tar file the data
+loader streams, in `data/preprocessed/pick_cube_1k/shards/`, next to `manifest.jsonl` and
+`stats.json` (normalisation statistics); see [70-demonstrations.md](70-demonstrations.md).
 
-**Step 2, `train_resilient.sh <config> <dataset> <run_name> <total_samples>`.** The config name
-selects `sim/pickup/configs/dp_vit.yaml`. It describes a diffusion policy, a model that produces
-an action chunk by refining random noise in a few steps while looking at the observations. This one
-is trained with flow matching, one way of teaching that refinement
-([41-flow-matching.md](41-flow-matching.md)). Its image encoder is a small ViT (vision
-transformer): each 224x224 image is cut into 16x16-pixel patches and every patch becomes a token
-([20-images-to-tokens.md](20-images-to-tokens.md)). The encoder is trained from scratch, the batch
-size is 64, and the instruction text is not used.
+**Step 2, `train_resilient.sh <config> <dataset> <run_name> <total_samples> [main.py arguments]`.**
+The config is `sim/pickup/configs/dp_vit.yaml`: a diffusion policy, which refines random noise into
+actions in a few **flow steps** while looking at the observations, trained with flow matching
+([41-flow-matching.md](41-flow-matching.md)). Its image encoder, a small ViT (vision transformer)
+trained from scratch, cuts each image into 16x16-pixel patches and makes every patch a token
+([20-images-to-tokens.md](20-images-to-tokens.md)). The instruction is not used. The policy has
+**history**: the images and states of frames `t-1` and `t` and its previous action are inputs.
 
-`train.sh` passes the shard manifest, the statistics, the run name and the sample budget to
-`vla_foundry/main.py`. The budget is counted in samples: 1,500,000 samples at batch 64 is
-`1_500_000 // 64 = 23,437` optimiser steps (`total_steps` in `main.py`). Nothing is printed while
-it trains; output and tracebacks go to `experiments/pickup/dp_vit_pick_cube_1k.train.log`.
+The budget is counted in **samples**; a sample is one window drawn by the data loader. 1,500,000
+samples at batch 64 are `1_500_000 // 64 = 23,437` optimiser steps (`total_steps` in
+`vla_foundry/main.py`). Output and tracebacks go to
+`experiments/pickup/dp_vit_pick_cube_1k.train.log`, not to the terminal.
 
-A **checkpoint** is the training state saved to disk: `save_checkpoint` in
-`vla_foundry/file_utils.py` writes `checkpoint_N.pt` (model weights and the position in the data)
-and `optimizer_N.pt` (optimiser state) to `experiments/pickup/<run>/checkpoints/`. `train.sh` asks
-for 6 (`--num_checkpoints`); `main.py` asks the data loader for
-`samples_per_checkpoint = total_train_samples // num_checkpoints` (here 250,000) per part and saves
-after each. The loader rounds each part to whole shards and batches (`get_wds_dataloader` in
-`vla_foundry/data/dataloader.py`), and training continues until `global_step >= total_steps`, so a
-short last part and a `checkpoint_7.pt` can follow.
-
-`train_resilient.sh` runs `train.sh` in a loop of up to 20 attempts. Each attempt resumes from the
-newest checkpoint; a run whose log has not changed for 420 seconds is killed and restarted; the
-loop ends when the log contains "Model has seen the desired number of samples".
-[81-surviving-long-runs.md](81-surviving-long-runs.md) explains why.
+A **checkpoint** is the training state saved at one point: `save_checkpoint` in
+`vla_foundry/file_utils.py` writes `checkpoint_N.pt` (weights and the position in the data) and
+`optimizer_N.pt` (optimiser state) to `experiments/pickup/<run>/checkpoints/`. `train.sh` asks for
+6 (`PICKUP_NUM_CHECKPOINTS`), here 250,000 samples apart; a seventh can follow, because each part
+is rounded to whole shards ([80-the-training-loop.md](80-the-training-loop.md)).
+`train_resilient.sh` runs `train.sh` up to 20 times, each time from the newest checkpoint, and
+kills a run whose log has not changed for 420 seconds
+([81-surviving-long-runs.md](81-surviving-long-runs.md)). The pickup policy configs switch on a
+running average of the weights themselves (`ema: enabled: true`; EMA, an exponential moving
+average), saved as `ema_N.pt` with every checkpoint.
 
 **Step 3, `eval_checkpoints.sh <experiment_dir> <task> [episodes]`.** For every
 `checkpoint_N.pt`, newest first, it calls `eval.sh` and writes
-`results/pickup/<run>/<task>/ckpt_<N>_raw/results.json`. With `PICKUP_WATCH=1` it keeps polling
-until the training log reports the end of the run. A checkpoint that already has a `results.json`
-is skipped, so the script can be re-run. `_raw` marks the trained weights, as opposed to the
-averaged (`_ema`) weights that runs with `--ema.enabled True` also save.
+`results/pickup/<run>/<task>/ckpt_<N>_ema/results.json` and `ckpt_<N>_raw/results.json`:
+averaged and trained weights, because the config saves both. Results already written are skipped.
+With `PICKUP_WATCH=1` it polls until the training log reports the end of the run.
 
-**Step 4, `monitor.py`.** A terminal dashboard that only reads log and result files, so it can be
-opened and closed at any time. Per run it shows progress, loss, samples per second, time left and
-restarts, then the closed-loop success of each evaluated checkpoint; GPU load is underneath. A run
-is `training` while its log changed in the last 180 seconds, `stalled` after that, `done` once the
-end-of-run line appears, and `waiting` when it has no live log (`Run.state` in
+**Step 4, `monitor.py`.** A terminal dashboard that only reads log and result files: per run,
+progress, loss, throughput, time left, restarts and the success of each evaluated checkpoint. An
+unfinished run whose log has been quiet for 180 seconds is `stalled` (`Run.state` in
 `sim/pickup/runstate.py`).
 
-**Step 5, `eval.sh <experiment_dir> <task> [episodes]`.** It starts
-`sim/pickup/policy_server.py`, runs `sim/pickup/eval.py` against it, and shuts the server down.
-The two processes talk over a socket on `127.0.0.1`; `eval.sh` picks a free port unless
-`PICKUP_PORT` is set. When its queue of actions is empty, the client sends the JPEG frames of both
-cameras at `t-1` and `t`, the two states, the previous action and the instruction. The server
-replies with an **action chunk**, a short sequence of future actions predicted in one call: here
-15 actions, shape `[15, 8]`. It builds each chunk by refining noise in a fixed number of steps,
-`--flow_steps` (default 10 in `eval.py`). The client executes the first 8 actions
-(`--exec_horizon`) and asks again ([42-chunks-and-execution.md](42-chunks-and-execution.md)). The
-first 5 rollouts are saved as mp4 files (`--videos`).
+**Step 5, `eval.sh <experiment_dir> <task> [episodes] [eval.py arguments]`.** It starts
+`sim/pickup/policy_server.py` (the averaged weights unless `PICKUP_WEIGHTS=raw`), runs
+`sim/pickup/eval.py` against it over a socket on `127.0.0.1` (a free port, unless `PICKUP_PORT` is
+set), and shuts the server down. The client stops unless the server reports the run `eval.sh` was
+called for. When its queue of actions is empty, the client sends the camera frames and states at
+`t-1` and `t`, the previous action and the instruction; the server uses what the run's config asks
+for and replies with an **action chunk**, a sequence of future actions predicted in one go: 15
+actions, shape `[15, 8]`, made from noise in `--flow_steps` flow steps (default 10). The client
+executes the first 8 (`--exec_horizon`) and asks again
+([42-chunks-and-execution.md](42-chunks-and-execution.md)).
 
-**Step 6, the results.** `eval.py` writes one `results.json`:
+**Step 6, the results.** `results.json` holds the count, the `success_rate` and `success_ci95`, its
+Wilson 95% interval: the range of true rates consistent with the count, 60% to 84% for 37 successes
+in 50 episodes. The `grasp` block says where the gripper was when it first closed:
+`closed_nearest_is_target_rate` is how often it **closed at the named object** (the object nearest
+the gripper was the named one), `median_xy_err_target_mm` is the median miss, its distance from that
+object. `per_episode` has the positions behind both, `server` the weights file that was served.
+[90-closed-loop-evaluation.md](90-closed-loop-evaluation.md) goes through the whole file.
 
-| Key | Meaning |
-|---|---|
-| `episodes`, `successes`, `success_rate`, `success_ci95` | the count, the rate and its Wilson 95% interval |
-| `task`, `mean_steps_success`, `wrong_object_rate` | the task, the mean length of the successful episodes, and the share of episodes in which an object other than the named one was lifted (0 on `pick_cube`: one object) |
-| `per_target` | successes per named object (only `cube` here) |
-| `grasp` | where the gripper was when it first closed, for example `closed_gripper_rate` and `median_xy_err_target_mm` |
-| `inference_latency_ms`, `wall_time_s` | the server's time per chunk (mean, median, 95th percentile) and the duration of the evaluation |
-| `exec_horizon`, `flow_steps`, `seed_start`, `interventions`, `server` | the settings (`interventions`: diagnostic options, all off here) and the checkpoint that was served |
-| `per_episode` | per episode: seed, target, instruction, success, steps, `wrong_object`, and the `close_*` fields (step, gripper and object positions at the first close) |
-
-`success_ci95` is a Wilson 95% confidence interval: a range produced by a procedure that contains
-the true success rate in about 95% of repeated evaluations. For 37 successes in 50 episodes it is
-60% to 84%. [90-closed-loop-evaluation.md](90-closed-loop-evaluation.md) gives the formula and why
-this form is used.
-
-`grasp_map.py` turns `per_episode` into a picture; `summarize.py` prints every `results.json` under
-`results/pickup` as one Markdown table.
+`grasp_map.py` draws `per_episode` as a map. `summarize.py` prints every `results.json` under
+`results/pickup` as one row of a Markdown table and adds the **slope**: the least-squares slope of
+where the gripper first closed against where the named object was. At 1 the gripper closes where
+the object is; at 0 where it closes does not depend on the scene. A failing policy with a slope
+near 1 is imprecise; one with a slope near 0 is not looking
+([92-measuring-failure.md](92-measuring-failure.md)).
 
 <!-- interactive: grasp-map -->
-*Figure: a top-down map, drawn in the terminal, with the object at the centre and one dot for each
-episode in which the gripper closed, at the position of its first close: green for success, red
-for failure, rings at 1 cm and 2 cm. One map is relative to the named object and one to the
-nearest object; on `pick_cube`, with one object, they are identical.*
+*Figure: a top-down terminal map, the object at the centre and one dot per episode where the gripper
+first closed: green for success, red for failure, rings at 1 cm and 2 cm. One map is relative to the
+named object, one to the nearest object.*
+
+### The first real run: three objects
+
+```bash
+sim/pickup/scripts/make_dataset.sh pick_target 4000 pick_target_4k
+sim/pickup/scripts/train_resilient.sh dp_vit_lang_reactive pick_target_4k dp_vit_lang_reactive_pt4k 5000000 &
+PICKUP_WATCH=1 sim/pickup/scripts/eval_checkpoints.sh experiments/pickup/dp_vit_lang_reactive_pt4k pick_target 100 &
+.venv/bin/python -m sim.pickup.monitor --task pick_target
+```
+
+This is the plain version of the recipe in the repository's [`README.md`](../../README.md), under
+the lab notebook's run name; the README adds `--random_start --disturb_prob 0.5` to the dataset
+(see below). It is the same loop with three changes.
+
+1. **Data.** 4000 layouts of `pick_target`, one demonstration each.
+2. **The instruction is an input.** `sim/pickup/configs/dp_vit_lang_reactive.yaml` adds it as 32
+   token slots next to the patch tokens (`text_tokens: 32`;
+   [51-language-conditioning.md](51-language-conditioning.md)). `SimpleVLMProcessor` turns the
+   text into token ids with a tokenizer it loads by name from the Hugging Face Hub, so the first
+   start needs network access.
+3. **No history.** One frame per camera (`image_indices: [0]`), the current state and no previous
+   action (`lowdim_past_timesteps: 0`).
+
+A success rate with nothing moving does not say what a policy looks at. A **probe** does: an
+evaluation with one condition changed by a flag of `eval.py`. `PICKUP_OUT` keeps each result apart:
+
+```bash
+PICKUP_OUT=results/pickup/dp_vit_lang_reactive_pt4k/pick_target/stale_images \
+  sim/pickup/scripts/eval.sh experiments/pickup/dp_vit_lang_reactive_pt4k pick_target 100 --stale_images
+PICKUP_OUT=results/pickup/dp_vit_lang_reactive_pt4k/pick_target/disturb_reach \
+  sim/pickup/scripts/eval.sh experiments/pickup/dp_vit_lang_reactive_pt4k pick_target 100 --disturb reach --disturb_step 20
+```
+
+`--stale_images` sends the first frame's images for the whole episode. `--disturb reach` moves the
+named object once, 80 mm by default, at control step `--disturb_step`
+([95-what-a-policy-looks-at.md](95-what-a-policy-looks-at.md)).
 
 ### Environment variables
 
-`sim/pickup/scripts/_common.sh` is sourced by `make_dataset.sh`, `train.sh` and `eval.sh`, which
-the wrappers `train_resilient.sh` and `eval_checkpoints.sh` call. It changes to the repository
-root and reads:
+`sim/pickup/scripts/_common.sh`, sourced by `make_dataset.sh`, `train.sh` and `eval.sh`, reads:
 
-| Variable | Default | What it does | Why it exists |
-|---|---|---|---|
-| `PICKUP_FOUNDRY_PYTHON` | `.venv/bin/python` | interpreter for training, preprocessing and the policy server; may be a command with arguments | to run the training side in a container or another environment |
-| `PICKUP_SIM_PYTHON` | same as above | interpreter for collection and the evaluation client | the simulator side does not import PyTorch, so it can live elsewhere |
-| `PICKUP_ROOT` | the repository root | repository path as the training interpreter sees it, used by `make_dataset.sh` | a container may mount the repository elsewhere |
-| `PICKUP_CPU_THREADS` | 4 | exported as `OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `NUMEXPR_NUM_THREADS`, unless already set | numerical libraries size their thread pools to the machine's core count by default; measured below |
-| `PICKUP_GPU` | unset | sets `CUDA_DEVICE_ORDER=PCI_BUS_ID` and `CUDA_VISIBLE_DEVICES` to this index | Background: CUDA numbers GPUs fastest-first by default and `nvidia-smi` in PCI bus order; `PCI_BUS_ID` makes them agree, so one index pins both compute and rendering; measured below |
-| `MUJOCO_GL` | `egl` | exported if not already set | rendering without a display |
+- `PICKUP_GPU`: the GPU index, as `nvidia-smi` shows it, for compute and rendering (it sets
+  `CUDA_VISIBLE_DEVICES`).
+- `PICKUP_CPU_THREADS` (default 4): CPU threads per process (`OMP_NUM_THREADS` and its
+  equivalents).
+- `PICKUP_FOUNDRY_PYTHON`, `PICKUP_SIM_PYTHON`, `PICKUP_ROOT`: for running the training side or
+  the simulator side in a container.
 
-`PICKUP_WORKERS` (default 8) is read by `make_dataset.sh` itself: the number of simulator processes
-for collection and of preprocessing CPUs.
+`make_dataset.sh` also reads `PICKUP_WORKERS` (default 8): simulator processes for collection,
+CPUs for preprocessing.
 
 ## In this repository
 
 | Path | What lives there |
 |---|---|
-| [`vla_foundry/`](../../vla_foundry) | the training framework: `main.py` (entry point), `train.py`, `models/`, `data/`, `params/` (config dataclasses), `config_presets/` |
+| [`vla_foundry/`](../../vla_foundry) | the training framework; `main.py` is the entry point |
 | [`sim/pickup/env.py`](../../sim/pickup/env.py), [`expert.py`](../../sim/pickup/expert.py) | `PickupEnv` (scene, reset, step, cameras, success test), `TASKS`; `ScriptedExpert` |
 | [`collect.py`](../../sim/pickup/collect.py), [`policy_server.py`](../../sim/pickup/policy_server.py), [`eval.py`](../../sim/pickup/eval.py) | the three programs of the loop |
-| [`diagnostics.py`](../../sim/pickup/diagnostics.py) | `GraspProbe` and `summarize`, which fill the `grasp` block |
+| [`diagnostics.py`](../../sim/pickup/diagnostics.py), [`disturb.py`](../../sim/pickup/disturb.py) | `GraspProbe` and `summarize`, which fill the `grasp` block; `Disturbance`, behind `--disturb` |
 | [`monitor.py`](../../sim/pickup/monitor.py), [`grasp_map.py`](../../sim/pickup/grasp_map.py), [`summarize.py`](../../sim/pickup/summarize.py) | reading results |
-| [`sim/pickup/configs/`](../../sim/pickup/configs) | one YAML per policy, plus `preprocess.yaml` |
-| [`sim/pickup/scripts/`](../../sim/pickup/scripts) | the shell scripts used above |
-| `data/lerobot/`, `data/preprocessed/`, `experiments/`, `results/` | produced by the loop; listed in `.gitignore` |
+| [`sim/pickup/configs/`](../../sim/pickup/configs), [`scripts/`](../../sim/pickup/scripts) | one YAML per policy, plus `preprocess.yaml`; the shell scripts used above |
 
 ## What we measured
 
-All numbers are from [`lab-notebook.md`](../lab-notebook.md). Machine A has one RTX 4090; machine B
-has L40S GPUs and 128 CPU cores.
+All numbers are from [`lab-notebook.md`](../lab-notebook.md): machine A (one RTX 4090, 24 GB) and
+machine B (L40S GPUs, 128 CPU cores), unseen layouts, one training seed per run. Two numbers,
+`62% / 70%`, are the trained (raw) and the averaged (EMA) weights.
 
-| Step | Measured | For this run |
+Most runs below were trained with a bug, since fixed, in the transformer's table of position
+angles: computed in bfloat16, a 16-bit float format, it held 641 distinct positions where 2048
+were meant ([12-positions.md](12-positions.md)). Trained again after the fix, the same
+three-object recipe ends at 93% (trained weights), and on the single cube the policy with history
+ends at 96% / 98% (lab notebook, "After the position fix"). In both pairs of runs that compare the
+tables, the fixed table makes the policy start to look earlier.
+
+**Cost.** `dp_vit` trains at about 620 samples/s on machine A: 1.5M samples in about 40 minutes
+(arithmetic on the throughput). On machine B, with every checkpoint evaluated on the same GPU as it
+appeared, the 5M-sample runs of `dp_vit_lang_reactive` took 77 to 87 minutes and the 1.5M-sample
+single-cube runs 33 minutes without history and 53 with.
+
+**The smoke test.** `pick_cube`, 1000 demonstrations, 65,391 windows; 1.5M samples are 22.9
+epochs, an **epoch** being one pass over the training windows.
+
+| Policy, 1.5M samples | Machine, layouts | Success |
 |---|---|---|
-| Collection | 1500 demonstrations took 70 s with 48 simulator processes | the default of 8 processes was not timed |
-| Training | `dp_vit`: about 620 samples/s on machine A, about 540 samples/s on machine B | 1.5M samples at those rates is about 40 and about 46 minutes: arithmetic, not a measured duration, restarts excluded |
-| Evaluation, disk | not recorded in the lab notebook | `wall_time_s` in `results.json`; `du -sh data/lerobot/pick_cube_1k data/preprocessed/pick_cube_1k experiments/pickup/dp_vit_pick_cube_1k` |
+| `dp_vit`, the command above, before the fix | A, 50 | 37/50 = 74% (interval 60-84%) |
+| same, before the fix | B, 100 | 62% / 70% |
+| same, after the fix | B, 100 | 96% / 98% |
+| `dp_vit_lang_reactive`, no history, before the fix | B, 100 | 95% / 91% |
+| same, after the fix | B, 100 | 91% (trained weights) |
 
-Every frame is stored about three times: once as LeRobot parquet and twice inside the shards,
-because each window holds its own images at `t-1` and `t` and a window starts at every step
-(`stride: 1` in `preprocess.yaml`).
+**What it shows.** Every stage of the loop works, and the policy uses the scene: before the fix,
+on machine B, its slope was 1.03 / 1.03 and its median miss 14 / 14 mm, imprecise and not blind.
 
-What to expect at the end (the last row is this chapter's command): `pick_cube` on machine A, 50
-evaluation layouts, one training seed. An epoch is one pass over the training windows.
+**What it does not show.** A precise rate: the interval on the 74% is 24 points wide. That a
+policy picks the object it is told to: there is one object, and `dp_vit` does not read the
+instruction at all. Or that history hurts here: the second and fourth rows differ in history,
+instruction input and pixel range, and the gap between them was the position bug, as the third row
+shows ([100-case-pick-cube.md](100-case-pick-cube.md)).
 
-| Demos | Training samples (epochs) | Final loss | Success | 95% CI |
-|---|---|---|---|---|
-| 1000 | 500k (8) | 0.084 | 20/50 = 40% | 28-54% |
-| 1000 | 1.5M (23) | 0.058 | 37/50 = 74% | 60-84% |
+**The real run.** `dp_vit_lang_reactive_pt4k` on machine B, 263,289 windows (5M samples are 19.0
+epochs), 100 layouts per evaluation, raw / EMA, before the fix; the last column is the same
+recipe after it (`dp_vit_lang_reactive_pt4k_posfix`, trained weights). Chance for "closed at the
+named object" is 33%.
 
-The scripted expert scored 49/50 on a spot check of the same task.
+| Samples | Success | Closed at the named object | Slope | Median miss to named | Success after the fix |
+|---|---|---|---|---|---|
+| 1.0M | 0% / 1% | 35% / 32% | 0.11 / 0.14 | 138 / 154 mm | 8% |
+| 2.0M | 4% / 36% | 95% / 98% | 0.81 / 0.96 | 32 / 18 mm | 40% |
+| 2.5M | 56% / 70% | 98% / 100% | 0.94 / 0.98 | 14 / 13 mm | 77% |
+| 5.0M (final) | 83% / 85% | 100% / 100% | 0.98 / 0.98 | 7 / 7 mm | 93% |
 
-The table shows that the loop works end to end, not a precise success rate: the interval on the
-last row is 24 points wide. On that checkpoint, 4 actions per chunk gave 84% and 4 flow steps gave
-86% against 74% at the defaults, and the intervals overlap.
+<!-- interactive: onset -->
+*Figure: success, closed at the named object and slope against training samples for this run and
+its 1500-demonstration counterparts: flat for about a million samples, then all three rise.*
 
-The interval describes the true rate of that one checkpoint, not where a repeat will land. A new
-run has its own 50-episode sampling error and its own training randomness, which the notebook did
-not measure (one training seed per run). A run whose own interval overlaps 60-84% is consistent
-with the table.
+Looking at the scene arrives late and all at once. After 1.0M samples where the gripper closes
+still barely depends on the scene; then the slope moves, the miss shrinks and success follows,
+the averaged weights leading in this run ([101-case-pick-target.md](101-case-pick-target.md)).
+The notebook's rows are 0.5M samples apart (`PICKUP_NUM_CHECKPOINTS=10`); the default of 6 puts
+them about 0.83M apart.
 
-Threads: on the 128-core machine, without a thread cap, each policy server started 256 threads and
-used 14-22 cores; twelve of them pushed the load average to 570 and roughly halved training
-throughput (for example 1069 -> 410 samples/s). With `OMP_NUM_THREADS=4` a server has 12 threads
-and uses under one core.
+The 85% has two limits.
 
-GPUs: on a multi-GPU machine the EGL device order differed from `nvidia-smi`'s: two devices in the
-middle of EGL's list were GPUs 0 and 1. MuJoCo 4.0.1 orders EGL devices by `CUDA_VISIBLE_DEVICES`,
-and a render with that variable set to one GPU used that GPU only, so `PICKUP_GPU` sets that
-variable and no EGL index.
+- **The policy looks once.** With `--stale_images` the final EMA weights scored 1/100 and still
+  closed at the named object in 99% of episodes. With the object moved at control step 20 they
+  succeeded in 0 of the 96 episodes in which it could be moved, closing 8 mm (median) from its
+  old place. The README's demonstrations, with random start poses and recoveries, change this:
+  89-94% under every disturbance, against 0-18% for every policy trained on clean demonstrations
+  ([95-what-a-policy-looks-at.md](95-what-a-policy-looks-at.md)).
+- **The grasp angle.** Per object, same weights, before the fix: can 26/28, hex nut 24/25, cube
+  20/24, T block 15/23. After the fix the same recipe's final checkpoint has cube 23/24 and T block
+  20/23: most of this limit was the position bug, not the grasp angle
+  ([12-positions.md](12-positions.md)).
 
 ## Where it goes wrong
 
 | What you see | Why | Check, then do |
 |---|---|---|
-| A run sits at 0% GPU; the monitor says `stalled` | a dead data-loader worker leaves the trainer waiting forever (lab notebook) | use `train_resilient.sh`; restarts are listed in `<run>.retries.log` |
-| A run dies without a traceback | `sim/pickup/README.md`: a small shared-memory mount (`/dev/shm`), common in containers | lower `data.num_workers` and `data.prefetch_factor` (8 and 4 in `dp_vit.yaml`) |
+| A run sits at 0% GPU; the monitor says `stalled` | a dead data-loader worker leaves the trainer waiting forever | use `train_resilient.sh`; restarts are listed in `<run>.retries.log` |
+| A run dies without a traceback | `sim/pickup/README.md`: a small shared-memory mount (`/dev/shm`), common in containers | lower `data.num_workers` and `data.prefetch_factor` (8 and 4) |
 | A dataset disappears | `make_dataset.sh` starts with `rm -rf` on `data/lerobot/<name>` and `data/preprocessed/<name>` | use a new name for a new dataset |
-| A new run's log starts with a `Samples:` count above 0 | `train_resilient.sh` resumes from any `checkpoint_*.pt` in `experiments/pickup/<run_name>/checkpoints` | that directory should not exist before a new run; use a new run name |
-| `policy server exited before it was ready` with `Address already in use`, or `eval.py` stops because the server "is serving" another checkpoint | two evaluations share a port: the same `PICKUP_PORT` for both, or the two programs started by hand on their default 6200 | the `server` entry of `results.json` names the checkpoint served; leave `PICKUP_PORT` unset |
+| A new run's log starts with a `Samples:` count above 0 | `train_resilient.sh` resumes from any `checkpoint_*.pt` in `experiments/pickup/<run_name>/checkpoints` | use a new run name |
+| `policy server exited before it was ready` with `Address already in use`, or `eval.py` stops because the server "is serving" another checkpoint | two evaluations share a port (`PICKUP_PORT`, or 6200 when both programs are started by hand) | leave `PICKUP_PORT` unset; `server` in `results.json` names the weights file served |
 | `nvidia-smi` shows an evaluation's processes on a GPU other than `PICKUP_GPU` | `MUJOCO_EGL_DEVICE_ID` was set by hand, and EGL's order is not `nvidia-smi`'s | unset it |
-| Low loss, low success | on 200 demos, a diffusion policy whose pretrained CLIP encoder reduces each image to one vector reached loss 0.040 and 2/50 = 4%; `dp_vit`, with every patch a token, reached 0.091 and 15/50 = 30% (`pick_cube`, machine A) | judge by `results.json`; see [91-loss-is-not-success.md](91-loss-is-not-success.md) |
+| Low loss, low success | on 200 `pick_cube` demos (machine A), one pooled CLIP vector per image: loss 0.040, 2/50; `dp_vit`, every patch a token: 0.091, 15/50 | judge by `results.json` ([91-loss-is-not-success.md](91-loss-is-not-success.md)) |
+| The real run is near 0% after 1M samples | the transition comes later (table above). On 1500 demonstrations the same policy scored 3% / 5% with a budget of 1.0M samples and 64% / 62% with 3.0M | watch the slope in `summarize.py`; let the run reach its budget ([71-how-much-data-and-training.md](71-how-much-data-and-training.md)) |
+| A `pick_target` policy with history stays near 0% | `dp_vit_lang`, same 4000 demonstrations: 2% / 2% after 3.0M samples. It takes the target from its previous action: one checkpoint scored 1/100 as served, 22/100 with the expert's first command as its first previous action, 77/100 with the expert driving the first 10 control steps (trained before the position fix; after it, on demonstrations that begin with a hold frame, `collect.py --hold_steps 1`, it ends at 0% / 4% after 5M samples) | `eval.py --first_prev_action expert`, `--expert_prefix 10`; start without history ([52-history-and-shortcuts.md](52-history-and-shortcuts.md)) |
 
 ## Background and further reading
 
 Background, not measured here.
 
 - Todorov et al., *MuJoCo: A physics engine for model-based control*, 2012
-  ([doi:10.1109/IROS.2012.6386109](https://doi.org/10.1109/IROS.2012.6386109)). Introduced a
-  physics engine built for model-based control, with multi-joint dynamics in generalised
-  coordinates; the simulator underneath `PickupEnv`.
-- Zakka et al., *MuJoCo Menagerie: A collection of high-quality simulation models for MuJoCo*, 2022
-  (software, [repository](https://github.com/google-deepmind/mujoco_menagerie)). A curated
-  collection of robot models for MuJoCo; the source of the Panda model.
+  ([doi:10.1109/IROS.2012.6386109](https://doi.org/10.1109/IROS.2012.6386109)). The physics
+  engine underneath `PickupEnv`.
 - Cadene et al., *LeRobot: State-of-the-art Machine Learning for Real-World Robotics in Pytorch*,
-  2024 (software, [repository](https://github.com/huggingface/lerobot)). An open-source PyTorch
-  library for robot learning with a shared dataset format, which `collect.py` writes.
+  2024 (software, [repository](https://github.com/huggingface/lerobot)). A PyTorch library for
+  robot learning whose dataset format `collect.py` writes.
 - Mercat et al., *VLA Foundry: A Unified Framework for Training Vision-Language-Action Models*, 2026
-  ([arXiv:2604.19728](https://arxiv.org/abs/2604.19728)). One codebase for language-model,
-  vision-language-model and vision-language-action training, released with a from-scratch model
-  and one built on Qwen3-VL; the framework in `vla_foundry/`.
+  ([arXiv:2604.19728](https://arxiv.org/abs/2604.19728)). The framework in `vla_foundry/`,
+  one codebase for language-model, vision-language-model and vision-language-action training.
 - Chi et al., *Diffusion Policy: Visuomotor Policy Learning via Action Diffusion*, 2023
-  ([arXiv:2303.04137](https://arxiv.org/abs/2303.04137)). Introduced generating robot actions with
-  a conditional denoising diffusion process. `dp_vit` keeps that design but is trained with flow
-  matching (`use_flow_matching_scheduler: true` in
+  ([arXiv:2303.04137](https://arxiv.org/abs/2303.04137)). Robot actions from a conditional denoising
+  diffusion process. The `dp_*` configs keep that design but train it with flow matching
+  (`use_flow_matching_scheduler: true` in
   `vla_foundry/config_presets/models/diffusion_policy.yaml`).
-- Wilson, *Probable Inference, the Law of Succession, and Statistical Inference*, 1927
-  ([doi:10.1080/01621459.1927.10502953](https://doi.org/10.1080/01621459.1927.10502953)). Derived
-  the interval for a proportion that `success_ci95` uses.
 
 ## Check yourself
 
 1. Run the scripted expert through the evaluation loop and draw its map. Compare the count with
-   the 49/50 spot check.
+   the lab notebook's 49/50 spot check.
 
    ```bash
    .venv/bin/python -m sim.pickup.eval --task pick_cube --episodes 50 --expert --out results/pickup/expert/pick_cube
    .venv/bin/python -m sim.pickup.grasp_map results/pickup/expert/pick_cube/results.json
    ```
 
-2. Find the lines of `sim/pickup/eval.py` that compute `success_ci95` (`centre` and `half`).
-   Evaluate them for 37/50 and for 148/200, the same rate, and compare the two widths.
+2. Read the Slope column that `summarize.py` prints for the last checkpoint of the smoke test. Is
+   that policy imprecise or not looking?
 
-3. Evaluate the final checkpoint again with 4 actions per chunk, then decide from the two
-   `success_ci95` intervals whether the setting made a difference.
-
-   ```bash
-   PICKUP_OUT=results/pickup/dp_vit_pick_cube_1k/pick_cube/exec4 \
-     sim/pickup/scripts/eval.sh experiments/pickup/dp_vit_pick_cube_1k pick_cube 50 --exec_horizon 4
-   ```
+3. Before running the `--stale_images` probe on the real run, write down what you expect for
+   `success_rate` and for `closed_nearest_is_target_rate`. Run it and compare with the numbers
+   above.

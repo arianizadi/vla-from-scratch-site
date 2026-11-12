@@ -1,0 +1,21 @@
+{
+  "tokenizer": "HuggingFaceTB/SmolVLM2-256M-Video-Instruct",
+  "vocabSize": 49280,
+  "padId": 2,
+  "paddingSide": "right",
+  "sentences": [
+    {"text":"pick up the red cube","ids":[18188,614,260,2382,20636],"pieces":["pick","Ġup","Ġthe","Ġred","Ġcube"]},
+    {"text":"pick up the green can","ids":[18188,614,260,2654,416],"pieces":["pick","Ġup","Ġthe","Ġgreen","Ġcan"]},
+    {"text":"pick up the blue hex nut","ids":[18188,614,260,4461,17967,2236],"pieces":["pick","Ġup","Ġthe","Ġblue","Ġhex","Ġnut"]},
+    {"text":"pick up the yellow T block","ids":[18188,614,260,5724,312,3608],"pieces":["pick","Ġup","Ġthe","Ġyellow","ĠT","Ġblock"]},
+    {"text":"The robot closes its gripper around the cube.","ids":[504,8085,29508,624,17201,3115,1130,260,20636,30],"pieces":["The","Ġrobot","Ġcloses","Ġits","Ġgri","pper","Ġaround","Ġthe","Ġcube","."]},
+    {"text":"Tokenization splits unfamiliar words into smaller pieces.","ids":[20855,1237,30855,14160,1924,618,3764,4443,30],"pieces":["Token","ization","Ġsplits","Ġunfamiliar","Ġwords","Ġinto","Ġsmaller","Ġpieces","."]},
+    {"text":"robot arm over a table. from left to right: a blue hex nut, a red cube and a yellow T block.","ids":[32307,5026,690,253,3252,30,429,2049,288,1048,42,253,4461,17967,2236,28,253,2382,20636,284,253,5724,312,3608,30],"pieces":["robot","Ġarm","Ġover","Ġa","Ġtable",".","Ġfrom","Ġleft","Ġto","Ġright",":","Ġa","Ġblue","Ġhex","Ġnut",",","Ġa","Ġred","Ġcube","Ġand","Ġa","Ġyellow","ĠT","Ġblock","."]}
+  ],
+  "chatTemplate": [
+    {"text":"<|im_start|>User:<image><image>pick up the red cube<end_of_utterance>\n","ids":[1,11126,42,49190,49190,18188,614,260,2382,20636,49279,198,2],"pieces":["<|im_start|>","User",":","<image>","<image>","pick","Ġup","Ġthe","Ġred","Ġcube","<end_of_utterance>","Ċ","<|im_end|>"],"mask":[1,1,1,1,1,1,1,1,1,1,1,1,0]},
+    {"text":"<|im_start|>User:<image><image>pick up the green can<end_of_utterance>\n","ids":[1,11126,42,49190,49190,18188,614,260,2654,416,49279,198,2],"pieces":["<|im_start|>","User",":","<image>","<image>","pick","Ġup","Ġthe","Ġgreen","Ġcan","<end_of_utterance>","Ċ","<|im_end|>"],"mask":[1,1,1,1,1,1,1,1,1,1,1,1,0]},
+    {"text":"<|im_start|>User:<image><image>pick up the blue hex nut<end_of_utterance>\n","ids":[1,11126,42,49190,49190,18188,614,260,4461,17967,2236,49279,198],"pieces":["<|im_start|>","User",":","<image>","<image>","pick","Ġup","Ġthe","Ġblue","Ġhex","Ġnut","<end_of_utterance>","Ċ"],"mask":[1,1,1,1,1,1,1,1,1,1,1,1,1]},
+    {"text":"<|im_start|>User:<image><image>pick up the yellow T block<end_of_utterance>\n","ids":[1,11126,42,49190,49190,18188,614,260,5724,312,3608,49279,198],"pieces":["<|im_start|>","User",":","<image>","<image>","pick","Ġup","Ġthe","Ġyellow","ĠT","Ġblock","<end_of_utterance>","Ċ"],"mask":[1,1,1,1,1,1,1,1,1,1,1,1,1]}
+  ]
+}

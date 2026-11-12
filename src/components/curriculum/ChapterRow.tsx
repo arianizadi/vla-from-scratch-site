@@ -2,8 +2,12 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { ChapterMeta } from "@/lib/content";
 
-/** One line of the contents page: order number, title, summary, then the chapter's facts. */
-export function ChapterRow({ chapter }: { chapter: ChapterMeta }) {
+/**
+ * One line of the contents page: order number, title, summary, then the
+ * chapter's facts. `showStatus` is off when the page says once that every
+ * chapter has the same status.
+ */
+export function ChapterRow({ chapter, showStatus = true }: { chapter: ChapterMeta; showStatus?: boolean }) {
   return (
     <li className="group relative grid grid-cols-[36px_minmax(0,1fr)] gap-x-3 border-t border-line py-4 sm:grid-cols-[44px_minmax(0,1fr)_auto] sm:gap-x-4">
       <span className="pt-0.5 text-16 text-ink-faint tabular-nums" aria-hidden="true">
@@ -23,9 +27,11 @@ export function ChapterRow({ chapter }: { chapter: ChapterMeta }) {
         ) : null}
       </div>
       <ul className="col-start-2 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-14 text-ink-muted sm:col-start-3 sm:mt-0.5 sm:flex-col sm:items-end sm:gap-y-1.5">
-        <li>
-          <StatusBadge status={chapter.status} />
-        </li>
+        {showStatus ? (
+          <li>
+            <StatusBadge status={chapter.status} />
+          </li>
+        ) : null}
         <li className="tabular-nums">{chapter.readingMinutes} min read</li>
         {chapter.figureCount > 0 ? (
           <li className="tabular-nums">

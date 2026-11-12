@@ -25,7 +25,8 @@ export interface ResolvedLink {
 }
 
 const SCHEME = /^([a-z][a-z0-9+.-]*:|\/\/)/i;
-const CHAPTER_PATH = new RegExp(`^${site.chapterDir}/(\\d+-[\\w-]+)\\.md$`);
+/** A chapter file: "41-flow-matching.md", or an unnumbered appendix page such as "glossary.md". */
+const CHAPTER_PATH = new RegExp(`^${site.chapterDir}/(\\d+-[\\w-]+|[a-z][a-z0-9-]*)\\.md$`);
 const IMAGE_DIR = "tutorial/img/";
 const LAB_NOTEBOOK = "tutorial/lab-notebook.md";
 

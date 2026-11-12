@@ -1,0 +1,415 @@
+/* ==========================================================================
+   rotary: the plane of one pair of numbers (panel A) and the position table
+   in bfloat16 (panel B). Colours come from the design tokens only, so both
+   themes follow. Arrows are neutral ink (query solid head, key open head);
+   the angle between them is the accent; float32 and bfloat16 are series 1
+   and 2, always with their marker shapes; the selected pair wears the
+   highlighter.
+
+   Motion: the arrows turn by a CSS rotation about the centre of the dial and
+   the score dot slides; both are transforms, an explanatory beat long. The
+   global stylesheet cuts them short under reduced motion.
+   ========================================================================== */
+
+.rot-root {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.rot-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.rot-panel-b {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.plate.plate .rot-panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-stretch: 95%;
+  line-height: 1.375rem;
+}
+.rot-panel-letter {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.rot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+}
+.rot-controls .fig-slider.rot-wide-slider {
+  max-width: none;
+}
+/* Narrow, the query slider's value ("q 1029, k 1026") would leave the track too short:
+   label and value share a row, and the track takes the full width below them. */
+@container (max-width: 480px) {
+  .rot-controls .fig-slider.rot-wide-slider {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+  }
+  .rot-wide-slider .fig-label {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .rot-wide-slider .fig-slider-value {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .rot-wide-slider .fig-range {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+}
+
+.rot-small {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+/* --------------------------------------------------------------------------
+   Panel A: the dial beside its ledger; stacked when narrow.
+   -------------------------------------------------------------------------- */
+
+.rot-a {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+@container (min-width: 600px) {
+  .rot-a {
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+
+.rot-dial-box {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+.rot-dial {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.rot-axis {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+.rot-circle {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-hub {
+  fill: var(--text);
+}
+.rot-shaft {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.rot-head {
+  fill: var(--text);
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.rot-head-open {
+  fill: var(--surface);
+}
+.rot-ghost {
+  stroke: var(--text-faint);
+  stroke-width: 1.5;
+}
+.rot-sector {
+  fill: var(--accent-soft);
+}
+.rot-arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.rot-dial-label,
+.rot-dial-value,
+.rot-dial-tick {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rot-dial-label {
+  fill: var(--text);
+  font-weight: 600;
+}
+.rot-dial-value {
+  fill: var(--text);
+  font-weight: 500;
+  font-stretch: 80%;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+}
+.rot-dial-tick {
+  fill: var(--text-faint);
+  font-weight: 500;
+  font-stretch: 80%;
+}
+
+/* A turn about the centre of the dial, whose viewBox puts that centre at (0, 0).
+   Labels inside a turned group turn back about their own middle. */
+.rot-turn {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition: transform 560ms var(--ease-standard);
+}
+text.rot-turn {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.rot-slide {
+  transition: transform 560ms var(--ease-standard);
+}
+
+/* The ledger: the pair as the selected table holds it. */
+.rot-ledger {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.rot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-stretch: 88%;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rot-table th,
+.rot-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.rot-table th:first-child,
+.rot-table td:first-child {
+  padding-left: 0;
+}
+.rot-table th:last-child,
+.rot-table td:last-child {
+  padding-right: 0;
+}
+.rot-table thead th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.rot-table tbody th {
+  color: var(--text);
+  font-weight: 500;
+}
+.rot-table td {
+  color: var(--text);
+}
+.rot-table .num {
+  text-align: right;
+}
+.rot-table-sum th,
+.rot-table-sum td {
+  border-bottom: 0;
+  font-weight: 600;
+}
+.rot-flag {
+  padding: 0 3px;
+  border-radius: 2px;
+  background-color: var(--mark);
+  outline: 1px solid var(--text);
+  color: var(--on-mark);
+}
+
+.rot-score {
+  display: grid;
+  gap: 2px;
+}
+.rot-score-text {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rot-score-text strong {
+  font-weight: 600;
+}
+.rot-score-true {
+  color: var(--text-muted);
+}
+.rot-track {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.rot-track-line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-track-tick {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-track-dot {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.rot-track-true {
+  fill: var(--surface);
+  stroke: var(--text-faint);
+  stroke-width: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Panel B: the lens and the count.
+   -------------------------------------------------------------------------- */
+
+.rot-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.rot-count strong {
+  color: var(--text);
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.rot-lens-box,
+.rot-chart-box {
+  min-width: 0;
+}
+.rot-chart-box {
+  display: grid;
+  gap: 8px;
+}
+.rot-lens,
+.rot-chart {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.rot-chart {
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.rot-row-label {
+  fill: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 88%;
+}
+.rot-cell {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-cell-selected {
+  fill: var(--mark);
+  stroke: var(--text);
+}
+.rot-cell-text {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rot-cell-selected + .rot-cell-text {
+  fill: var(--on-mark);
+}
+.rot-block {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-block-pair {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.rot-pair-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+.rot-link {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.rot-link-moved {
+  stroke: var(--series-2);
+  stroke-width: 1.5;
+}
+
+.rot-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.rot-band {
+  fill: var(--surface-2);
+}
+.plate .rot-band-label {
+  fill: var(--text-muted);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.rot-pair-readout {
+  color: var(--text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rot-crosshair {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+}
+.rot-end-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.rot-landmarks {
+  display: grid;
+  gap: 8px;
+}
+.rot-landmark-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

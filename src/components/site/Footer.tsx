@@ -20,17 +20,17 @@ export function Footer() {
           <h2 className="label text-ink-faint">Pages</h2>
           <ul className="mt-2 grid gap-1.5">
             <li>
-              <Link href="/learn" className="text-link">
+              <Link href="/learn" className="text-link touch-target">
                 Curriculum
               </Link>
             </li>
             <li>
-              <Link href="/lab" className="text-link">
+              <Link href="/lab" className="text-link touch-target">
                 Lab notebook
               </Link>
             </li>
             <li>
-              <Link href="/figures" className="text-link">
+              <Link href="/figures" className="text-link touch-target">
                 Figure gallery
               </Link>
             </li>
@@ -41,12 +41,12 @@ export function Footer() {
           <h2 className="label text-ink-faint">Source</h2>
           <ul className="mt-2 grid gap-1.5">
             <li>
-              <a href={site.tutorialRepo} className="text-link">
+              <a href={site.tutorialRepo} className="text-link touch-target">
                 Tutorial, code and experiments
               </a>
             </li>
             <li>
-              <a href={site.siteRepo} className="text-link">
+              <a href={site.siteRepo} className="text-link touch-target">
                 This website
               </a>
             </li>
