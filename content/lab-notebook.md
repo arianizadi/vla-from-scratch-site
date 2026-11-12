@@ -686,8 +686,19 @@ poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unse
 evaluation, final checkpoint, trained / averaged weights where both are given. "Closed at the named
 object" is the share of first closes nearest the named object.
 
-**In progress:** the three-flower cut with the jaws held shut after the cut, for 10M samples, from 4000 and
-from 16000 demonstrations (`..._cut4k_rs_recover_outer_tail10_10m`, `..._cut16k_rs_recover_outer_tail10_10m`).
+**In progress:** the pruning tasks (steps 6-8 of the roadmap) with the new physics:
+`dp_vit_lang_reactive_prune_one4k_rs_tail10`, `..._prune_turn4k_rs_tail10_10m`, `..._prune2k_rs_tail10_10m`.
+
+**Physics change (after the runs of steps 1-5 above).** An audit of every contact found the arm sinking
+into solid things: with MuJoCo's default soft contacts (time constant 0.02 s) the position-controlled arm
+pressed the hand 11 mm into the table and a finger 24 mm into a flower, and after a cut the top part slid
+down through its own base stem (the two stem pieces were excluded from colliding with each other so that
+they could overlap while whole). Now contacts are stiff (`o_solref` 0.004 s, the stiffest the 2 ms step
+allows), a cut leaves the two pieces apart and colliding, and a test checks that a cut top rests on the stub
+instead of sliding through it. The deepest contact is now 2-7 mm (fingers squeezing the cut pieces with the
+jaws shut). The scripted expert, 100 layouts each: `pick_target` 100, `pick_clutter` 99, `grasp_stem` 91,
+`cut_stem` 91, `cut_one` 100 (before: 100, 100, 88, 92, 100). The policy results above were measured with
+the old physics.
 
 ### Step 1: a target that keeps moving (`--disturb drift`)
 
@@ -879,9 +890,37 @@ episodes, which is chance with three flowers, and another stem is cut in 31-50%.
 word is not used at all, the step-2 problem in a scene where it did not solve itself (red, orange and pink
 heads are look-alikes; purple is the only colour far from the others).
 
-A video of the one-flower policy, final checkpoint, averaged weights, 22 episodes recorded, 22 cut, 5
-shown: `flower-step5a-cut-one-stem.mp4` (after each cut a script opens the jaws and draws the arm back so
-that the top can be seen to fall).
+Videos, recorded with the new physics (see "Physics change" above), final checkpoint, averaged weights:
+the one-flower policy, 15 episodes recorded, 14 cut, 5 shown (`flower-step5a-cut-one-stem.mp4`; with
+the new physics it cuts 93/100); the three-flower 10M-budget policy, 43 episodes recorded, 33 cut, 5
+shown (`flower-step5-cut-the-named-stem.mp4`; 79/100 with the new physics, another stem cut in 8). After
+each cut a script opens the jaws and draws the arm back so that the top can be seen to fall.
+
+**Choosing the stem: twice the training budget.** The same 4000 demonstrations with the tail, trained for 10M
+samples (`dp_vit_lang_reactive_cut4k_rs_recover_outer_tail10_10m`; checkpoints about 0.9M samples apart),
+cut the named stem in 89/100 / 87/100, another stem in 3/100 / 6/100, and its first close is nearest the
+named stem in 90% (the scripted expert cuts 92/100). Averaged weights per checkpoint (another stem cut in
+brackets): 21 (32), 19 (50), 26 (43), 65 (23), 76 (9), 80 (3), 79 (3), 84 (4), 84 (8), 82 (8), 87 (6). Up to
+about 2.7M samples it is the 5M run again; by about 3.6M it has started to use the colour word, all at once,
+the same late and sudden switch as the look-alike cubes of step 2. That is before the 5M run ended,
+so the difference is not simply more samples: the learning rate follows a cosine over the planned budget
+(`lr_scheduler: cosine`, peak 5e-4), and at 3.6M samples this run still had about 71% of its peak rate, the
+5M run about 18%. One seed of each so far. By flower: red 23/24, pink 23/25,
+orange 22/28, purple 19/23 (averaged weights). Other seeds of the same run
+(averaged weights per checkpoint, another stem cut in brackets):
+
+| Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| seed 42 | 21 (32) | 19 (50) | 26 (43) | 65 (23) | 76 (9) | 80 (3) | 79 (3) | 84 (4) | 84 (8) | 82 (8) | 87 (6) |
+| seed 43 (`..._10m_seed43`) | 15 (25) | 19 (38) | 19 (38) | 21 (49) | 24 (45) | 31 (37) | 37 (41) | 35 (43) | 47 (38) | 34 (46) | 36 (35) |
+| seed 44 (`..._10m_seed44`) | 13 (36) | 26 (38) | 17 (38) | 68 (10) | 84 (3) | 87 (3) | 92 (2) | 87 (0) | 92 (1) | 91 (1) | 88 (1) |
+| 16000 demonstrations (`..._cut16k_rs_recover_outer_tail10_10m`) | 16 (30) | 23 (44) | 19 (48) | 22 (61) | 20 (57) | 21 (64) | 34 (57) | 29 (52) | 26 (56) | 32 (53) | 31 (56) |
+
+Two seeds of three switch at the same checkpoint (about 3.6M samples) and end at 87-88/100 with another
+stem cut in 1-6%; the third climbs slowly and ends at 36. From 16000 demonstrations the switch never comes
+within 10M samples: four times the demonstrations at the same number of samples means each one is seen a
+quarter as often. As with the look-alike cubes, a run that has not switched looks the same as one that
+cannot; other seeds tell them apart.
 
 ## Throughput
 

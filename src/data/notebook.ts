@@ -293,15 +293,31 @@ const cutRowsOf = (
 
 const { drift, lookalike, clutter, stem, cut } = data.flower;
 
+/** A film of a cut: how many episodes were recorded, cut and shown, and the policy's rate with the new physics. */
+const filmOf = (film: { name: string; recorded: number; cut: number; shown: number; newPhysics: number[] }) => ({
+  name: film.name,
+  recorded: film.recorded,
+  cut: film.cut,
+  shown: film.shown,
+  newPhysics: countOf(film.newPhysics),
+});
+
 /**
- * The five steps toward flower trimming (machine B). None of these runs is in
+ * The five steps toward flower trimming (machine B), the physics change after
+ * them, and the pruning runs in progress. None of these runs is in
  * the experiment export: every value is copied from the notebook. Each step
  * keeps the notebook heading it comes from (`section`).
  */
 export const flowerTrimming = {
   section: data.flower.section,
   recipe: data.flower.recipe,
+  /** The pruning runs still training, by task; their roadmap steps are in Flower.tsx. */
   inProgress: data.flower.inProgress.runs,
+  /** The contact change after steps 1-5: what was wrong, and the scripted expert before and after. */
+  physics: {
+    ...data.flower.physics,
+    deepestNowMm: pair(data.flower.physics.deepestNowMm),
+  },
   drift: {
     section: drift.section,
     run: drift.run,
@@ -426,7 +442,36 @@ export const flowerTrimming = {
       firstCloseNamed: pair(cut.conclusion.firstCloseNamed),
       otherCutPercent: pair(cut.conclusion.otherCutPercent),
     },
-    film: { name: cut.film.name, recorded: cut.film.recorded, cut: cut.film.cut, shown: cut.film.shown },
+    films: {
+      cutOne: { ...filmOf(cut.films.cutOne), other: null },
+      cutStem: { ...filmOf(cut.films.cutStem), other: cut.films.cutStem.newPhysicsOther },
+    },
+    tenM: {
+      run: cut.tenM.run,
+      samplesM: cut.tenM.samplesM,
+      spacingAboutM: cut.tenM.spacingAboutM,
+      named: countsOf(cut.tenM.named),
+      other: countsOf(cut.tenM.other),
+      firstCloseNamed: cut.tenM.firstCloseNamed,
+      expert: countOf(cut.tenM.expert),
+      sameAsFiveMUntilAboutM: cut.tenM.sameAsFiveMUntilAboutM,
+      switchAboutM: cut.tenM.switchAboutM,
+      peakLearningRateShare: cut.tenM.peakLearningRateShare,
+      learningRate: cut.tenM.learningRate,
+      byFlower: cut.tenM.byFlower.map((row) => ({ flower: row.flower, cut: countOf(row.cut) })),
+    },
+    seeds: {
+      rows: cut.seeds.rows.map((row) => ({
+        words: row.words,
+        run: "run" in row ? row.run : undefined,
+        values: row.values.map(([cutCount, other]) => ({ cut: cutCount, other })),
+      })),
+      conclusion: {
+        ...cut.seeds.conclusion,
+        end: pair(cut.seeds.conclusion.end),
+        otherCutPercent: pair(cut.seeds.conclusion.otherCutPercent),
+      },
+    },
   },
 };
 

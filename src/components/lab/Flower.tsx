@@ -1,8 +1,10 @@
 /**
  * Section 9 of the lab page: the first five steps toward flower trimming, on
- * machine B. None of these runs is in the experiment export, so every value
+ * machine B, the physics change after them, and the pruning runs still
+ * training. None of these runs is in the experiment export, so every value
  * comes from the notebook through src/data/notebook.json (flowerTrimming);
- * the runs still training are marked as the notebook marks them. Server
+ * the runs still training are marked as the notebook marks them. The pruning
+ * steps' words and expert rates come from the roadmap (PRUNING_STEPS). Server
  * component.
  */
 
@@ -35,6 +37,34 @@ function partialText(partial: FlowerPartial): string {
 
 /** The roadmap's heading for this ladder; a link to it lands on the file when the heading changes. */
 const ROADMAP_HEADING = "Phase 4: toward flower trimming  (started 2026-11-12)";
+
+/**
+ * Steps 6-8 of the roadmap, the pruning tasks themselves, as its table words them. The roadmap is
+ * not checked by the sync scripts: when its table changes, change these by hand.
+ */
+const PRUNING_STEPS = [
+  {
+    step: 6,
+    task: "prune_one",
+    title: "One side shoot",
+    what: "the plant on its stand, one shoot facing the robot; cut it off, keep the flower",
+    expert: "100%",
+  },
+  {
+    step: 7,
+    task: "prune_turn",
+    title: "Turning the plant",
+    what: "one shoot at any angle; press a button to turn it into reach, then cut",
+    expert: "99%",
+  },
+  {
+    step: 8,
+    task: "prune",
+    title: "Pruning",
+    what: "1-3 shoots at any angles, turn and cut each, the flower untouched",
+    expert: "100% (about 500 control steps)",
+  },
+] as const;
 
 const STEPS = {
   drift: flowerTrimming.drift.section,
@@ -527,7 +557,9 @@ function StemStep() {
 
 function CutStep() {
   const step = flowerTrimming.cut;
-  const { diagnosis, tail, conclusion, film } = step;
+  const recipe = flowerTrimming.recipe;
+  const { diagnosis, tail, conclusion, films, tenM, seeds } = step;
+  const [shareThisRun, shareFiveM] = [tenM.peakLearningRateShare.thisRun, tenM.peakLearningRateShare.fiveM];
   const [low, high] = step.overCheckpoints.range;
   return (
     <>
@@ -639,10 +671,12 @@ function CutStep() {
         flower there is no other stem.
       </TableNote>
 
-      <Film name={film.name} title="A cut with one flower: the policy trained with the jaws held shut past the cut">
+      <Film name={films.cutOne.name} title="A cut with one flower: the policy trained with the jaws held shut past the cut">
         The one-flower policy trained with the jaws held shut past the cut, final checkpoint, averaged weights, on layouts
-        it never saw: {film.shown} of {film.recorded} recorded episodes, all {film.cut} cut. The learned policy drives
-        until the cut; then a script opens the jaws and draws the arm back, so that the cut-off top can be seen to fall.
+        it never saw, with the corrected physics, under which it cuts {count(films.cutOne.newPhysics)}:{" "}
+        {films.cutOne.shown} of {films.cutOne.recorded} recorded episodes shown, {films.cutOne.cut} of them cut. The
+        learned policy drives until the cut; then a script opens the jaws and draws the arm back, so that the cut-off top
+        can be seen to fall.
       </Film>
 
       <CheckpointStrip
@@ -671,6 +705,168 @@ function CutStep() {
         scene where it did not solve itself (red, orange and pink heads are look-alikes; purple is the only colour far
         from the others).
       </p>
+
+      <div className={`${styles.prose} ${styles.blockGap}`}>
+        <p>
+          <strong>Choosing the stem: twice the training budget.</strong> The same {recipe.demos} demonstrations with the
+          tail, trained for {tenM.samplesM}M samples (<code>{tenM.run}</code>; checkpoints about {tenM.spacingAboutM}M
+          samples apart), cut the named stem in {counts(tenM.named)}, another stem in {counts(tenM.other)}, and its first
+          close is nearest the named stem in {tenM.firstCloseNamed}% (the scripted expert cuts {count(tenM.expert)}). By
+          flower, averaged weights:{" "}
+          {tenM.byFlower.map((row, index) => (
+            <span key={row.flower}>
+              {index > 0 ? ", " : null}
+              {row.flower} {count(row.cut)}
+            </span>
+          ))}
+          .
+        </p>
+        <p>
+          Up to about {tenM.sameAsFiveMUntilAboutM}M samples it is the {recipe.samplesM}M run again; by about{" "}
+          {tenM.switchAboutM}M it has started to use the colour word, all at once, the same late and sudden switch as the
+          look-alike cubes of {stepName("lookalike").toLowerCase()}. That is before the {recipe.samplesM}M run ended, so
+          the difference is not simply more samples: the learning rate follows a cosine over the planned budget (
+          <code>lr_scheduler: {tenM.learningRate.scheduler}</code>, peak {tenM.learningRate.peak}), and at{" "}
+          {tenM.switchAboutM}M samples this run still had about {shareThisRun}% of its peak rate, the {recipe.samplesM}M
+          run about {shareFiveM}%.
+        </p>
+      </div>
+      <CheckpointStrip
+        label={`Cutting the named stem with three flowers, ${tenM.samplesM}M samples, by seed`}
+        rows={seeds.rows.map((row) => ({
+          id: `flower-cut-10m-checkpoints-${slug(row.words)}`,
+          words: row.run ? `${row.words} (${row.run})` : row.words,
+          cells: row.values.map((value) => `${value.cut} (${value.other})`),
+        }))}
+      />
+      <TableNote>
+        Averaged weights on <code className={styles.inlineCode}>cut_stem</code>, out of {flowerTrimming.recipe.layouts}{" "}
+        layouts; in brackets, the episodes in which another stem was cut. Checkpoints are about {tenM.spacingAboutM}M
+        samples apart. Seed 42 is the run above; the last row trains on {seeds.conclusion.demos} demonstrations instead of{" "}
+        {recipe.demos}.
+      </TableNote>
+      <p className={`${styles.prose} ${styles.blockGap}`}>
+        Two seeds of three switch at the same checkpoint (about {seeds.conclusion.switchAboutM}M samples) and end at{" "}
+        {seeds.conclusion.end[0]}-{seeds.conclusion.end[1]}/{flowerTrimming.recipe.layouts} with another stem cut in{" "}
+        {seeds.conclusion.otherCutPercent[0]}-{seeds.conclusion.otherCutPercent[1]}%; the third climbs slowly and ends at{" "}
+        {seeds.conclusion.slowEnd}. From {seeds.conclusion.demos} demonstrations the switch never comes within{" "}
+        {seeds.conclusion.withinM}M samples: four times the demonstrations at the same number of samples means each one is
+        seen a quarter as often. As with the look-alike cubes, a run that has not switched looks the same as one that
+        cannot; other seeds tell them apart.
+      </p>
+
+      <Film name={films.cutStem.name} title="Cutting the named stem among three flowers: the policy trained for 10M samples">
+        The three-flower policy trained for {tenM.samplesM}M samples, final checkpoint, averaged weights, on layouts it
+        never saw, with the corrected physics, under which it cuts the named stem in {count(films.cutStem.newPhysics)}{" "}
+        and another stem in {films.cutStem.other}: {films.cutStem.shown} of {films.cutStem.recorded} recorded episodes
+        shown, {films.cutStem.cut} of them cut. The learned policy drives until the cut; then a script opens the jaws and
+        draws the arm back, so that the cut-off top can be seen to fall.
+      </Film>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- the physics change, and pruning
+
+function PhysicsChange() {
+  const physics = flowerTrimming.physics;
+  const [shallow, deep] = physics.deepestNowMm;
+  return (
+    <>
+      <SubHead id="flower-physics-change">Physics change</SubHead>
+      <p className={styles.prose}>
+        After the runs of steps 1-5, an audit of every contact found the arm sinking into solid things. With
+        MuJoCo&rsquo;s default soft contacts (time constant {physics.softTimeConstantS} s) the position-controlled arm
+        pressed the hand {physics.handIntoTableMm} mm into the table and a finger {physics.fingerIntoFlowerMm} mm into a
+        flower, and after a cut the top part slid down through its own base stem: the two stem pieces were excluded from
+        colliding with each other so that they could overlap while whole. Now contacts are stiff (
+        <code>o_solref</code> {physics.stiffTimeConstantS} s, the stiffest the {physics.stepMs} ms step allows), a cut
+        leaves the two pieces apart and colliding, and a test checks that a cut top rests on the stub instead of sliding
+        through it. The deepest contact is now {shallow}-{deep} mm, fingers squeezing the cut pieces with the jaws shut.
+        The policy results of the five steps below were measured with the old physics; the videos of{" "}
+        {stepName("cut").toLowerCase()} and the pruning runs use the new.
+      </p>
+      <TableBox label="The scripted expert before and after the physics change">
+        <thead>
+          <tr>
+            <th scope="col">Task</th>
+            <th scope="col" className="num">
+              Before
+            </th>
+            <th scope="col" className="num">
+              After
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {physics.expert.map((row) => (
+            <tr key={row.task}>
+              <th scope="row">
+                <code className={styles.inlineCode}>{row.task}</code>
+              </th>
+              <td className="num">{formatCount(row.before, physics.layouts)}</td>
+              <td className="num">{formatCount(row.after, physics.layouts)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </TableBox>
+      <TableNote>The scripted expert, {physics.layouts} layouts each.</TableNote>
+    </>
+  );
+}
+
+function Pruning() {
+  return (
+    <>
+      <SubHead id="flower-runs-in-progress">Pruning: the runs in progress</SubHead>
+      <p className={styles.prose}>
+        Steps 6-8 of the roadmap are the pruning tasks themselves, each with one policy training on the new physics. No
+        result yet.
+      </p>
+      <TableBox label="The pruning tasks and their runs in progress">
+        <thead>
+          <tr>
+            <th scope="col">Step</th>
+            <th scope="col">What is added</th>
+            <th scope="col" className="num">
+              Expert
+            </th>
+            <th scope="col">Run</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PRUNING_STEPS.map((entry) => {
+            const running = flowerTrimming.inProgress.filter((item) => item.task === entry.task);
+            return (
+              <tr key={entry.task} id={`flower-prune-${entry.step}`}>
+                <th scope="row" className={styles.wrap}>
+                  Step {entry.step}: {entry.title}
+                  <span className={styles.cellDetail}>
+                    <code className={styles.inlineCode}>{entry.task}</code>
+                  </span>
+                </th>
+                <td className={styles.wrap}>{capital(entry.what)}</td>
+                <td className="num">{entry.expert}</td>
+                <td className={styles.wrap}>
+                  {running.length > 0
+                    ? running.map((item) => (
+                        <code key={item.run} className={`${styles.inlineCode} block`}>
+                          {item.run}
+                        </code>
+                      ))
+                    : MISSING}
+                </td>
+                <td>{running.length > 0 ? <InProgressBadge /> : MISSING}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableBox>
+      <TableNote>
+        The steps and the expert&rsquo;s rates are the roadmap&rsquo;s; the runs are the notebook&rsquo;s, which shortens
+        some names with &ldquo;...&rdquo;; they are shown as it writes them.
+      </TableNote>
     </>
   );
 }
@@ -682,18 +878,22 @@ export function FlowerSection({ chapter }: { chapter: ChapterFor }) {
   return (
     <LabSection
       {...SECTIONS.flower}
-      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, and so can cutting a single flower's stem; choosing the named stem among three flowers, to grasp or to cut, not yet."
+      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, and so can cutting a single flower's stem; choosing the named stem among three flowers to cut it needs twice the training budget and then works on two seeds of three; grasping and holding the named stem does not yet. The pruning tasks are still training."
       chapters={[chapter("110-toward-real-tasks"), chapter("103-case-self-correction")]}
       notes={[7, 11]}
     >
       <div className={`${styles.prose} mt-4`}>
         <p>
-          The final goal is a robot arm that turns a plant until the part to cut faces it, moves the other leaves aside,
-          and cuts exactly the part it was asked to cut. The{" "}
+          The final goal is pruning: a potted plant with a main stem topped by a flower and side shoots branching off it.
+          The robot arm cuts every side shoot off the main stem and leaves the main stem and its flower; damaging the
+          flower (touching it, pushing on the main stem, cutting the main stem) is a failure. The plant stands on a
+          motorised rotating stand with two push buttons, one for each direction; the arm presses a button to turn the
+          plant until a shoot on the far side is in reach. The{" "}
           <a href={`${repoUrl("tutorial/roadmap.md")}#${slug(ROADMAP_HEADING)}`} className="text-link">
             ladder in the roadmap
           </a>{" "}
-          gets there one property at a time; these are its first five steps, all on {MACHINES.B.name}.
+          gets there one property at a time: its first five steps, below, use simpler scenes; steps 6-8 are the pruning
+          tasks themselves, still training. All of it runs on {MACHINES.B.name}.
         </p>
         <p>
           Unless a table says otherwise: the policy without history, with language (<code>{recipe.policy}</code>),{" "}
@@ -704,40 +904,8 @@ export function FlowerSection({ chapter }: { chapter: ChapterFor }) {
         </p>
       </div>
 
-      <SubHead id="flower-runs-in-progress">Runs in progress</SubHead>
-      <TableBox label="Runs toward flower trimming still in progress">
-        <thead>
-          <tr>
-            <th scope="col">Run</th>
-            <th scope="col">Step</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {flowerTrimming.inProgress.map((entry) => {
-            const step = entry.step as StepKey;
-            return (
-              <tr key={entry.run}>
-                <th scope="row" className={styles.wrap}>
-                  {capital(entry.words)}
-                  <span className={styles.cellDetail}>
-                    <code className={styles.inlineCode}>{entry.run}</code>
-                  </span>
-                </th>
-                <td className="whitespace-nowrap">
-                  <a href={`#${slug(STEPS[step])}`} className="text-link">
-                    {stepName(step)}
-                  </a>
-                </td>
-                <td>
-                  <InProgressBadge />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </TableBox>
-      <TableNote>The notebook shortens some run names with &ldquo;...&rdquo;; they are shown as it writes them.</TableNote>
+      <PhysicsChange />
+      <Pruning />
 
       <DriftStep />
       <LookalikeStep />
