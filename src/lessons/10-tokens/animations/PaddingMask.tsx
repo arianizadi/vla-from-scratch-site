@@ -16,12 +16,12 @@ const ROW_Y = [66, 156];
 export function PaddingMask() {
   return (
     <AnimationFrame
-      title="Padding and the attention mask"
-      description="Two instructions have 5 and 6 tokens. A batch must be a rectangle, so the shorter row gets one pad token at its end. A second grid, the attention mask, marks real tokens with 1 and the pad with 0. Because the model reads left to right and the pad sits at the right end, no real token ever looks at it."
+      title="Padding and the mask"
+      description="Two instructions have 5 and 6 tokens. A batch must be a rectangle, so the shorter row gets one pad token at its end. A second grid, the mask, marks real tokens with 1 and the pad with 0. Because the model reads left to right and the pad sits at the right end, no real token ever looks at it."
       steps={[
         "Two instructions, 5 and 6 tokens long.",
-        "A batch is one rectangle: the short row gets a pad token at its end.",
-        "The attention mask says which positions are real: 1 for a token, 0 for padding.",
+        "Stacked together they must form a grid: the short row gets a blank pad at its end.",
+        "The mask says which slots are real: 1 for a word, 0 for a blank.",
         "The model reads left to right, and the pad comes last, so no real token sees it.",
       ]}
       size={[480, 270]}

@@ -58,14 +58,14 @@ const centre = (start: number, length: number) => LEFT + (start + (length - 1) /
 export function BpeMerges() {
   return (
     <AnimationFrame
-      title="Byte-pair encoding, four merges"
+      title="Gluing the most common pairs"
       description="Four words, cube, cubes, tube and bed, start as single characters: a vocabulary of 7 tokens. The most frequent neighbouring pair is merged into a new token, then the pairs are counted again: b and e become be, u and be become ube, c and ube become cube, and t and ube become tube. Four merges give 11 tokens."
       steps={[
-        "Start from single characters. The vocabulary is the 7 letters.",
-        "The most frequent neighbouring pair is b e, 12 times. Merge it into one token: be.",
-        "Count again. u be wins with 10: it becomes ube.",
+        "Start from single letters. The list of tokens is the 7 letters.",
+        "The pair seen side by side most often is b e, 12 times. Glue it into one token: be.",
+        "Count again. u be wins with 10 and becomes ube.",
         "c ube, 7 times, becomes cube.",
-        "t ube becomes tube. Four merges, 11 tokens: common words are now one token each.",
+        "t ube becomes tube. Four glues, 11 tokens: common words are now one piece each.",
       ]}
       size={[480, 260]}
     >
@@ -115,7 +115,7 @@ export function BpeMerges() {
             })}
 
             <Label x={394} y={44} tone="muted" size={14}>
-              vocabulary
+              the list has
             </Label>
             <Label key={`vocab-${step}`} x={394} y={84} tone="ink" size={40} weight={700} enter>
               {String(7 + step)}

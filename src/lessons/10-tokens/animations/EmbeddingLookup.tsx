@@ -26,9 +26,9 @@ export function EmbeddingLookup() {
       description="The word cubes arrives as two ids, 9 for cube and 4 for s. The model's embedding table has one row of numbers per token in the vocabulary. Id 9 selects the row for cube and id 4 the row for s; the model copies those rows out and works with the vectors from then on."
       steps={[
         "cubes arrives as two ids: 9 (cube) and 4 (s).",
-        "The embedding table has one row per token. Id 9 points at row 9.",
+        "The table has one row per token. Id 9 points at row 9.",
         "The model copies that row out: a vector of numbers for cube.",
-        "Same for id 4. The real table here has 49,280 rows of 512 numbers.",
+        "Same for id 4. A real table has tens of thousands of rows.",
       ]}
       size={[480, 280]}
     >

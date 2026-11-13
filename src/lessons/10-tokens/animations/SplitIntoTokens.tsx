@@ -47,8 +47,8 @@ export function SplitIntoTokens() {
       steps={[
         "An instruction is one string of characters.",
         "The tokenizer cuts it into tokens. A space stays at the front of the next word (shown as ␣).",
-        "Each token becomes its id: its row number in the vocabulary.",
-        "The model never sees the letters, only this list of numbers.",
+        "Each token becomes its id: its number in a fixed list.",
+        "The model never sees the letters, only these numbers.",
       ]}
       size={[480, 260]}
     >
