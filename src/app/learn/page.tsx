@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CourseExtras, CourseOutline } from "@/components/curriculum/CourseOutline";
 import { getCourse } from "@/lib/course";
-import { lessonIdeas } from "@/lessons";
+import { lessonIdeas, lessonTitles } from "@/lessons";
 
 export const metadata: Metadata = {
   title: "The course",
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LearnPage() {
-  const course = getCourse();
+  const course = getCourse(await lessonTitles());
   const ideas = await lessonIdeas();
   const first = course.lessons[0];
   const ready = new Map([...ideas].map(([slug, summary]) => [slug, { minutes: summary.minutes }]));

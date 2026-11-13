@@ -12,8 +12,10 @@ import { getAllChapters } from "@/lib/content";
 import type { Lesson, MathEntry } from "./define";
 import { lessonMinutes, validateLesson, validateMath } from "./validate";
 
-const LOADERS = import.meta.glob<{ default: Lesson }>("./*/lesson.ts");
-const MATH_LOADERS = import.meta.glob<{ default?: MathEntry[]; math?: MathEntry[] }>("./*/math.ts");
+// `?lesson-data` runs scripts/lesson-data-loader.cjs (next.config.ts): a lesson's animations arrive as
+// markers, not as client components, so a page that reads lessons ships no animation it does not show.
+const LOADERS = import.meta.glob<{ default: Lesson }>("./*/lesson.ts", { query: "?lesson-data" });
+const MATH_LOADERS = import.meta.glob<{ default?: MathEntry[]; math?: MathEntry[] }>("./*/math.ts", { query: "?lesson-data" });
 
 function folderOf(key: string): string {
   return key.split("/")[1] ?? key;
@@ -77,6 +79,23 @@ export async function getMath(slug: string): Promise<MathEntry[] | undefined> {
     throw new Error(`[lessons] The math of "${slug}" does not follow the format (AUTHORING.md):\n- ${errors.join("\n- ")}`);
   }
   return entries as MathEntry[];
+}
+
+/**
+ * The titles lessons set themselves (`title` in lesson.ts), by slug. Pass the map to the course
+ * helpers of src/lib/course.ts (getCourse, courseTitle, courseSidebar, courseNeighbours) so a
+ * lesson is named the same everywhere.
+ */
+export async function lessonTitles(): Promise<Map<string, string>> {
+  const entries = await Promise.all(
+    lessonSlugs()
+      .sort()
+      .map(async (slug) => {
+        const lesson = await getLesson(slug);
+        return lesson?.title ? ([slug, lesson.title] as const) : undefined;
+      }),
+  );
+  return new Map(entries.filter((entry): entry is NonNullable<typeof entry> => entry !== undefined));
 }
 
 export interface LessonSummary {

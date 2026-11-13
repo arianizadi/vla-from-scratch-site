@@ -80,6 +80,8 @@ function build(): Map<SectionId, string[]> {
       SECTIONS.headline.id,
       [
         "`pick_target`, second round (machine B)",
+        // The findings name the same heading without the machine (landing and lab glance numbers).
+        "pick_target, second round",
         "Does the closing position depend on the scene?",
         ...sectionsOf((entry) => entry.group.fix === "before" && (entry.group.family === "reference" || entry.group.family === "first_round")),
       ],

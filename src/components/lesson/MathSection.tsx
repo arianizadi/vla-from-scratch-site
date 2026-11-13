@@ -1,3 +1,4 @@
+import { AnimationSlot } from "@/lessons/AnimationSlot";
 import type { MathEntry, MathTone } from "@/lessons/define";
 import { DEFAULT_TONES, colourSymbols, exampleSteps, inlinePieces, renderTex, splitMath } from "@/lib/math";
 import { Inline } from "./Inline";
@@ -91,7 +92,7 @@ function MathCard({ entry, index, total }: { entry: MathEntry; index: number; to
 
       {Animation ? (
         <div className="math-visual">
-          <Animation />
+          <AnimationSlot animation={Animation} />
         </div>
       ) : null}
 

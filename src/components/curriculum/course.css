@@ -342,15 +342,111 @@
    Next lesson, the quiet "want more?" links, the pager
    -------------------------------------------------------------------------- */
 
-.lesson-next {
-  margin: 88px 0 0;
+/* The end of a lesson: progress through the course, then the next lesson as the one big card. */
+.up-next {
+  margin-top: 104px;
 }
-.lesson-next .button {
-  height: auto;
-  min-height: 52px;
-  padding: 12px 24px;
+.up-next-progress {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+}
+.up-next-progress-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.up-next-track {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background-color: var(--surface-2);
+}
+.up-next-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--text);
+}
+.up-next-card {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-top: 20px;
+  padding: 28px 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+@container (min-width: 560px) {
+  .up-next-card {
+    padding: 40px;
+  }
+}
+.up-next-card:hover {
+  border-color: var(--accent);
+}
+.up-next-label {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.up-next-title {
+  max-width: 22ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.875rem, 5cqw, 3rem);
+  font-weight: 750;
+  font-stretch: 86%;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+.up-next-blurb {
+  max-width: 48ch;
+  color: var(--text-muted);
   font-size: 1.0625rem;
-  text-align: left;
+  line-height: 1.5;
+}
+.up-next-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin-top: 10px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background-color: var(--text);
+  color: var(--bg);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    color var(--duration-micro) var(--ease-standard);
+}
+.up-next-card:hover .up-next-cta {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
+.up-next-arrow {
+  flex: none;
+  transition: transform var(--duration-interface) var(--ease-standard);
+}
+.up-next-card:hover .up-next-arrow {
+  transform: translateX(3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .up-next-card:hover .up-next-arrow {
+    transform: none;
+  }
+}
+.up-next-back {
+  margin: 18px 0 0;
+  font-size: 0.9375rem;
 }
 .lesson-deeper {
   margin-top: 72px;

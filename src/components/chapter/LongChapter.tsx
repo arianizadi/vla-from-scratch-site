@@ -6,7 +6,7 @@ import { ReadingProgress } from "@/components/chapter/ReadingProgress";
 import { Inline } from "@/components/lesson/Inline";
 import { Markdown } from "@/components/markdown/Markdown";
 import { getChapter, type Chapter } from "@/lib/content";
-import { courseBlurb, courseExtra, courseNeighbours, courseSidebar, courseTitle } from "@/lib/course";
+import { courseBlurb, courseExtra, courseNeighbours, courseSidebar, courseTitle, type TitleOverrides } from "@/lib/course";
 import { renderMarkdown } from "@/lib/markdown/pipeline";
 import { repoUrl, site } from "@/lib/site";
 
@@ -18,6 +18,8 @@ interface LongChapterProps {
   summary?: { idea: string; takeaway: string };
   /** At /learn/<slug>/full: the pager stays among technical pages. */
   technical?: boolean;
+  /** Titles lessons set themselves (`lessonTitles()`), so every lesson is named as in the course. */
+  titles?: TitleOverrides;
 }
 
 function BackGlyph() {
@@ -34,15 +36,15 @@ function BackGlyph() {
  * opens with a note that this is the reference version and a plain "In one
  * minute" summary; the lesson is where the idea is taught.
  */
-export function LongChapter({ chapter, lessonHref, summary, technical = false }: LongChapterProps) {
+export function LongChapter({ chapter, lessonHref, summary, technical = false, titles }: LongChapterProps) {
   const { tree, headings } = renderMarkdown(chapter.body, {
     chapterNumber: String(chapter.order),
     chapterTitle: (target) => {
       const found = getChapter(target);
-      return found ? courseTitle(found) : undefined;
+      return found ? courseTitle(found, titles) : undefined;
     },
   });
-  const { previous, next } = courseNeighbours(chapter.slug);
+  const { previous, next } = courseNeighbours(chapter.slug, titles);
   const sections = headings
     .filter((heading) => heading.depth === 2)
     .map(({ id, text, section }) => ({ id, text, section }));
@@ -57,7 +59,7 @@ export function LongChapter({ chapter, lessonHref, summary, technical = false }:
     <>
       <ReadingProgress targetId="chapter" />
       <div className="page-frame lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[256px_minmax(0,960px)] xl:gap-x-16">
-        <ChapterSidebar parts={courseSidebar()} currentSlug={chapter.slug} currentTitle={courseTitle(chapter)} sections={sections} />
+        <ChapterSidebar parts={courseSidebar(titles)} currentSlug={chapter.slug} currentTitle={courseTitle(chapter, titles)} sections={sections} />
         <main id="main" tabIndex={-1} className="min-w-0 pb-8 outline-none">
           <article id="chapter">
             <p className="full-banner">
@@ -75,7 +77,7 @@ export function LongChapter({ chapter, lessonHref, summary, technical = false }:
                       : "The reference version, with code and exact numbers. Its lesson is being written."}
               </span>
             </p>
-            <ChapterHeader chapter={chapter} title={courseTitle(chapter)} editUrl={editUrl} />
+            <ChapterHeader chapter={chapter} title={courseTitle(chapter, titles)} editUrl={editUrl} />
 
             {summary || blurb ? (
               <aside className="one-minute" aria-labelledby="one-minute-title">

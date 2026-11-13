@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChapterPager } from "@/components/chapter/ChapterPager";
 import { ChapterSidebar, type SidebarPart } from "@/components/chapter/ChapterSidebar";
 import { ReadingProgress } from "@/components/chapter/ReadingProgress";
 import { FIGURES } from "@/figures/catalog";
@@ -7,6 +6,7 @@ import { FigureMount } from "@/figures/FigureMount";
 import type { ChapterMeta } from "@/lib/content";
 import type { CourseLesson, NeighbourRef } from "@/lib/course";
 import type { Lesson, MathEntry } from "@/lessons/define";
+import { AnimationSlot } from "@/lessons/AnimationSlot";
 import { lessonMinutes } from "@/lessons/validate";
 import { Inline } from "./Inline";
 import { MathSection } from "./MathSection";
@@ -29,21 +29,86 @@ interface LessonViewProps {
   related: { slug: string; title: string }[];
 }
 
+/** A warning sign: where the idea breaks. */
 function EdgeGlyph() {
   return (
     <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" className="lesson-list-glyph">
-      <path d="M4 15.5h12M4 15.5V4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="4" cy="15.5" r="2.4" fill="currentColor" />
+      <path d="M10 2.8 18 16.6H2z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M10 8v4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="10" cy="14.4" r="1.1" fill="currentColor" />
     </svg>
   );
 }
 
+/** A tick in a circle: advice that works. */
 function TipGlyph() {
   return (
     <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" className="lesson-list-glyph">
-      <path d="M10 2.5v4M10 13.5v4M2.5 10h4M13.5 10h4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="10" cy="10" r="2" fill="currentColor" />
+      <circle cx="10" cy="10" r="7.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m6.6 10.2 2.3 2.3 4.6-4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function ArrowGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" className="up-next-arrow">
+      <path d="M4 10h11M10.5 5.5 15 10l-4.5 4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/**
+ * The end of a lesson: how far along the course the reader is, and the next
+ * lesson as one big, inviting card; the previous one as a quiet link. After
+ * the last lesson, the way beyond the course.
+ */
+export function UpNext({ place, total, previous, next }: { place?: CourseLesson; total: number; previous?: NeighbourRef; next?: NeighbourRef }) {
+  const done = place ? Math.round((place.number / total) * 100) : 0;
+  return (
+    <nav aria-labelledby="up-next-title" className="up-next">
+      {place ? (
+        <div className="up-next-progress">
+          <p className="up-next-progress-text">
+            {next ? `Lesson ${place.number} of ${total} done.` : `Lesson ${total} of ${total}: that is the whole course.`}
+          </p>
+          <span className="up-next-track" aria-hidden="true">
+            <span className="up-next-fill" style={{ width: `${done}%` }} />
+          </span>
+        </div>
+      ) : null}
+      <h2 id="up-next-title" className="sr-only">
+        {next ? "Next lesson" : "Where to go from here"}
+      </h2>
+      {next ? (
+        <Link href={`/learn/${next.slug}`} prefetch rel="next" className="up-next-card">
+          <span className="up-next-label">{next.number ? `Up next: lesson ${next.number}` : "Up next"}</span>
+          <span className="up-next-title">{next.title}</span>
+          {next.blurb ? <span className="up-next-blurb">{next.blurb}</span> : null}
+          <span className="up-next-cta">
+            {next.number ? `Start lesson ${next.number}` : "Read it next"}
+            <ArrowGlyph />
+          </span>
+        </Link>
+      ) : place ? (
+        <Link href="/learn#extras" className="up-next-card">
+          <span className="up-next-label">You finished the course</span>
+          <span className="up-next-title">Beyond the course</span>
+          <span className="up-next-blurb">Stories from the experiments, a glossary, and how to run it all yourself.</span>
+          <span className="up-next-cta">
+            See what else there is
+            <ArrowGlyph />
+          </span>
+        </Link>
+      ) : null}
+      {previous ? (
+        <p className="up-next-back">
+          <Link href={`/learn/${previous.slug}`} rel="prev" className="text-link">
+            {previous.number ? `Back to lesson ${previous.number}: ${previous.title}` : `Back to ${previous.title}`}
+          </Link>
+        </p>
+      ) : null}
+    </nav>
   );
 }
 
@@ -104,6 +169,18 @@ export function LessonView({ chapter, lesson, math, place, total, title, parts, 
                 <li>
                   About {minutes} {minutes === 1 ? "minute" : "minutes"}
                 </li>
+                {hasMath ? (
+                  <li>
+                    <a href="#math" className="lesson-fact-link lesson-fact-quiet">
+                      Maths, step by step
+                    </a>
+                  </li>
+                ) : null}
+                <li>
+                  <Link href={fullHref} className="lesson-fact-link lesson-fact-quiet">
+                    Technical details
+                  </Link>
+                </li>
               </ul>
             </header>
 
@@ -126,7 +203,7 @@ export function LessonView({ chapter, lesson, math, place, total, title, parts, 
                     </div>
                     {Animation ? (
                       <div className="beat-visual">
-                        <Animation />
+                        <AnimationSlot animation={Animation} />
                       </div>
                     ) : null}
                   </li>
@@ -198,13 +275,7 @@ export function LessonView({ chapter, lesson, math, place, total, title, parts, 
               </section>
             ) : null}
 
-            {next ? (
-              <p className="lesson-next">
-                <Link href={`/learn/${next.slug}`} className="button button-primary">
-                  Next{next.label ? `, ${next.label.toLowerCase()}` : ""}: {next.title}
-                </Link>
-              </p>
-            ) : null}
+            <UpNext place={place} total={total} previous={previous} next={next} />
 
             <section aria-labelledby="deeper-title" className="lesson-deeper">
               <h2 id="deeper-title" className="lesson-deeper-title">
@@ -238,7 +309,6 @@ export function LessonView({ chapter, lesson, math, place, total, title, parts, 
               ) : null}
             </section>
           </article>
-          <ChapterPager previous={previous} next={next} />
         </main>
       </div>
     </>

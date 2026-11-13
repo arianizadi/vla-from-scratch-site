@@ -433,3 +433,42 @@
 .anim-bare .anim-foot {
   padding: 8px 0 0;
 }
+
+/* --------------------------------------------------------------------------
+   Phones. A 480-unit drawing in a 343px column shrinks to about 0.7x, so
+   14-unit text would read at 9-10px. Below 640px the frame runs edge to edge
+   (the page gutter becomes the drawing's), and every label in a drawing is
+   scaled up about its anchor by --a-text: 13-unit text reads at about 11.5px,
+   14-unit at about 12px. Shapes keep their size, so layouts do not move; text
+   sized for a 480-wide stage leaves room for the extra 12%.
+   -------------------------------------------------------------------------- */
+
+.anim {
+  --a-text: 1;
+}
+@media (max-width: 639px) {
+  .anim:not(.anim-bare) {
+    --a-text: 1.12;
+    margin-inline: -16px;
+    border-inline-width: 0;
+    border-radius: 0;
+  }
+  .anim:not(.anim-bare) .anim-stage {
+    padding: 0;
+  }
+  /* Inside a padded card (the maths), the frame bleeds to the card's edge only. */
+  .math-card .anim:not(.anim-bare) {
+    margin-inline: -18px;
+  }
+}
+.anim-svg text {
+  transform-box: fill-box;
+  transform-origin: left center;
+  scale: var(--a-text);
+}
+.anim-svg text[text-anchor="middle"] {
+  transform-origin: center;
+}
+.anim-svg text[text-anchor="end"] {
+  transform-origin: right center;
+}

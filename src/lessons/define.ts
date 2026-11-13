@@ -39,6 +39,13 @@ export interface LabLink {
 export interface Lesson {
   /** The chapter's file name without .md; must equal the folder name. */
   slug: string;
+  /**
+   * Optional: the lesson's title, if it should differ from the one in src/lib/course.ts.
+   * Used everywhere the lesson is named (its page, the course outline, the sidebar, the pager,
+   * the page title). Short and concrete, sentence case, no colon or full stop, at most 8 words:
+   * "How a robot learns from examples".
+   */
+  title?: string;
   /** The idea of the chapter in one plain sentence (at most 30 words). */
   idea: string;
   /** 3 to 6 beats, in reading order. */
@@ -55,6 +62,19 @@ export interface Lesson {
   lab?: LabLink[];
   /** Interactive figures (ids from src/figures/catalog.ts) offered as "Try it". */
   tryIt?: FigureId[];
+}
+
+/**
+ * What `animation` is at run time when a lesson is read through src/lessons/index.ts: authors
+ * write a component, and scripts/lesson-data-loader.cjs swaps it for this marker, so that a page
+ * loads only the animations it shows (src/lessons/AnimationSlot.tsx draws either).
+ */
+export interface AnimationMarker {
+  __animation: string;
+}
+
+export function isAnimationMarker(value: unknown): value is AnimationMarker {
+  return typeof value === "object" && value !== null && typeof (value as AnimationMarker).__animation === "string";
 }
 
 /** Identity function that gives a lesson file its type. */

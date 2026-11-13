@@ -42,9 +42,9 @@ An inline script sets `data-theme` before paint. Plain hex values (client code r
 | `--accent` | #4F2FE0 | #B3A3FF | violet: links, focus ring, "has a lesson", the one thing to follow |
 | `--mark` | #FFD43B | #FFD43B | highlighter: "this one, now"; takeaway underline |
 | `--language` | #2D5BE3 | #7096FF | words, tokens |
-| `--vision` | #0A8F80 | #2CC2AE | images, patches |
-| `--action` | #DC5317 | #FF8B4D | actions, trajectories |
-| `--success` / `--failure` / `--warning` | | | states, always with a glyph and a word |
+| `--vision` | #087B6E | #2CC2AE | images, patches |
+| `--action` | #C04710 | #FF8B4D | actions, trajectories |
+| `--success` / `--failure` / `--warning` | #117A56 / #C2362B / #8F5A00 | #4FC48D / #FF8375 / #F2B84B | states, always with a glyph and a word |
 
 `--language-soft`, `--vision-soft`, `--action-soft`, `--mark-soft` are 14–45% tints for fills.
 Data series (`--series-1..6`), the sequential scale and syntax colours are unchanged from the

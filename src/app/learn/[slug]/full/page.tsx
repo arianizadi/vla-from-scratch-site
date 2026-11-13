@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { LongChapter } from "@/components/chapter/LongChapter";
 import { getAllChapters, getChapter } from "@/lib/content";
 import { courseLesson, courseTitle } from "@/lib/course";
-import { getLesson, hasLesson } from "@/lessons";
+import { getLesson, hasLesson, lessonTitles } from "@/lessons";
 import { site } from "@/lib/site";
 import "katex/dist/katex.min.css";
 
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: FullChapterProps): Promise<Me
   if (!chapter) return {};
   // A chapter outside the course without a lesson shows this same text at /learn/<slug>: that address is canonical.
   const canonical = hasLesson(slug) || courseLesson(slug) ? `/learn/${slug}/full` : `/learn/${slug}`;
-  const title = `${courseTitle(chapter)}, technical details`;
+  const title = `${courseTitle(chapter, await lessonTitles())}, technical details`;
   return {
     title,
     description: chapter.summary || undefined,
@@ -47,6 +47,7 @@ export default async function FullChapterPage({ params }: FullChapterProps) {
       lessonHref={lesson || inCourse ? `/learn/${slug}` : undefined}
       summary={lesson ? { idea: lesson.idea, takeaway: lesson.takeaway } : undefined}
       technical
+      titles={await lessonTitles()}
     />
   );
 }

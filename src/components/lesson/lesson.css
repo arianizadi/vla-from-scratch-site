@@ -103,6 +103,14 @@
 .lesson-fact-link:hover {
   border-color: var(--accent);
 }
+/* A link among the facts: outlined paper, so it reads as something to press, not a label. */
+.lesson-fact-quiet {
+  color: var(--text);
+  font-weight: 600;
+}
+.lesson-fact-quiet:hover {
+  color: var(--accent);
+}
 @media (pointer: coarse) {
   .lesson-fact-link,
   .lesson-part {

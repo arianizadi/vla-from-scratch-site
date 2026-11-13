@@ -75,8 +75,11 @@ arithmetic and the animation draws it).
 - Keep every shape mounted in every step; hide it with `opacity={0}` and move it with `x`/`y`.
   Then it fades and glides instead of popping. Use stable `key`s. A shape a step *creates* (a
   merged token) may mount with `enter`.
-- Coordinates are SVG units. Default size `[480, 280]`; keep the width 480 so text stays
-  readable on a phone (the drawing shrinks to about 0.7x). Text at 14 units or more, 13 at least.
+- Coordinates are SVG units. Default size `[480, 280]`; keep the width 480. Text at 14 units or
+  more, 13 at least. On a phone (below 640px) the frame runs edge to edge (about 0.78x) and every
+  `<text>` is scaled up 12% about its anchor (`--a-text`), so 13 units read at about 11.5px. Shapes
+  keep their size: leave a label about 6% of its width free on each side (and a little above and
+  below), or it may touch its neighbour on a phone.
 - Positions are centres (`Chip`, `Dot`, `Box`, `Label`, `Thing` stand on their `y`). Axes and
   timelines take their left/top corner.
 - Leave 12 units of air inside the edges. No text over lines or dots: move labels until nothing
@@ -136,7 +139,8 @@ and the `a-t` class if it should transition.
 1. `npm run dev`, open the lesson, watch it loop once. Click each pip: every step must read on its
    own, with nothing overlapping.
 2. Switch the theme (header button). Both themes must read.
-3. Phone width (375 px): text still legible.
+3. Phone width (375 px): text legible and, with the 12% larger labels, still clear of each other
+   and of the edges in every step.
 4. Reduced motion (browser devtools, Rendering, "prefers-reduced-motion: reduce"): the still step
    must explain the idea by itself.
 5. `npm run lint`, `npx tsc --noEmit`, `npm run build`.

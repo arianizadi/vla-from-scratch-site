@@ -566,8 +566,9 @@ export function descendantsOf(id: string): Set<string> {
   return found;
 }
 
+/** A chapter, or a section of it: section anchors live in the technical page (/full). */
 export function chapterHref(ref: ChapterRef): string {
-  return `/learn/${ref.slug}${ref.section ? `#${ref.section}` : ""}`;
+  return ref.section ? `/learn/${ref.slug}/full#${ref.section}` : `/learn/${ref.slug}`;
 }
 
 /** "02", the chapter's order number, from its slug. */

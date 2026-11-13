@@ -22,6 +22,12 @@ src/lessons/<slug>/              <slug> = the chapter's file name without .md, e
   animations/<data>.ts           optional: seeded data or a computation the animations draw
 ```
 
+Every lesson's title lives in `src/lib/course.ts` (`TITLES`): short, concrete, sentence case, no
+colon. Set `title` in lesson.ts only to change it; the build checks it. Import each animation in
+lesson.ts or math.ts on its own line, `import { Name } from "./animations/Name";`: the site reads
+lessons as data and loads each animation's code only on the page that shows it
+(scripts/lesson-data-loader.cjs, scripts/gen-animation-registry.mjs).
+
 Do **not** edit, in a lesson task:
 - `content/chapters/*.md` (overwritten by `npm run sync`), `src/data/*` (checked against the
   lab notebook);
@@ -41,6 +47,7 @@ import { FirstThing } from "./animations/FirstThing";
 
 export default defineLesson({
   slug: "<slug>",                       // equals the folder name
+  // title: "How a robot learns from examples", // optional: overrides the course title (src/lib/course.ts)
   idea: "One plain sentence: the whole idea.",                // at most 30 words
   beats: [                                                    // 3 to 6
     { title: "A few words", text: "At most 50 words.", animation: FirstThing },
