@@ -686,8 +686,8 @@ poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unse
 evaluation, final checkpoint, trained / averaged weights where both are given. "Closed at the named
 object" is the share of first closes nearest the named object.
 
-**In progress:** the pruning tasks (steps 6-8 of the roadmap) with the new physics:
-`dp_vit_lang_reactive_prune_one4k_rs_tail10`, `..._prune_turn4k_rs_tail10_10m`, `..._prune2k_rs_tail10_10m`.
+**In progress:** the full pruning task (step 8) for 20M samples: from 2000 demonstrations, three seeds
+(`..._prune2k_rs_tail10_20m`, `..._seed43`, `..._seed44`), and from 4000 (`..._prune4k_rs_tail10_20m`, `..._seed43`).
 
 **Physics change (after the runs of steps 1-5 above).** An audit of every contact found the arm sinking
 into solid things: with MuJoCo's default soft contacts (time constant 0.02 s) the position-controlled arm
@@ -921,6 +921,71 @@ stem cut in 1-6%; the third climbs slowly and ends at 36. From 16000 demonstrati
 within 10M samples: four times the demonstrations at the same number of samples means each one is seen a
 quarter as often. As with the look-alike cubes, a run that has not switched looks the same as one that
 cannot; other seeds tell them apart.
+
+### Step 6: one side shoot (`prune_one`), new physics
+
+The pruning scene of the roadmap: a potted plant (main stem with a flower on top) on a motorised stand that
+turns while one of its two push buttons is held down. In `prune_one` the plant has one side shoot, already
+facing the robot; holding it with shut jaws 2-5 cm out from the main stem for 3 control steps cuts it off.
+Touching the flower, pushing the main stem with more than 5 N, or cutting the main stem is damage and fails
+the episode. The scripted expert succeeds in 100/100 with no damage. The demonstrations: 4000, random start
+poses, the jaws held shut 10 frames past the cut (`--random_start --tail_steps 10`); 5M samples.
+
+| Run | Pruned (trained / averaged) | Flower damaged | Damage: flower touched / main stem pushed (averaged) |
+|---|---|---|---|
+| seed 42 (`dp_vit_lang_reactive_prune_one4k_rs_tail10`) | 80/100 / 77/100 | 12 / 9 | 6 / 3 |
+| seed 43 (`..._seed43`) | 89/100 / 84/100 | 6 / 6 | 6 / 0 |
+
+Averaged weights per checkpoint (damage in brackets): seed 42: 14 (76), 19 (76), 37 (62), 45 (54), 61 (30),
+69 (24), 78 (14), 78 (11), 74 (16), 81 (12), 77 (9); seed 43: 38 (36), 44 (29), 48 (31), 58 (20), 69 (14), 82 (4),
+88 (7), 88 (7), 90 (5), 92 (5), 84 (6). Early on the policy damages the flower in most episodes (up to 76%);
+damage falls as success rises, and what is left is mostly a touch of the flower head. A successful episode
+takes about 120 control steps (6 s).
+
+### Step 7: turning the plant (`prune_turn`), new physics
+
+One side shoot at a random angle; when it points more than 25° away from the robot the plant has to be turned
+first, by holding down the button that turns it the right way. The expert succeeds in 100/100 (211 control
+steps on average). 4000 demonstrations as in step 6, 10M samples.
+
+| Run | Pruned (trained / averaged) | Flower damaged (averaged) | Steps (success) | Degrees turned / needed | First press the short way |
+|---|---|---|---|---|---|
+| expert | 100/100 | 0 | 211 | 89 / 91 | 100% |
+| seed 42 (`dp_vit_lang_reactive_prune_turn4k_rs_tail10_10m`) | 85/100 / 90/100 | 3 (flower touched) | 232 | 106 / 88 | 88% |
+| seed 43 (`..._seed43`) | 81/100 / 83/100 | 10 (flower touched) | 226 | 95 / 85 | 87% |
+
+Averaged weights per checkpoint (damage in brackets): seed 42: 31 (19), 46 (21), 74 (10), 83 (5), 80 (8), 85 (8),
+89 (3), 82 (5), 87 (4), 90 (4), 90 (3); seed 43: 30 (16), 42 (24), 50 (21), 70 (9), 81 (9), 81 (12), 84 (5), 86 (4),
+77 (9), 75 (9), 83 (10). The turning is purposeful, not random. At checkpoint 4 of seed 42 (83/100), rolled out on
+60 other layouts with every button press recorded: when the shoot was out of reach it pressed a button in 43 of
+46, never switched buttons, and at the cut the shoot pointed a median of 3° (at most 13°) from the robot; when the
+shoot already faced the robot (within about 10°) it did not press. The first press went the short way in 34 of
+43 (79%); the misses were mostly shoots that had to turn counter-clockwise (14 of 20 the short way, against 20 of
+23 for clockwise), so the policy leaned toward one button. Going the long way still worked: it held the button
+until the shoot came round. By the final checkpoint the short way is taken in 87-88%, and the policies take
+about 10% longer than the expert and turn 10-20% further.
+
+### Step 8: the full task (`prune`), in progress
+
+Two or three shoots at random angles: turn, cut, turn, cut. The expert succeeds in 100/100 in about 515 control
+steps; an episode may last 1000. 2000 demonstrations, 10M samples, averaged weights per checkpoint (damage in
+brackets): seed 42 (`dp_vit_lang_reactive_prune2k_rs_tail10_10m`): 0 (8), 0 (38), 0 (13), 2 (35), 9 (17), 22 (7),
+35 (4), 37 (3), 41 (4), 39 (3), 34 (5); seed 43: 0 (24), 1 (19), 1 (20), 6 (4), 10 (8), 17 (3), 20 (9), 25 (8), 11 (7),
+16 (12), 22 (10). Executing 4 or 16 actions per predicted chunk instead of 8 (seed 42, checkpoint 8, 37/100): 16
+gives 39/100, 4 gives 18/100 with the flower damaged in 16. At checkpoint 5 the failures are mostly timeouts (74 and 82
+of 100), not damage (17, 8). Rolled out on 20 layouts with every cut and press recorded, the policy cut at least
+one shoot in 13 and two or more in 7; the first cut came 200-700 steps in and the next 300-450 steps later (the
+expert needs about 515 for everything), and in the last 200 steps of the episodes that ran out of time the
+gripper was mostly near neither an uncut shoot nor a button, and some turned the plant 450-560° in all. The same
+checkpoint with twice the time (2000 steps) prunes 27 and 30 plants instead of 9 and 10, but 36 and 52 still run
+out of time and the flower is damaged in more (37 and 18): it is slow and it wanders, and more time also means
+more chances to touch the flower. The run planned for 20M samples (same demonstrations and seed,
+`dp_vit_lang_reactive_prune2k_rs_tail10_20m`; checkpoints about 1.8M samples apart) prunes 29/100 at its
+second checkpoint (about 3.6M samples), where the 10M runs were at 2-6: as in step 5, a learning rate that
+decays over a longer budget learns faster per sample. Averaged weights per checkpoint so far (damage in
+brackets): 0 (60), 29 (10), 67 (4), 65 (9), 69 (8), 76 (5), 79 (1). At checkpoint 3 (67/100) the other 29
+ran out of time and 4 touched the flower; successful episodes took 723 control steps on average (the expert
+about 515). Other seeds, and 4000 demonstrations, are training.
 
 ## Throughput
 

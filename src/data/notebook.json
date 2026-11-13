@@ -860,11 +860,13 @@
       "quotes": ["Same policy and recipe as the runs above unless stated: `dp_vit_lang_reactive`, 4000 demonstrations with random start poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unseen layouts per evaluation, final checkpoint, trained / averaged weights where both are given."]
     },
     "inProgress": {
-      "quotes": ["**In progress:** the pruning tasks (steps 6-8 of the roadmap) with the new physics: `dp_vit_lang_reactive_prune_one4k_rs_tail10`, `..._prune_turn4k_rs_tail10_10m`, `..._prune2k_rs_tail10_10m`."],
+      "quotes": ["**In progress:** the full pruning task (step 8) for 20M samples: from 2000 demonstrations, three seeds (`..._prune2k_rs_tail10_20m`, `..._seed43`, `..._seed44`), and from 4000 (`..._prune4k_rs_tail10_20m`, `..._seed43`)."],
       "runs": [
-        { "task": "prune_one", "run": "dp_vit_lang_reactive_prune_one4k_rs_tail10" },
-        { "task": "prune_turn", "run": "..._prune_turn4k_rs_tail10_10m" },
-        { "task": "prune", "run": "..._prune2k_rs_tail10_10m" }
+        { "task": "prune", "run": "..._prune2k_rs_tail10_20m" },
+        { "task": "prune", "run": "..._seed43" },
+        { "task": "prune", "run": "..._seed44" },
+        { "task": "prune", "run": "..._prune4k_rs_tail10_20m" },
+        { "task": "prune", "run": "..._seed43" }
       ]
     },
 
