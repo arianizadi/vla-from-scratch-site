@@ -52,7 +52,7 @@ export function FlowSampling() {
               return <Dot key={index} x={toX(x)} y={toY(y)} r={4.5} tone="action" delay={index * 6} />;
             })}
 
-            <Label x={470} y={312} tone="muted" size={13} anchor="end" mono>
+            <Label x={12} y={26} tone="muted" size={13} anchor="start" mono>
               {`flow step ${k} of 10`}
             </Label>
           </>

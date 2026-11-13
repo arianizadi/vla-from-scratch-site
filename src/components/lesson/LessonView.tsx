@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChapterPager } from "@/components/chapter/ChapterPager";
 import { ChapterSidebar, type SidebarPart } from "@/components/chapter/ChapterSidebar";
 import { ReadingProgress } from "@/components/chapter/ReadingProgress";
+import { FIGURES } from "@/figures/catalog";
 import { FigureMount } from "@/figures/FigureMount";
 import type { ChapterMeta } from "@/lib/content";
 import type { Lesson } from "@/lessons/define";
@@ -151,7 +152,9 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
                 Takeaway
               </h2>
               <p className="lesson-takeaway-text">
-                <Inline text={lesson.takeaway} />
+                <span className="lesson-takeaway-mark">
+                  <Inline text={lesson.takeaway} />
+                </span>
               </p>
             </section>
 
@@ -160,10 +163,18 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
                 <h2 id="try-title" className="lesson-section-title">
                   Try it yourself
                 </h2>
-                <p className="lesson-section-lead">Interactive figures from the full chapter. Change the inputs and watch what moves.</p>
+                <p className="lesson-section-lead">Interactive figures from the full chapter: open one, change its inputs and watch what moves.</p>
                 <div className="lesson-try-figures">
                   {lesson.tryIt.map((id) => (
-                    <FigureMount key={id} id={id} />
+                    <details key={id} className="lesson-try-item">
+                      <summary>
+                        <span>{FIGURES[id].title}</span>
+                        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                          <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </summary>
+                      <FigureMount id={id} />
+                    </details>
                   ))}
                 </div>
               </section>

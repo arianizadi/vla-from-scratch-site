@@ -285,17 +285,16 @@
   line-height: 1.14;
   letter-spacing: -0.02em;
 }
-.lesson-takeaway-text {
+.lesson-takeaway-mark {
   background-image: linear-gradient(transparent 58%, var(--mark-soft) 58%, var(--mark-soft) 92%, transparent 92%);
   background-repeat: no-repeat;
   background-size: 100% 100%;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
-  display: inline;
 }
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .lesson-takeaway-text {
+    .lesson-takeaway-mark {
       animation: lesson-highlight linear both;
       animation-timeline: view();
       animation-range: entry 40% cover 45%;
@@ -332,8 +331,43 @@
 }
 .lesson-try-figures {
   display: grid;
-  gap: 32px;
+  gap: 10px;
   margin-top: 24px;
+}
+.lesson-try-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.lesson-try-item > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 20px;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.lesson-try-item > summary::-webkit-details-marker {
+  display: none;
+}
+.lesson-try-item > summary svg {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform var(--duration-interface) var(--ease-standard);
+}
+.lesson-try-item[open] > summary svg {
+  transform: rotate(180deg);
+}
+.lesson-try-item[open] {
+  padding-bottom: 12px;
+}
+.lesson-try-item > .plate {
+  margin: 0 12px;
 }
 .lesson-deeper {
   margin-top: 104px;

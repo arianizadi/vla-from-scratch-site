@@ -68,7 +68,7 @@
 }
 
 .anim-stage {
-  padding: 4px 12px;
+  padding: 4px;
   background-image: radial-gradient(circle, var(--grid) 1.1px, transparent 1.4px);
   background-size: 16px 16px;
   background-position: center;

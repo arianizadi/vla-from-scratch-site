@@ -23,9 +23,16 @@ function Mark() {
 
 function Wordmark() {
   return (
-    <Link href="/" className="site-wordmark touch-target inline-flex items-center gap-2.5 rounded-control no-underline">
+    <Link
+      href="/"
+      aria-label={`${site.name}, home`}
+      className="site-wordmark touch-target inline-flex shrink-0 items-center gap-2.5 rounded-control whitespace-nowrap no-underline"
+    >
       <Mark />
-      <span>{site.name}</span>
+      {/* On a phone the mark stands alone, so the four links and the theme button fit one line. */}
+      <span className="hidden min-[520px]:inline" aria-hidden="true">
+        {site.name}
+      </span>
     </Link>
   );
 }
