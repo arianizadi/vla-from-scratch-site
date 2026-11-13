@@ -834,8 +834,9 @@ function Pruning() {
         Steps 6-8 of the roadmap are the pruning tasks themselves, on the new physics. All three can be learned. The full
         task needed a longer training budget: two of three seeds prune about 80 plants in 100, the third learned late and
         reached 56. Twice the demonstrations did not help, and neither did twice the budget again (80 at 40M samples). Most
-        failures run out of time rather than touch the flower. Now training: extra demonstrations in which the expert
-        takes over from wherever the policy has got to.
+        failures run out of time rather than touch the flower. Extra demonstrations in which the expert takes over from
+        wherever the policy has got to first made it worse (0-28): the expert&rsquo;s moves after a takeover contradicted
+        the ordinary demonstrations. A corrected version is training.
       </p>
       <TableBox label="The pruning tasks, their policies and the runs in progress">
         <thead>
