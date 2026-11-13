@@ -18,13 +18,13 @@ export function NoisePath() {
   return (
     <AnimationFrame
       title="One training example"
-      description="Training takes a demonstrated action and random noise of the same shape. It picks a noise level s between 0 and 1 and mixes the two: a point on the straight line from the action (s = 0) to the noise (s = 1). The network sees that point and the level, and is trained to output the direction along the line, noise minus action, which is the same at every point of the line."
+      description="Training takes a demonstrated action and random noise of the same size. It picks a noise level between 0 and 1 and mixes the two: a point on the straight line from the action (level 0) to the noise (level 1). The network sees that point and is trained to point along the line, from the action toward the noise. Every point on the line has the same answer."
       steps={[
-        "Take one demonstrated action: a point in the space of actions.",
-        "Draw random noise of the same shape.",
-        "Pick a noise level s and mix the two: a point on the straight line between them.",
-        "The network sees the mix and learns the direction along the line: noise minus action.",
-        "Another s, same direction. That target is plain squared-error regression.",
+        "Take one demonstrated action: a point in the space of all actions.",
+        "Draw random noise of the same size.",
+        "Pick a noise level and blend the two: a point on the straight line between them.",
+        "The network sees the blend and learns which way the line runs.",
+        "A different level, the same direction. One clear answer per training example.",
       ]}
       size={[480, 270]}
     >
@@ -39,25 +39,25 @@ export function NoisePath() {
               action
             </Label>
             <Label x={ACTION[0]} y={ACTION[1] + 46} tone="faint" size={13} opacity={step >= 2 ? 1 : 0}>
-              s = 0
+              no noise
             </Label>
 
             <Dot x={NOISE[0]} y={NOISE[1]} r={9} tone="muted" opacity={step >= 1 ? 1 : 0} scale={step >= 1 ? 1 : 0.4} />
             <Label x={NOISE[0]} y={NOISE[1] - 26} tone="muted" weight={700} opacity={step >= 1 ? 1 : 0}>
               noise
             </Label>
-            <Label x={NOISE[0]} y={NOISE[1] + 28} tone="faint" size={13} opacity={step >= 2 ? 1 : 0}>
-              s = 1
+            <Label x={NOISE[0]} y={NOISE[1] + 28} tone="faint" size={13} opacity={step >= 2 && step < 4 ? 1 : 0}>
+              all noise
             </Label>
 
             <Move x={mx} y={my} opacity={step >= 2 ? 1 : 0}>
               <Arrow from={[0, 0]} to={ARROW} tone="accent" width={3} drawn={step >= 3} />
               <Dot x={0} y={0} r={7} tone="ink" />
               <Label x={14} y={26} tone="ink" size={14} anchor="start" mono>
-                {`s = ${s(step)}`}
+                {`noise ${Math.round(s(step) * 100)}%`}
               </Label>
               <Label x={TARGET_LABEL[0]} y={TARGET_LABEL[1]} tone="accent" size={14} weight={700} anchor="start" opacity={step >= 3 ? 1 : 0}>
-                target
+                learn this
               </Label>
             </Move>
           </>
