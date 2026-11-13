@@ -3,64 +3,64 @@ import { ChapterRow } from "@/components/curriculum/ChapterRow";
 import { PartFilter } from "@/components/curriculum/PartFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { listChapters, listParts } from "@/lib/content";
+import { lessonIdeas } from "@/lessons";
 
 export const metadata: Metadata = {
-  title: "Curriculum",
+  title: "Learn",
   description:
-    "Every chapter of the tutorial in reading order: language models, vision, vision-language models, actions and policies, and how to train and debug them.",
+    "Every chapter in reading order: language models, vision, vision-language models, actions and policies, and how to train and debug them.",
   alternates: { canonical: "/learn" },
 };
 
-function readingTime(minutes: number): string {
-  if (minutes < 60) return `${minutes} minutes`;
-  const hours = Math.round(minutes / 30) / 2;
-  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
-}
-
-export default function LearnPage() {
+export default async function LearnPage() {
   const parts = listParts();
   const chapters = listChapters();
-  const minutes = chapters.reduce((total, chapter) => total + chapter.readingMinutes, 0);
+  const ideas = await lessonIdeas();
   // While every chapter has one status, the page says it once instead of badging every row.
   const statuses = [...new Set(chapters.map((chapter) => chapter.status))];
   const shared = statuses.length === 1 ? statuses[0] : undefined;
+  const lessons = chapters.filter((chapter) => ideas.has(chapter.slug)).length;
 
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-8 outline-none">
-      <header className="max-w-[680px] pt-10 lg:pt-14">
-        <h1 className="text-[2rem] leading-9 font-semibold stretch-90 sm:text-44 sm:leading-[3rem]">Curriculum</h1>
-        <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
+      <header className="learn-header">
+        <h1 className="learn-title">Learn</h1>
+        <p className="learn-lead">
           {chapters.length > 0 ? (
             <>
-              {chapters.length} {chapters.length === 1 ? "chapter" : "chapters"} in {parts.length}{" "}
-              {parts.length === 1 ? "part" : "parts"}, about {readingTime(minutes)} of reading. Each chapter
-              explains one idea from zero, shows where it lives in the code, and reports what was measured. Read
-              them in order, or start at the part you need.
+              {chapters.length} chapters in {parts.length} parts, in the order you would build the system yourself. Read
+              them in order, or jump to the part you need.
             </>
           ) : (
             <>The chapters are being written. This page lists them as soon as the first one is in.</>
           )}
         </p>
-        {shared && chapters.length > 1 ? (
-          <p className="mt-4 flex items-center gap-2 text-14 text-ink-muted">
-            <StatusBadge status={shared} />
-            <span>Every chapter has this status for now; a chapter that changes it is marked in the list.</span>
-          </p>
+        {chapters.length > 0 ? (
+          <ul className="learn-facts">
+            {lessons > 0 ? (
+              <li>
+                <span className="part-chapter-dot" aria-hidden="true" />
+                {lessons} animated {lessons === 1 ? "lesson" : "lessons"}
+              </li>
+            ) : null}
+            {shared && chapters.length > 1 ? (
+              <li>
+                <StatusBadge status={shared} />
+                <span>every chapter, for now</span>
+              </li>
+            ) : null}
+          </ul>
         ) : null}
       </header>
 
       {parts.length > 0 ? (
-        <div className="mt-12 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-x-12">
-          <nav aria-label="Parts" className="sticky top-20 hidden self-start lg:block">
-            <p className="label text-ink-faint">Parts</p>
-            <ol className="mt-2 grid gap-0.5">
+        <div className="mt-12 lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[256px_minmax(0,1fr)] xl:gap-x-16">
+          <nav aria-label="Parts" className="sticky top-24 hidden self-start lg:block">
+            <ol className="learn-parts-nav">
               {parts.map((part) => (
                 <li key={part.id}>
-                  <a
-                    href={`#${part.id}`}
-                    className="flex gap-2 rounded-control py-1.5 text-14 text-ink-muted no-underline hover:text-ink"
-                  >
-                    <span className="w-5 shrink-0 text-ink-faint tabular-nums" aria-hidden="true">
+                  <a href={`#${part.id}`}>
+                    <span className="learn-parts-number" aria-hidden="true">
                       {part.number}
                     </span>
                     <span>{part.name}</span>
@@ -73,15 +73,15 @@ export default function LearnPage() {
           <PartFilter parts={parts.map((part) => ({ id: part.id, number: part.number, name: part.name }))}>
             {parts.map((part) => (
               <section key={part.id} id={part.id} aria-labelledby={`${part.id}-title`}>
-                <h2 id={`${part.id}-title`} className="flex items-baseline gap-3 pb-3 text-28 font-semibold stretch-95">
-                  <span className="text-ink-faint tabular-nums" aria-hidden="true">
+                <h2 id={`${part.id}-title`} className="learn-part-title">
+                  <span className="learn-part-number" aria-hidden="true">
                     {part.number}
                   </span>
                   <span>{part.name}</span>
                 </h2>
-                <ol className="border-b border-line">
+                <ol className="chapter-rows">
                   {part.chapters.map((chapter) => (
-                    <ChapterRow key={chapter.slug} chapter={chapter} showStatus={!shared} />
+                    <ChapterRow key={chapter.slug} chapter={chapter} lesson={ideas.get(chapter.slug)} showStatus={!shared} />
                   ))}
                 </ol>
               </section>

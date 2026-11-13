@@ -17,18 +17,18 @@ export function ChapterHeader({ chapter, editUrl }: ChapterHeaderProps) {
   return (
     <header className="max-w-[680px] pt-8 lg:pt-12">
       <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="text-44 font-semibold text-ink-faint tabular-nums stretch-90" aria-hidden="true">
+        <span className="font-display text-44 font-bold text-ink-faint tabular-nums" aria-hidden="true">
           {chapter.orderLabel}
         </span>
         <Link href={`/learn#${chapter.part.id}`} className="label text-ink-muted hover:text-ink">
           Part {chapter.part.number}: {chapter.part.name}
         </Link>
       </p>
-      <h1 className="mt-1 text-[2rem] leading-9 font-semibold text-balance stretch-90 sm:text-44 sm:leading-[3rem]">
+      <h1 className="page-title mt-2">
         {chapter.title}
       </h1>
       {chapter.summary ? (
-        <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">{chapter.summary}</p>
+        <p className="page-lead">{chapter.summary}</p>
       ) : null}
       <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-14 text-ink-muted">
         <li>

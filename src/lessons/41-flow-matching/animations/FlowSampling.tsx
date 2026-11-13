@@ -26,7 +26,7 @@ export function FlowSampling() {
         "The points commit to the nearest demonstrated action.",
         "After 10 flow steps every draw sits on a real action. None is left in the gap.",
       ]}
-      size={[480, 300]}
+      size={[480, 330]}
       hold={[1800, 1800, 1800, 1800, 3400]}
     >
       {(step) => {
@@ -41,7 +41,7 @@ export function FlowSampling() {
             {TARGETS.map(([tx, ty], index) => (
               <g key={index}>
                 <Dot x={toX(tx)} y={toY(ty)} r={14} tone="ink" hollow />
-                <Label x={toX(tx)} y={toY(ty) + 30} tone="ink" size={14} weight={700}>
+                <Label x={toX(tx)} y={312} tone="ink" size={14} weight={700}>
                   {index === 0 ? "demo A" : "demo B"}
                 </Label>
               </g>
@@ -52,7 +52,7 @@ export function FlowSampling() {
               return <Dot key={index} x={toX(x)} y={toY(y)} r={4.5} tone="action" delay={index * 6} />;
             })}
 
-            <Label x={470} y={284} tone="muted" size={13} anchor="end" mono>
+            <Label x={470} y={312} tone="muted" size={13} anchor="end" mono>
               {`flow step ${k} of 10`}
             </Label>
           </>

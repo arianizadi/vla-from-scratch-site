@@ -6,6 +6,9 @@
 /* The explanation animations (src/animations) and the short lesson layout. */
 @import "../animations/animations.css" layer(components);
 @import "../components/lesson/lesson.css" layer(components);
+@import "../components/landing/landing.css" layer(components);
+@import "../components/curriculum/curriculum.css" layer(components);
+@import "../components/site/pages.css" layer(components);
 
 /* ==========================================================================
    Design tokens (DESIGN.md, section 2): "ink and signal".
@@ -499,6 +502,40 @@
     .button-small {
       min-height: 44px;
     }
+  }
+
+  /* Site header: paper with a hairline, slightly see-through over what scrolls under it. */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background-color: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+  .site-wordmark {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 750;
+    font-stretch: 90%;
+    letter-spacing: -0.015em;
+  }
+  .site-mark {
+    flex: none;
+  }
+  .site-mark-bg {
+    fill: var(--text);
+  }
+  .site-mark-ink {
+    stroke: var(--bg);
+  }
+  .site-mark-token {
+    fill: var(--mark);
+    transition: transform var(--duration-interface) var(--ease-spring);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .site-wordmark:hover .site-mark-token {
+    transform: translateY(-3px);
   }
 
   /* Theme toggle: the icon follows the theme without waiting for JavaScript. */
@@ -1057,15 +1094,26 @@
   /* The /learn part filter: a dozen choices wrap as separate chips, not one joined bar. */
   .part-filter .segments {
     gap: 6px;
+    padding: 0;
     border: 0;
+    background: none;
   }
   .part-filter .segments label {
     flex: 0 0 auto;
   }
   .part-filter .segments .segment,
   .part-filter .segments label + label .segment {
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background-color: var(--surface);
+  }
+  .part-filter .segments input:checked + .segment {
+    border-color: var(--text);
+    background-color: var(--text);
+    box-shadow: none;
+    color: var(--bg);
   }
 
   /* A link or button that is small in the layout grows to a 44px target on a

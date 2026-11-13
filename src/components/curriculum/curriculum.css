@@ -1,0 +1,183 @@
+/* ==========================================================================
+   /learn: the contents page. Imported into the components layer by
+   src/app/globals.css.
+   ========================================================================== */
+
+.learn-header {
+  max-width: 760px;
+  padding-top: 40px;
+}
+@media (min-width: 1024px) {
+  .learn-header {
+    padding-top: 72px;
+  }
+}
+.learn-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+}
+.learn-lead {
+  max-width: 48ch;
+  margin: 20px 0 0;
+  color: var(--text-muted);
+  font-size: clamp(1.125rem, 1.8vw, 1.3125rem);
+  line-height: 1.5;
+}
+.learn-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+.learn-facts > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.learn-parts-nav {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.learn-parts-nav a {
+  display: flex;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  text-decoration: none;
+}
+.learn-parts-nav a:hover {
+  background-color: var(--surface);
+  color: var(--text);
+}
+.learn-parts-number {
+  min-width: 1.4em;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.learn-part-title {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 760;
+  font-stretch: 86%;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+.learn-part-number {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.chapter-rows {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.chapter-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background-color: var(--surface);
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+.chapter-row:hover {
+  border-color: var(--text);
+}
+@media (min-width: 720px) {
+  .chapter-row {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 4px 20px;
+  }
+}
+.chapter-row-number {
+  padding-top: 2px;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+.chapter-row-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-stretch: 94%;
+  line-height: 1.25;
+}
+.chapter-row-link {
+  color: var(--text);
+  text-decoration: none;
+}
+.chapter-row-link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+}
+.chapter-row-text {
+  max-width: 64ch;
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.chapter-row-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  grid-column: 2;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+@media (min-width: 720px) {
+  .chapter-row-facts {
+    flex-direction: column;
+    align-items: flex-end;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    margin: 4px 0 0;
+  }
+}
+.chapter-row-lesson {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: var(--accent-soft);
+  color: var(--text);
+}
+.chapter-row-lesson::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: var(--accent);
+  content: "";
+}

@@ -15,7 +15,7 @@ import { KitSpecimen, StampMark } from "@/figures/kit";
 import { listFigureUses, type FigureUse } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Figure gallery",
+  title: "Interactive figures",
   description: "Every interactive figure of the tutorial on one page, with the captions the chapters give it.",
   alternates: { canonical: "/figures" },
   // A review page: reachable from the footer, not offered to search engines.
@@ -86,11 +86,11 @@ export default function FiguresPage() {
 
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-8 outline-none">
-      <header className="max-w-[680px] pt-10 lg:pt-14">
-        <h1 className="text-[2rem] leading-9 font-semibold stretch-90 sm:text-44 sm:leading-[3rem]">Figure gallery</h1>
-        <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
-          Every interactive figure a chapter can embed, drawn once with a caption from a chapter. Use this page to
-          review the figures side by side: in both themes, at any width, with the keyboard and with reduced motion.
+      <header className="page-header max-w-[760px]">
+        <h1 className="page-title">Interactive figures</h1>
+        <p className="page-lead">
+          Every interactive figure, on one page. Each one is a small tool: change its inputs and watch what moves.
+          The full chapters embed them where they explain something.
         </p>
         <p className="mt-4 text-14 text-ink-muted tabular-nums">
           {plural(FIGURE_IDS.length, "figure")}, {embedded} of them embedded in the chapters, {plural(uses.length, "use")}{" "}

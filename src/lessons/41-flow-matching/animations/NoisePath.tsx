@@ -9,7 +9,9 @@ const mix = (s: number): [number, number] => [lerp(ACTION[0], NOISE[0], s), lerp
 const dx = NOISE[0] - ACTION[0];
 const dy = NOISE[1] - ACTION[1];
 const unit = Math.hypot(dx, dy);
-const ARROW: [number, number] = [(dx / unit) * 92, (dy / unit) * 92];
+const ARROW: [number, number] = [(dx / unit) * 76, (dy / unit) * 76];
+/** Beside the middle of the arrow, on the side away from the line's labels. */
+const TARGET_LABEL: [number, number] = [ARROW[0] / 2 + (-dy / unit) * 22, ARROW[1] / 2 + (dx / unit) * 22];
 
 export function NoisePath() {
   const s = (step: number) => (step >= 4 ? 0.7 : 0.3);
@@ -51,10 +53,10 @@ export function NoisePath() {
             <Move x={mx} y={my} opacity={step >= 2 ? 1 : 0}>
               <Arrow from={[0, 0]} to={ARROW} tone="accent" width={3} drawn={step >= 3} />
               <Dot x={0} y={0} r={7} tone="ink" />
-              <Label x={-8} y={24} tone="ink" size={14} anchor="end" mono>
+              <Label x={14} y={26} tone="ink" size={14} anchor="start" mono>
                 {`s = ${s(step)}`}
               </Label>
-              <Label x={ARROW[0] + 6} y={ARROW[1] - 18} tone="accent" size={14} weight={700} anchor="middle" opacity={step >= 3 ? 1 : 0}>
+              <Label x={TARGET_LABEL[0]} y={TARGET_LABEL[1]} tone="accent" size={14} weight={700} anchor="start" opacity={step >= 3 ? 1 : 0}>
                 target
               </Label>
             </Move>

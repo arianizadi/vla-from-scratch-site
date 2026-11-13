@@ -57,6 +57,14 @@ notebook, the sync says which and exits with status 2. Update the entry from the
 this repository. The sync keeps them while the tutorial has no chapters and removes them once it
 has one.
 
+## Lessons
+
+Every chapter page shows a short lesson first, when the chapter has one: an idea in one
+sentence, a few beats each with an SVG animation, edge cases, tips and a takeaway. The full,
+synced chapter is at `/learn/<slug>/full`. A lesson is one folder, `src/lessons/<slug>/`, found
+automatically; [AUTHORING.md](AUTHORING.md) explains how to write one, and the build checks the
+format.
+
 ## Figures
 
 A chapter asks for an interactive figure by id (`<!-- interactive: flow-matching -->`). Each of the
@@ -71,6 +79,9 @@ is linked from the footer.
 | Path | What |
 |---|---|
 | `src/app/globals.css` | design tokens, Tailwind theme, the prose layer |
+| `src/lessons/<slug>/` | a chapter's lesson (short, animated); found automatically, see [AUTHORING.md](AUTHORING.md) |
+| `src/animations/` | the animation kit for lessons ([README](src/animations/README.md)) |
+| `src/components/lesson/` | the lesson page |
 | `src/lib/content.ts` | lists and loads chapters |
 | `src/lib/markdown/pipeline.ts` | the Markdown pipeline, step by step |
 | `src/components/markdown/Markdown.tsx` | maps the pipeline's elements to components |

@@ -265,7 +265,7 @@ export function Arrow({ from, to, bend = 0, tone = "muted", drawn = true, flow =
   const right: Point = [tip[0] - size * Math.cos(angle + 0.45), tip[1] - size * Math.sin(angle + 0.45)];
   const plain = dashed || flow;
   return (
-    <g className={toneClass(tone)} style={{ opacity: opacity ?? 1 }}>
+    <g className={`a-t ${toneClass(tone)}`} style={{ opacity: opacity ?? 1 }}>
       <path
         d={d}
         className={`a-stroke ${plain ? "a-t" : "a-draw"} ${flow ? "a-flow" : ""}`}

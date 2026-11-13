@@ -398,3 +398,37 @@
   fill: var(--mark);
   opacity: 0.85;
 }
+
+/* --------------------------------------------------------------------------
+   The bare variant: a hero drawing without a frame. The title is read by
+   screen readers only; the buttons float in the top-right corner.
+   -------------------------------------------------------------------------- */
+
+.anim-bare {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.anim-bare .anim-head {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  min-height: 0;
+  padding: 0;
+}
+.anim-bare .anim-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.anim-bare .anim-stage {
+  padding: 0;
+  background: none;
+}
+.anim-bare .anim-foot {
+  padding: 8px 0 0;
+}

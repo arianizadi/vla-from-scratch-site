@@ -11,7 +11,7 @@ import { getAllChapters } from "@/lib/content";
 import type { Lesson } from "./define";
 import { validateLesson } from "./validate";
 
-const LOADERS = import.meta.glob<Lesson>("./*/lesson.ts", { import: "default" });
+const LOADERS = import.meta.glob<{ default: Lesson }>("./*/lesson.ts");
 
 function folderOf(key: string): string {
   return key.split("/")[1] ?? key;
@@ -38,7 +38,9 @@ const warned = new Set<string>();
 export async function getLesson(slug: string): Promise<Lesson | undefined> {
   const load = FOLDERS.get(slug);
   if (!load) return undefined;
-  const lesson = await load();
+  const loaded = await load();
+  // The module, or (depending on the bundler's interop) its default export directly.
+  const lesson = ("default" in loaded && loaded.default ? loaded.default : loaded) as Lesson;
   const known = new Set(getAllChapters().map((chapter) => chapter.slug));
   const { errors, warnings } = validateLesson(lesson, slug, known);
   for (const warning of warnings) {

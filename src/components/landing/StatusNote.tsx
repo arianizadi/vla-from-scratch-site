@@ -29,13 +29,13 @@ function runsSentence(): string {
 export function StatusNote({ chapters }: { chapters: ChapterMeta[] }) {
   const runs = runsSentence();
   return (
-    <section aria-labelledby="status-title" className="page-frame mt-14">
-      <div className="grid max-w-[960px] gap-x-6 gap-y-2 border-l-2 border-line-strong py-1 pl-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-        <h2 id="status-title" className="label inline-flex items-center gap-1.5 self-start pt-1 text-warning">
+    <section aria-labelledby="status-title" className="page-frame mt-16">
+      <div className="status-note">
+        <h2 id="status-title" className="label inline-flex items-center gap-1.5 self-start pt-0.5 text-warning">
           <Glyph name="clock" />
           Work in progress
         </h2>
-        <p className="font-serif text-16 leading-6 text-ink-muted">
+        <p className="text-15 leading-6 text-ink-muted">
           {draftSentence(chapters)} {runs ? `${runs} ` : ""}What comes next is in the{" "}
           <a href={repoUrl("tutorial/roadmap.md")} className="text-link">
             roadmap

@@ -63,7 +63,7 @@ export interface LineProps extends Animated {
 export function Line({ points, tone = "accent", drawn = true, width = 2.5, dashed = false, dots = false, opacity, delay }: LineProps) {
   const d = points.map(([px, py], index) => `${index === 0 ? "M" : "L"}${round(px)} ${round(py)}`).join("");
   return (
-    <g className={toneClass(tone)} style={{ opacity: opacity ?? 1 }}>
+    <g className={`a-t ${toneClass(tone)}`} style={{ opacity: opacity ?? 1 }}>
       <path
         d={d}
         className={`a-stroke ${dashed ? "a-t" : "a-draw"}`}
@@ -159,7 +159,7 @@ export interface TimelineProps extends Animated {
 export function Timeline({ x, y, w, ticks, marker, tone = "accent", fill = true, opacity, delay }: TimelineProps) {
   const m = marker === undefined ? undefined : Math.min(1, Math.max(0, marker));
   return (
-    <g style={{ opacity: opacity ?? 1 }}>
+    <g className="a-t" style={{ opacity: opacity ?? 1 }}>
       <rect x={x} y={y - 3} width={w} height={6} rx={3} className="t-faint a-fill-soft" />
       {fill && m !== undefined ? (
         <rect

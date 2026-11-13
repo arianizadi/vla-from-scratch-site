@@ -24,6 +24,11 @@ export interface AnimationFrameProps {
   hold?: number | number[];
   /** Start again after the last step. Default true. */
   loop?: boolean;
+  /**
+   * "card" (default): the framed stage used in lessons. "bare": no frame and
+   * no visible title, for a page's hero; the controls float in a corner.
+   */
+  variant?: "card" | "bare";
   className?: string;
 }
 
@@ -64,6 +69,7 @@ export function AnimationFrame({
   still,
   hold,
   loop = true,
+  variant = "card",
   className = "",
 }: AnimationFrameProps) {
   const last = Math.max(0, steps.length - 1);
@@ -95,43 +101,37 @@ export function AnimationFrame({
     return () => window.clearTimeout(timer);
   }, [playing, started]);
 
-  // The clock: hold the step, then move on (or fade and loop from the start).
+  // The clock: hold the step, then move on, or start the fade that loops back to the start.
   useEffect(() => {
-    if (!playing || !started) return;
-    const timers: number[] = [];
-    const wait = holdFor(hold, step, last);
-    timers.push(
-      window.setTimeout(() => {
-        if (step < last) {
-          setStep(step + 1);
-          return;
-        }
-        if (!loop) {
-          setEnded(true);
-          return;
-        }
-        if (last === 0) {
-          setCycle((value) => value + 1);
-          return;
-        }
-        setFading(true);
-        timers.push(
-          window.setTimeout(() => {
-            setInstant(true);
-            setStep(0);
-            setCycle((value) => value + 1);
-            timers.push(
-              window.setTimeout(() => {
-                setInstant(false);
-                setFading(false);
-              }, 40),
-            );
-          }, LOOP_FADE),
-        );
-      }, wait),
-    );
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [playing, started, step, last, loop, hold, cycle]);
+    if (!playing || !started || fading) return;
+    const timer = window.setTimeout(() => {
+      if (step < last) setStep(step + 1);
+      else if (!loop) setEnded(true);
+      else if (last === 0) setCycle((value) => value + 1);
+      else setFading(true);
+    }, holdFor(hold, step, last));
+    return () => window.clearTimeout(timer);
+  }, [playing, started, fading, step, last, loop, hold, cycle]);
+
+  // The loop: once faded out, jump to the first step without transitions. It
+  // completes even if the frame scrolls away meanwhile, so it never stays blank.
+  useEffect(() => {
+    if (!fading) return;
+    const timer = window.setTimeout(() => {
+      setInstant(true);
+      setStep(0);
+      setCycle((value) => value + 1);
+      setFading(false);
+    }, LOOP_FADE);
+    return () => window.clearTimeout(timer);
+  }, [fading]);
+
+  // A jump (loop, replay) renders once without transitions, then they come back.
+  useEffect(() => {
+    if (!instant) return;
+    const timer = window.setTimeout(() => setInstant(false), 40);
+    return () => window.clearTimeout(timer);
+  }, [instant]);
 
   // Which step is drawn: the still one on the server and under reduced motion
   // (unless the reader picked one), otherwise the clock's.
@@ -167,7 +167,7 @@ export function AnimationFrame({
     setEnded(false);
     setUserPaused(false);
     setStarted(true);
-    window.setTimeout(() => setInstant(false), 40);
+    setFading(false);
     setAnnounced("Playing from the start");
   };
 
@@ -178,7 +178,7 @@ export function AnimationFrame({
   return (
     <figure
       ref={ref}
-      className={`anim ${className}`}
+      className={`anim ${variant === "bare" ? "anim-bare" : ""} ${className}`}
       data-playing={playing ? "true" : "false"}
       data-instant={instant || resting ? "" : undefined}
       data-fading={fading ? "" : undefined}

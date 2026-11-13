@@ -9,11 +9,11 @@ interface NavLinkProps {
 }
 
 const BASE =
-  "inline-flex h-8 items-center rounded-control px-2 text-14 sm:px-2.5 font-medium transition-colors duration-100 ease-standard pointer-coarse:h-11";
+  "inline-flex h-9 items-center rounded-full px-3 text-15 font-semibold transition-colors duration-100 ease-standard sm:px-3.5 pointer-coarse:h-11";
 
 /**
- * A header link that marks itself as the current section of the site: a fill
- * and a 2px accent bar under it (not colour alone), and aria-current "page"
+ * A header link that marks itself as the current section of the site: a
+ * paper pill with an outline (not colour alone), and aria-current "page"
  * on the section's own page, "true" on a page inside it (a chapter under Learn).
  */
 export function NavLink({ href, children }: NavLinkProps) {
@@ -24,7 +24,7 @@ export function NavLink({ href, children }: NavLinkProps) {
     <Link
       href={href}
       aria-current={page ? "page" : current ? "true" : undefined}
-      className={`${BASE} ${current ? "bg-accent-soft text-ink shadow-[inset_0_-2px_0_var(--accent)]" : "text-ink-muted hover:text-ink"}`}
+      className={`${BASE} ${current ? "bg-surface text-ink shadow-[0_0_0_1px_var(--border-strong)]" : "text-ink-muted hover:text-ink"}`}
     >
       {children}
     </Link>

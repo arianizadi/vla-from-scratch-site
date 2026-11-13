@@ -217,10 +217,10 @@ function Panel({
                   strokeLinejoin="round"
                 />
                 {/* The 95% interval of every success rate, thin; the one at the crosshair is drawn bold below. */}
-                {defined.map((point) =>
+                {defined.map((point, index) =>
                   point.low !== undefined && point.low !== null && point.high !== undefined && point.high !== null ? (
                     <line
-                      key={`ci-${point.x}`}
+                      key={`ci-${point.x}-${index}`}
                       x1={x(point.x)}
                       x2={x(point.x)}
                       y1={y(point.low)}
@@ -232,9 +232,9 @@ function Panel({
                   ) : null,
                 )}
                 {series.shape
-                  ? defined.map((point) => (
+                  ? defined.map((point, index) => (
                       <Marker
-                        key={point.x}
+                        key={`${point.x}-${index}`}
                         shape={series.shape ?? "circle"}
                         x={x(point.x)}
                         y={y(point.y ?? 0)}

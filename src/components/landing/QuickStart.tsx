@@ -66,12 +66,12 @@ function RecipeResult() {
 /** How to start: the commands from the tutorial's README. */
 export function QuickStart({ firstRun }: { firstRun?: ChapterMeta }) {
   return (
-    <section aria-labelledby="start-title" className="page-frame mt-24">
-      <div className="max-w-[680px]">
-        <h2 id="start-title" className="text-28 font-semibold stretch-95">
-          How to start
+    <section aria-labelledby="start-title" className="page-frame landing-section">
+      <div className="section-intro">
+        <h2 id="start-title" className="section-title">
+          Run it yourself
         </h2>
-        <p className="mt-3 font-serif text-18 leading-[1.875rem] text-ink-muted">
+        <p className="section-lead">
           In a clone of the{" "}
           <a href={site.tutorialRepo} className="text-link">
             tutorial repository
@@ -93,7 +93,7 @@ export function QuickStart({ firstRun }: { firstRun?: ChapterMeta }) {
       </div>
       <RecipeResult />
 
-      <p className="mt-6 max-w-[680px] font-serif text-18 leading-[1.875rem] text-ink-muted">
+      <p className="mt-8 max-w-[680px] text-18 leading-7 text-ink-muted">
         Then test what a success rate cannot tell you: move the object while the robot reaches for it, and
         freeze the cameras on their first frame.
       </p>

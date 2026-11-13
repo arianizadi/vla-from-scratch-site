@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Shared page furniture: the header of an inner page (lab, notes, figures,
+   a full chapter), and the lab page's opening band. Imported into the
+   components layer by src/app/globals.css.
+   ========================================================================== */
+
+.page-header {
+  padding-top: 40px;
+}
+@media (min-width: 1024px) {
+  .page-header {
+    padding-top: 64px;
+  }
+}
+.page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  font-stretch: 82%;
+  line-height: 0.95;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+.page-lead {
+  max-width: 50ch;
+  margin: 18px 0 0;
+  color: var(--text-muted);
+  font-size: clamp(1.125rem, 1.7vw, 1.25rem);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   /lab: the results to read first, then the films.
+   -------------------------------------------------------------------------- */
+
+.lab-glance {
+  margin-top: 40px;
+}
+.lab-glance-numbers {
+  margin-top: 0;
+}
+.lab-glance .big-number-value {
+  font-size: clamp(2.25rem, 3.4vw, 3.75rem);
+  white-space: nowrap;
+}
+.lab-glance-films {
+  display: grid;
+  gap: 16px;
+  margin-top: 40px;
+}
+@media (min-width: 900px) {
+  .lab-glance-films {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lab-glance-films-text {
+    grid-column: 1 / -1;
+  }
+}
+.lab-glance-films-text p {
+  max-width: 60ch;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+.lab-glance-film {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.lab-glance-film video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-2);
+}
+.lab-glance-film figcaption {
+  padding: 14px 18px 16px;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.lab-glance-film figcaption strong {
+  color: var(--text);
+}

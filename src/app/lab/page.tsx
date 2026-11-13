@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BackbonesSection, DemonstrationsSection, OutsideSection, PositionFixSection } from "@/components/lab/AfterFix";
 import { DependsOnSection, HeadlineSection, HistorySection, TaskSection, type ChapterFor } from "@/components/lab/BeforeFix";
 import { FlowerSection, flowerRunsInProgress } from "@/components/lab/Flower";
+import { LabGlance } from "@/components/lab/LabGlance";
 import { LabContents, LabSidebar } from "@/components/lab/LabNav";
 import { RecordsSection, SamplerSection, ToleranceSection } from "@/components/lab/Reference";
 import { SECTIONS, SECTION_LIST } from "@/components/lab/sections";
@@ -40,17 +41,15 @@ export default function LabPage() {
 
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-16 outline-none">
-      <div className={`${styles.layout} pt-10 lg:pt-14`}>
+      <div className={`${styles.layout} pt-2`}>
         <LabSidebar sections={SECTION_LIST} />
 
         <div className="min-w-0">
-          <header className="max-w-[680px]">
-            <h1 className="text-[2rem] leading-9 font-semibold stretch-90 sm:text-44 sm:leading-[3rem]">Lab notebook</h1>
-            <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
-              Every number the chapters cite, measured in the tutorial&rsquo;s repository and set out in the order the
-              notebook keeps: the task, the policies before and after a bug in their position table, what they look at,
-              how they cope when the scene changes, and the first steps toward trimming a flower. Read it top to bottom
-              once, then use it as a reference.
+          <header className="page-header max-w-[760px]">
+            <h1 className="page-title">Lab notebook</h1>
+            <p className="page-lead">
+              Every number the lessons cite, measured in real runs. The headlines first; below them, every table in
+              the order the notebook keeps.
             </p>
             <p className="mt-4 text-14 text-ink-muted">
               Data exported <time dateTime={exportedAt}>{dataDate(exportedAt)}</time>.{" "}
@@ -69,6 +68,8 @@ export default function LabPage() {
               .
             </p>
           </header>
+
+          <LabGlance />
 
           <LabContents sections={SECTION_LIST} />
 

@@ -23,6 +23,9 @@ const body = Atkinson_Hyperlegible_Next({
   style: ["normal", "italic"],
   variable: "--font-body",
   display: "swap",
+  // next/font has no metrics for this family, so it cannot size a fallback; say which one to use.
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+  adjustFontFallback: false,
 });
 
 /** Tokens, ids and code: the same family, monospaced. */
@@ -31,6 +34,8 @@ const code = Atkinson_Hyperlegible_Mono({
   variable: "--font-code",
   display: "swap",
   preload: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {

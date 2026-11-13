@@ -66,8 +66,8 @@ function Missing() {
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-8 outline-none">
       <div className="max-w-[680px] pt-10 lg:pt-14">
-        <h1 className="text-[2rem] leading-9 font-semibold stretch-90 sm:text-44 sm:leading-[3rem]">Field notes</h1>
-        <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
+        <h1 className="page-title">Field notes</h1>
+        <p className="page-lead">
           The notes have not been copied into the site yet. Run <code>npm run sync:content</code> to copy them from
           the tutorial, or read them{" "}
           <a href={repoUrl(NOTES_REPO_PATH)} className="text-link">
@@ -111,10 +111,10 @@ export default function NotesPage() {
       <main id="main" tabIndex={-1} className="min-w-0 pb-8 outline-none">
         <article className="notes">
           <header className="max-w-[680px] pt-8 lg:pt-12">
-            <h1 className="text-[2rem] leading-9 font-semibold text-balance stretch-90 sm:text-44 sm:leading-[3rem]">
+            <h1 className="page-title">
               {notes.title || "Field notes"}
             </h1>
-            <p className="mt-4 font-serif text-20 leading-[1.875rem] text-ink-muted">
+            <p className="page-lead">
               What worked, what did not and what we got wrong while training robot policies from scratch. Read the
               three summaries and the short version first; each line links to the entry with the measurements behind it.
             </p>
