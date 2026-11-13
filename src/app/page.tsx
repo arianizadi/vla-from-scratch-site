@@ -1,40 +1,82 @@
 import type { Metadata } from "next";
-import { FieldNotes } from "@/components/landing/FieldNotes";
-import { Findings } from "@/components/landing/Findings";
+import Link from "next/link";
 import { Hero } from "@/components/landing/Hero";
-import { LessonShowcase } from "@/components/landing/LessonShowcase";
-import { PartsOverview } from "@/components/landing/PartsOverview";
-import { QuickStart } from "@/components/landing/QuickStart";
-import { StatusNote } from "@/components/landing/StatusNote";
-import { listChapters, listParts } from "@/lib/content";
+import { getCourse } from "@/lib/course";
 import { lessonIdeas } from "@/lessons";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** How many lessons the landing page offers to start with. */
-const SHOWCASE = 3;
-
 export default async function HomePage() {
-  const chapters = listChapters();
+  const course = getCourse();
   const ideas = await lessonIdeas();
-  const withLessons = chapters.filter((chapter) => ideas.has(chapter.slug));
-  const showcase = withLessons.slice(0, SHOWCASE).map((chapter) => ({
-    chapter,
-    idea: ideas.get(chapter.slug)?.idea ?? "",
-    beats: ideas.get(chapter.slug)?.beats ?? 0,
-  }));
+  const first = course.lessons[0];
 
   return (
     <main id="main" tabIndex={-1} className="pb-8 outline-none">
-      <Hero chapters={chapters} firstLesson={withLessons[0]} />
-      <LessonShowcase items={showcase} />
-      <PartsOverview parts={listParts()} lessons={new Set(ideas.keys())} />
-      <Findings chapters={chapters} />
-      <FieldNotes />
-      <QuickStart firstRun={chapters.find((chapter) => chapter.slug === "01-setup-and-first-run")} />
-      <StatusNote chapters={chapters} />
+      <Hero firstHref={first ? `/learn/${first.slug}` : undefined} />
+
+      {course.modules.length > 0 ? (
+        <section aria-labelledby="modules-title" className="page-frame landing-section">
+          <div className="section-intro">
+            <h2 id="modules-title" className="section-title">
+              What you will understand
+            </h2>
+            <p className="section-lead">
+              {course.modules.length} modules, {course.lessons.length} short lessons, in the order the ideas build on
+              each other.
+            </p>
+          </div>
+          <ol className="modules">
+            {course.modules.map((module) => {
+              const ready = module.lessons.filter((lesson) => ideas.has(lesson.slug)).length;
+              return (
+                <li key={module.id}>
+                  <Link href={`/learn#${module.id}`} className="module-card">
+                    <span className="module-number" aria-hidden="true">
+                      {module.number}
+                    </span>
+                    <span className="module-title">
+                      <span className="sr-only">Module {module.number}: </span>
+                      {module.title}
+                    </span>
+                    <span className="module-about">{module.about}</span>
+                    <span className="module-meta">
+                      {module.lessons.length} {module.lessons.length === 1 ? "lesson" : "lessons"}
+                      {ready > 0 ? `, ${ready} ready` : ""}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+          {first ? (
+            <p className="modules-start">
+              <Link href={`/learn/${first.slug}`} className="button button-primary">
+                Start with lesson 1: {first.title}
+              </Link>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      <section aria-label="Going further" className="page-frame landing-section landing-further">
+        <p>
+          <span className="landing-further-title">Curious how it holds up?</span>{" "}
+          <Link href="/lab" className="text-link">
+            See the experiments behind the lessons
+          </Link>
+          .
+        </p>
+        <p>
+          <span className="landing-further-title">Want to try the code?</span>{" "}
+          <Link href="/run-it-yourself" className="text-link">
+            Run it yourself
+          </Link>
+          .
+        </p>
+      </section>
     </main>
   );
 }

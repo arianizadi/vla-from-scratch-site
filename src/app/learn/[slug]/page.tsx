@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LongChapter } from "@/components/chapter/LongChapter";
+import { LessonPending } from "@/components/lesson/LessonPending";
 import { LessonView } from "@/components/lesson/LessonView";
-import { getAllChapters, getChapter, getNeighbours, getSidebarParts, type ChapterMeta } from "@/lib/content";
-import { getLesson } from "@/lessons";
+import { getAllChapters, getChapter } from "@/lib/content";
+import { courseBlurb, courseLesson, courseNeighbours, courseSidebar, courseTitle, getCourse } from "@/lib/course";
+import { getLesson, getMath } from "@/lessons";
 import { site } from "@/lib/site";
 import "katex/dist/katex.min.css";
 
@@ -20,19 +22,17 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
   const chapter = getChapter(slug);
   if (!chapter) return {};
   const lesson = await getLesson(slug);
-  const description = lesson?.idea ?? (chapter.summary || undefined);
+  const inCourse = courseLesson(slug) !== undefined;
+  const title = courseTitle(chapter);
+  const description = lesson?.idea ?? (courseBlurb(chapter) || chapter.summary || undefined);
+  // A chapter outside the course without a lesson shows its technical page here; that address is canonical.
+  const canonical = lesson || inCourse ? `/learn/${chapter.slug}` : `/learn/${chapter.slug}/full`;
   return {
-    title: chapter.title,
+    title,
     description,
-    alternates: { canonical: `/learn/${chapter.slug}` },
+    alternates: { canonical },
     robots: chapter.isSample ? { index: false } : undefined,
-    openGraph: {
-      type: "article",
-      siteName: site.name,
-      title: chapter.title,
-      description,
-      url: `/learn/${chapter.slug}`,
-    },
+    openGraph: { type: "article", siteName: site.name, title, description, url: canonical },
   };
 }
 
@@ -50,8 +50,9 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
 export const instant = false;
 
 /**
- * A chapter with a lesson (src/lessons/<slug>) shows the lesson; the full chapter is one click
- * away at /learn/<slug>/full. A chapter without one shows the full chapter here.
+ * /learn/<slug>: the lesson when there is one; for a lesson of the course not written yet, a calm
+ * "in progress" card (never the long chapter); for a chapter outside the course (run it yourself,
+ * case studies, reference), its technical page.
  */
 export default async function ChapterPage({ params }: ChapterPageProps) {
   const { slug } = await params;
@@ -59,22 +60,34 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
   if (!chapter) notFound();
 
   const lesson = await getLesson(slug);
-  if (!lesson) return <LongChapter chapter={chapter} />;
+  const place = courseLesson(slug);
+  const total = getCourse().lessons.length;
+  const parts = courseSidebar();
+  const { previous, next } = courseNeighbours(slug);
 
-  const { previous, next } = getNeighbours(chapter.slug);
-  const parts = getSidebarParts(chapter.slug).map((part) => ({
-    id: part.id,
-    number: part.number,
-    name: part.name,
-    chapters: part.chapters.map(({ slug: chapterSlug, orderLabel, title }) => ({ slug: chapterSlug, orderLabel, title })),
-  }));
+  if (!lesson) {
+    if (place) return <LessonPending chapter={chapter} place={place} total={total} parts={parts} previous={previous} next={next} />;
+    return <LongChapter chapter={chapter} />;
+  }
+
+  const math = await getMath(slug);
   const related = (lesson.related ?? [])
     .map((relatedSlug) => getChapter(relatedSlug))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
-    .map(({ body: _body, ...meta }): ChapterMeta => {
-      void _body;
-      return meta;
-    });
+    .map((entry) => ({ slug: entry.slug, title: courseTitle(entry) }));
 
-  return <LessonView chapter={chapter} lesson={lesson} parts={parts} previous={previous} next={next} related={related} />;
+  return (
+    <LessonView
+      chapter={chapter}
+      lesson={lesson}
+      math={math}
+      place={place}
+      total={total}
+      title={courseTitle(chapter)}
+      parts={parts}
+      previous={previous}
+      next={next}
+      related={related}
+    />
+  );
 }

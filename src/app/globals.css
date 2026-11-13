@@ -8,6 +8,7 @@
 @import "../components/lesson/lesson.css" layer(components);
 @import "../components/landing/landing.css" layer(components);
 @import "../components/curriculum/curriculum.css" layer(components);
+@import "../components/curriculum/course.css" layer(components);
 @import "../components/site/pages.css" layer(components);
 
 /* ==========================================================================

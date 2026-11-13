@@ -106,300 +106,96 @@
   line-height: 1.6;
 }
 
-/* Lessons to start with */
-.showcase {
+/* What you will understand: the modules, in order. */
+.modules {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin: 36px 0 0;
   padding: 0;
   list-style: none;
 }
-@media (min-width: 800px) {
-  .showcase {
+@media (min-width: 720px) {
+  .modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .modules {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.showcase-card {
-  position: relative;
+.module-card {
   display: grid;
-  align-content: start;
-  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: 6px 16px;
   height: 100%;
-  min-height: 240px;
-  padding: 24px 24px 64px;
+  padding: 22px 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-stage);
   background-color: var(--surface);
   color: var(--text);
   text-decoration: none;
-  transition:
-    border-color var(--duration-interface) var(--ease-standard),
-    transform var(--duration-interface) var(--ease-standard);
+  transition: border-color var(--duration-micro) var(--ease-standard);
 }
-.showcase-card:hover {
+.module-card:hover {
   border-color: var(--text);
 }
-.showcase-part {
-  color: var(--text-faint);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.showcase-title {
-  font-family: var(--font-display);
-  font-size: 1.625rem;
-  font-weight: 720;
-  font-stretch: 90%;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-.showcase-idea {
-  color: var(--text-muted);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-.showcase-meta {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.showcase-arrow {
-  position: absolute;
-  right: 22px;
-  bottom: 20px;
-  color: var(--text);
-  transition: transform var(--duration-interface) var(--ease-standard);
-}
-.showcase-card:hover .showcase-arrow {
-  transform: translateX(4px);
-}
-
-/* The three models */
-.stages {
-  display: grid;
-  gap: 16px;
-  margin: 40px 0 0;
-  padding: 0;
-  list-style: none;
-}
-@media (min-width: 900px) {
-  .stages {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.stage {
-  position: relative;
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-stage);
-  background-color: var(--surface);
-}
-.stage-number {
+.module-number {
+  grid-row: span 3;
   color: transparent;
   font-family: var(--font-display);
-  font-size: 4rem;
+  font-size: 3.25rem;
   font-weight: 800;
   font-stretch: 80%;
-  line-height: 0.9;
+  line-height: 0.85;
   -webkit-text-stroke: 1.5px var(--border-strong);
+  font-variant-numeric: tabular-nums;
 }
-.stage-name {
-  margin: 0;
+.module-card:hover .module-number {
+  -webkit-text-stroke-color: var(--accent);
+}
+.module-title {
+  font-family: var(--font-display);
   font-size: 1.5rem;
-  font-weight: 720;
+  font-weight: 750;
   font-stretch: 90%;
   line-height: 1.1;
+  letter-spacing: -0.015em;
 }
-.stage-link {
-  color: inherit;
-  text-decoration: none;
-}
-.stage-link:hover {
-  color: var(--accent);
-}
-.stage-text {
-  margin: 0;
+.module-about {
   color: var(--text-muted);
   font-size: 1rem;
   line-height: 1.5;
 }
-.stage-modalities {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.modality {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 28px;
-  padding: 0 11px;
-  border-radius: 999px;
-  background-color: var(--m-soft);
-  color: var(--text);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-.modality::before {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background-color: var(--m);
-  content: "";
-}
-.modality-language {
-  --m: var(--language);
-  --m-soft: var(--language-soft);
-}
-.modality-vision {
-  --m: var(--vision);
-  --m-soft: var(--vision-soft);
-}
-.modality-action {
-  --m: var(--action);
-  --m-soft: var(--action-soft);
-}
-.stage-result {
-  display: grid;
-  gap: 4px;
-  margin: 8px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-.stage-result-label {
-  color: var(--text);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-/* Every part */
-.parts-title {
-  margin: 72px 0 0;
-  font-size: 1.375rem;
-  font-weight: 720;
-  font-stretch: 92%;
-}
-.parts {
-  display: grid;
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-}
-@media (min-width: 900px) {
-  .parts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 48px;
-  }
-}
-.part {
-  padding: 18px 0;
-  border-top: 1px solid var(--border);
-}
-.part-head {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  color: var(--text);
-  text-decoration: none;
-}
-.part-head:hover .part-name {
-  color: var(--accent);
-}
-.part-number {
-  min-width: 1.6em;
-  color: var(--text-faint);
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 760;
-  font-variant-numeric: tabular-nums;
-}
-.part-name {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  font-stretch: 92%;
-  transition: color var(--duration-micro) var(--ease-standard);
-}
-.part-count {
-  margin-left: auto;
+.module-meta {
   color: var(--text-faint);
   font-size: 0.875rem;
-  white-space: nowrap;
 }
-.part-chapters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 0;
-  padding: 0 0 0 calc(1.6em * 1.5 + 12px);
-  list-style: none;
+.modules-start {
+  margin: 32px 0 0;
 }
-@media (max-width: 639px) {
-  .part-chapters {
-    padding-left: 0;
-  }
+.modules-start .button {
+  height: auto;
+  min-height: 52px;
+  padding: 12px 24px;
+  font-size: 1.0625rem;
+  text-align: left;
 }
-.part-chapter {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 30px;
-  padding: 0 11px;
-  border-radius: 999px;
-  background-color: var(--surface-2);
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  text-decoration: none;
-  transition:
-    color var(--duration-micro) var(--ease-standard),
-    background-color var(--duration-micro) var(--ease-standard);
-}
-.part-chapter:hover {
-  background-color: var(--surface);
-  color: var(--text);
-  box-shadow: 0 0 0 1px var(--border-strong);
-}
-.part-chapter[data-lesson] {
-  background-color: var(--accent-soft);
-  color: var(--text);
-  font-weight: 600;
-}
-.part-chapter[data-lesson]::before,
-.part-chapter-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background-color: var(--accent);
-  content: "";
-}
-@media (pointer: coarse) {
-  .part-chapter {
-    min-height: 40px;
-  }
-}
-.parts-key {
-  display: flex;
-  align-items: center;
+.landing-further {
+  display: grid;
   gap: 8px;
-  margin: 20px 0 0;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 1.125rem;
+}
+.landing-further p {
+  margin: 0;
+}
+.landing-further-title {
+  color: var(--text);
+  font-weight: 700;
 }
 
-/* Results */
 .big-numbers {
   display: grid;
   gap: 16px;
@@ -516,33 +312,14 @@
   }
 }
 
-/* Field notes and status */
-.notes-band {
-  display: grid;
-  gap: 24px;
-  padding: 32px;
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  background-color: var(--surface);
-}
-@media (min-width: 800px) {
-  .notes-band {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    padding: 44px;
+/* On a phone the loop is drawn at about half size: its words are set larger
+   so they stay readable (about 13px on screen), and the frame uses the full width. */
+@media (max-width: 639px) {
+  .hero-visual {
+    margin-inline: -8px;
+    padding: 14px 8px 12px;
   }
-}
-.status-note {
-  display: grid;
-  gap: 6px 16px;
-  max-width: 960px;
-  padding: 16px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background-color: var(--surface);
-}
-@media (min-width: 640px) {
-  .status-note {
-    grid-template-columns: auto minmax(0, 1fr);
+  .hero-visual svg text {
+    font-size: 22px;
   }
 }

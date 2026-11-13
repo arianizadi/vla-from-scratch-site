@@ -102,6 +102,7 @@ export function rehypeHighlight() {
       const grammar = grammarFor(language);
 
       let pre = node;
+      const lines = toString(code).replace(/\n$/, "").split("\n").length;
       if (grammar) {
         const source = toString(code).replace(/\n$/, "");
         const highlighted = highlight(source, grammar);
@@ -116,6 +117,8 @@ export function rehypeHighlight() {
       pre.properties.tabIndex = 0;
       pre.properties.dataLanguage = language ?? "";
       pre.properties.dataLabel = label;
+      // Code is folded on the page; its toggle says how much it holds.
+      pre.properties.dataLines = lines;
       parent.children[index] = pre;
       return SKIP;
     });
@@ -196,6 +199,8 @@ export function rehypeTables() {
       }
       const headRows = rows(table.children.find((child) => isElement(child, "thead")));
       const bodyRows = rows(table.children.find((child) => isElement(child, "tbody")));
+      // Tables are folded on the page; the toggle says how many rows it opens.
+      table.properties.dataRows = bodyRows.length;
       if (bodyRows.length === 0) return;
 
       const width = Math.max(...bodyRows.map((row) => cells(row).length));

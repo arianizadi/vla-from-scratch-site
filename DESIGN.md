@@ -7,8 +7,11 @@ and the page around it stays quiet.
 
 ## 1. Principles
 
-1. **One idea at a time.** A lesson is a handful of beats: a few sentences beside one animation.
-   The full chapter is one click away for every detail.
+1. **A class, not documentation.** The site teaches: a course of short lessons in order, each one
+   idea, a few sentences beside one animation. Code, tables, commands and measurements are
+   secondary: on technical pages and the experiments page, folded behind "Show code", "Show
+   table (N rows)" or "Show the numbers". Nothing a beginner meets first is a wall of text, a
+   table or a terminal.
 2. **Motion explains or it goes.** Animations show a process; the interface only confirms
    actions (press, open, hover). No scroll-triggered entrances, parallax or decorative loops.
 3. **Colour is rationed to meaning** (section 2). Never colour alone: a word or a shape goes with it.
@@ -16,7 +19,9 @@ and the page around it stays quiet.
    number only if their chapter does.
 5. **Every animation has a still.** Reduced motion, no JavaScript and print show a composed
    final frame that explains the idea by itself.
-6. **Missing content never breaks a page.** A chapter without a lesson shows the full chapter.
+6. **Missing content never breaks a page.** A lesson of the course not written yet shows a calm
+   "being written" card (what it will teach, the next lesson, a quiet link to the technical
+   details), never the long chapter.
 
 ## 2. Colour tokens
 
@@ -68,23 +73,36 @@ No shadows; surfaces separate by tone and a 1px border.
 - **Lesson** (`/learn/<slug>`): sidebar (parts, current chapter expanded to its beats) | lesson.
   The lesson is a container: from 760px wide each beat is text (5 parts, sticky) beside its
   animation (7 parts); below, they stack.
-- **Full chapter** (`/learn/<slug>/full`): sidebar | 680px prose, figures 960px; a pill banner
-  links back to the lesson.
+- **Technical details** (`/learn/<slug>/full`): sidebar | 620px prose with more air between
+  paragraphs, figures 960px; a pill banner says this is the reference version and links to the
+  lesson; an "In one minute" box (the lesson's idea and takeaway, or the course's one line);
+  every code block and table folded.
+- **Sidebar**: the course's modules with numbered lessons, then the extras (stories from the
+  experiments, reference, run it yourself).
 - Header 56px, translucent paper with a hairline; nav items are pills, the current one outlined.
 
 ## 5. Components
 
-- **Lesson** (`src/components/lesson`): kicker (part pill, chapter number), title, the idea as a
-  lead, fact pills; numbered beats (outlined numerals, display titles); edge cases and quick
-  tips side by side; the takeaway in display type under a highlighter that sweeps in on scroll
-  (static where scroll timelines are unsupported or motion is reduced); "Try it" figures; "Go
-  deeper" (an ink card to the full chapter, lab links, related chapters); previous/next.
+- **Lesson** (`src/components/lesson`): kicker (module pill, "Lesson 4 of 35"), title, the idea
+  as a lead, fact pills (steps, minutes); numbered beats (outlined numerals, display titles);
+  the optional maths; "What could go wrong" and "Tips" side by side; the takeaway in display
+  type under a highlighter that sweeps in on scroll (static where scroll timelines are
+  unsupported or motion is reduced); "Try it" figures; the next lesson as the one primary
+  button; "Want more?" (quiet outlined links: technical details, the experiments, related
+  lessons); previous/next.
 - **Animation frame** (`src/animations`, documented in its README): 20px-radius stage on a dot
   grid; title and round play/replay buttons on top; step pips (the current one fills over its
   hold time) and the step caption below. `variant="bare"` for heroes.
 - **Figure plate** (`src/figures/kit`): the interactive figures keep their frame, now 14px radius,
   display-face titles and pill segment controls. They appear in full chapters, in lessons as
   "Try it", and at `/figures`.
+- **Reveal** (`src/components/ui/Reveal.tsx`): a native `<details>` with a pill toggle ("Show
+  code", "Show table (12 rows)", "Show the numbers"), closed by default; a link to something
+  inside opens it (`RevealOnHash`).
+- **The math, step by step** (`src/components/lesson/MathSection.tsx`, from an optional
+  `src/lessons/<slug>/math.ts`): per formula a card with the formula large and centred, every
+  symbol coloured by meaning in the formula and in a legend, one metaphor in an accent-soft
+  callout, a worked example as numbered steps. KaTeX with MathML for screen readers.
 - **Buttons**: pills. Primary is ink and turns violet on hover; secondary is paper with an outline.
 - **Focus**: 2px `--accent` outline, 2px offset, everywhere.
 
@@ -106,22 +124,28 @@ hidden tabs. Reduced motion: no autoplay, transitions collapse, every animation 
 
 ## 7. Pages
 
-- **Landing**: hero (promise, two ways in, the whole loop as one animation: words and pixels in,
-  an action out, the named object lifted); lessons to start with; what you will build (three
-  models with their measured result, then every part with its chapters, lessons marked);
-  what the experiments showed (three big numbers from `findings.json`, the measured onset plate,
-  the findings one line each); field notes; run it yourself; status.
-- **/learn**: big title, counts, part filter (pills), part sections of chapter rows; a row with a
-  lesson shows its idea and an "Animated lesson" badge.
-- **/lab**: title, lead, data date; at a glance (big numbers, the newest films); conventions;
-  then every notebook section unchanged (section 8).
-- **/notes**, **/figures**: shared page header; content as before.
+- **Navigation**: Course, Experiments, Run it yourself, GitHub. Experiments and running the code
+  are labelled optional everywhere.
+- **Landing**: hero (what you will understand, "Start lesson 1", the whole loop as one
+  animation: words and pixels in, an action out, the named object lifted); the modules as cards
+  ("What you will understand"); one line each to the experiments and to running it yourself.
+- **/learn**: the course outline (`src/lib/course.ts`): modules in order, each a path of
+  numbered lessons with one line on what the reader will understand, minutes or "Being
+  written"; lesson 1 marked "Start here"; then "Beyond the course" (stories, reference, run it
+  yourself, the experiments).
+- **/run-it-yourself**: five plain steps, each command folded; the guides.
+- **/lab** ("Experiments"): the experiments behind the lessons; the at-a-glance band; how they
+  were measured (folded); then each section as a plain headline, what it means, a big number
+  when the data has one, links to lessons and notes, and "Show the numbers" (section 8).
+- **/notes**: each note as its title and one plain line; the full note folded.
+- **/figures**: shared page header; content as before.
 
 ## 8. Lab page (`/lab`)
 
-Title, data-file date, the at-a-glance band, and a Conventions list (closed-loop, unseen layouts,
-one seed, Wilson 95% intervals). The sidebar lists the notebook sections. Each section is one
-960px table with at most one chart above it: tolerance curves; `pick_cube` dot-and-whisker rows;
+Title, the at-a-glance band, and a folded "How these were measured" (data date, closed-loop,
+unseen layouts, one seed, Wilson 95% intervals). The sidebar lists the notebook sections. Each
+section opens in plain words (`src/components/lab/plain.ts`); folded below, one 960px table with
+at most one chart above it: tolerance curves; `pick_cube` dot-and-whisker rows;
 named-object rate against a dashed 33% line, and by checkpoint. Rows have ids and permalinks;
 columns sort through `th` buttons with `aria-sort`; values stay as written ("37/50 = 74%"). Runs
 in progress show a Running badge and a hatched cell. Task and policy filters sit in one row above.

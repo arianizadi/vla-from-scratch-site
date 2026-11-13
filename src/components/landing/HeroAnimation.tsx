@@ -38,7 +38,7 @@ export function HeroAnimation() {
         "The policy reads words and patches together.",
         "It outputs actions: where the arm should go next.",
         "The gripper closes on the object the words named.",
-        "Lifted. Every step of this loop is a chapter.",
+        "Lifted. Each part of this loop is a module of the course.",
       ]}
       size={[640, 400]}
       hold={[1700, 1700, 1700, 1700, 1900, 1700, 3200]}
@@ -50,7 +50,7 @@ export function HeroAnimation() {
         return (
           <>
             {/* Words */}
-            <Chip x={150} y={44} text="pick up the red cube" tone="ink" variant="outline" size={17} opacity={step === 0 ? 1 : 0} />
+            <Chip x={150} y={44} text="pick up the red cube" tone="ink" variant="outline" size={17} width={280} opacity={step === 0 ? 1 : 0} />
             {TOKENS.map((token, index) => (
               <Chip
                 key={token}

@@ -1,94 +1,67 @@
 import type { Metadata } from "next";
-import { ChapterRow } from "@/components/curriculum/ChapterRow";
-import { PartFilter } from "@/components/curriculum/PartFilter";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { listChapters, listParts } from "@/lib/content";
+import Link from "next/link";
+import { CourseExtras, CourseOutline } from "@/components/curriculum/CourseOutline";
+import { getCourse } from "@/lib/course";
 import { lessonIdeas } from "@/lessons";
 
 export const metadata: Metadata = {
-  title: "Learn",
+  title: "The course",
   description:
-    "Every chapter in reading order: language models, vision, vision-language models, actions and policies, and how to train and debug them.",
+    "Short lessons in order, from the big picture to testing a robot: how a model reads words, sees pictures, chooses movements and learns from examples.",
   alternates: { canonical: "/learn" },
 };
 
 export default async function LearnPage() {
-  const parts = listParts();
-  const chapters = listChapters();
+  const course = getCourse();
   const ideas = await lessonIdeas();
-  // While every chapter has one status, the page says it once instead of badging every row.
-  const statuses = [...new Set(chapters.map((chapter) => chapter.status))];
-  const shared = statuses.length === 1 ? statuses[0] : undefined;
-  const lessons = chapters.filter((chapter) => ideas.has(chapter.slug)).length;
+  const first = course.lessons[0];
+  const ready = new Map([...ideas].map(([slug, summary]) => [slug, { minutes: summary.minutes }]));
 
   return (
     <main id="main" tabIndex={-1} className="page-frame pb-8 outline-none">
       <header className="learn-header">
-        <h1 className="learn-title">Learn</h1>
+        <h1 className="learn-title">The course</h1>
         <p className="learn-lead">
-          {chapters.length > 0 ? (
-            <>
-              {chapters.length} chapters in {parts.length} parts, in the order you would build the system yourself. Read
-              them in order, or jump to the part you need.
-            </>
-          ) : (
-            <>The chapters are being written. This page lists them as soon as the first one is in.</>
-          )}
+          {course.lessons.length} short lessons in {course.modules.length} modules, from the big picture to testing a
+          real robot. Each one explains one idea with a small animation. Go in order; no code needed.
         </p>
-        {chapters.length > 0 ? (
-          <ul className="learn-facts">
-            {lessons > 0 ? (
-              <li>
-                <span className="part-chapter-dot" aria-hidden="true" />
-                {lessons} animated {lessons === 1 ? "lesson" : "lessons"}
-              </li>
-            ) : null}
-            {shared && chapters.length > 1 ? (
-              <li>
-                <StatusBadge status={shared} />
-                <span>every chapter, for now</span>
-              </li>
-            ) : null}
-          </ul>
+        {first ? (
+          <p className="learn-actions">
+            <Link href={`/learn/${first.slug}`} className="button button-primary">
+              Start with lesson 1
+            </Link>
+            <span className="learn-actions-note">{first.title}</span>
+          </p>
         ) : null}
       </header>
 
-      {parts.length > 0 ? (
-        <div className="mt-12 lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[256px_minmax(0,1fr)] xl:gap-x-16">
-          <nav aria-label="Parts" className="sticky top-24 hidden self-start lg:block">
-            <ol className="learn-parts-nav">
-              {parts.map((part) => (
-                <li key={part.id}>
-                  <a href={`#${part.id}`}>
-                    <span className="learn-parts-number" aria-hidden="true">
-                      {part.number}
-                    </span>
-                    <span>{part.name}</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-
-          <PartFilter parts={parts.map((part) => ({ id: part.id, number: part.number, name: part.name }))}>
-            {parts.map((part) => (
-              <section key={part.id} id={part.id} aria-labelledby={`${part.id}-title`}>
-                <h2 id={`${part.id}-title`} className="learn-part-title">
-                  <span className="learn-part-number" aria-hidden="true">
-                    {part.number}
+      <div className="mt-14 lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[256px_minmax(0,1fr)] xl:gap-x-16">
+        <nav aria-label="Modules" className="sticky top-24 hidden self-start lg:block">
+          <ol className="learn-parts-nav">
+            {course.modules.map((module) => (
+              <li key={module.id}>
+                <a href={`#${module.id}`}>
+                  <span className="learn-parts-number" aria-hidden="true">
+                    {module.number}
                   </span>
-                  <span>{part.name}</span>
-                </h2>
-                <ol className="chapter-rows">
-                  {part.chapters.map((chapter) => (
-                    <ChapterRow key={chapter.slug} chapter={chapter} lesson={ideas.get(chapter.slug)} showStatus={!shared} />
-                  ))}
-                </ol>
-              </section>
+                  <span>{module.title}</span>
+                </a>
+              </li>
             ))}
-          </PartFilter>
+            <li>
+              <a href="#extras">
+                <span className="learn-parts-number" aria-hidden="true" />
+                <span>Beyond the course</span>
+              </a>
+            </li>
+          </ol>
+        </nav>
+
+        <div className="max-w-[880px] min-w-0">
+          <CourseOutline course={course} ready={ready} />
+          <CourseExtras course={course} />
         </div>
-      ) : null}
+      </div>
     </main>
   );
 }

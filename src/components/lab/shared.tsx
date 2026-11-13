@@ -9,6 +9,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { Glyph } from "@/components/ui/Glyph";
+import { Reveal } from "@/components/ui/Reveal";
 import { ScrollBox } from "@/components/ui/ScrollBox";
 import type { CheckpointRow } from "@/data/checkpoints";
 import { MISSING, formatBoth, formatMm, formatPercent, formatSamples, formatSlope } from "@/data/format";
@@ -16,6 +17,7 @@ import { MACHINES } from "@/data/labels";
 import { finishedRuns, type Run } from "@/data/runs";
 import type { Evaluation } from "@/data/types";
 import { notebookAnchors } from "./anchors";
+import { PLAIN } from "./plain";
 import styles from "./styles";
 
 /** A chapter the page links to, resolved at build time; null when the chapter is not on the site. */
@@ -49,47 +51,63 @@ interface LabSectionProps extends SectionInfo {
   children: ReactNode;
 }
 
-/** One numbered section of the page: heading, what to read from it, where it is explained, then its tables. */
+/**
+ * One numbered section of the page: what was found, in plain words and in
+ * big type; what it means; where the lessons explain it; then, folded behind
+ * "Show the numbers", what to read from the tables and the tables themselves.
+ */
 export function LabSection({ id, number, title, read, chapters, notes, children }: LabSectionProps) {
   const shown = chapters.filter((chapter): chapter is ChapterLink => chapter !== null);
+  const plain = PLAIN[id];
+  const big = plain?.number?.();
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={styles.section}>
+    <section id={id} aria-labelledby={`${id}-title`} className={`${styles.section} lab-plain`}>
       {notebookAnchors(id).map((anchor) => (
         <span key={anchor} id={anchor} aria-hidden="true" />
       ))}
-      <div className={styles.headingRow}>
-        <h2 id={`${id}-title`} className="relative text-24 font-semibold stretch-95 sm:text-28">
-          <span className={styles.sectionNumber} aria-hidden="true">
-            {number}
-          </span>
-          {title}
-        </h2>
+      <div className="lab-plain-kicker">
+        <span className="lab-plain-number" aria-hidden="true">
+          {number}
+        </span>
+        <span>{title}</span>
         <a href={`#${id}`} className={styles.rowLink} aria-label={`Link to section: ${title}`}>
           #
         </a>
       </div>
-      <p className={styles.read}>{read}</p>
+      <h2 id={`${id}-title`} className="lab-plain-headline">
+        <span className="sr-only">{title}: </span>
+        {plain?.headline ?? title}
+      </h2>
+      {plain || big ? (
+        <div className="lab-plain-body">
+          {plain ? <p className="lab-plain-meaning">{plain.meaning}</p> : null}
+          {big ? (
+            <p className="lab-plain-big">
+              <span className="lab-plain-big-value">{big.value}</span>
+              <span className="lab-plain-big-caption">{big.caption}</span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {shown.length > 0 || notes.length > 0 ? (
-        <p className={styles.related}>
+        <p className="lab-plain-related">
+          {shown.length > 0 ? <span className="lab-plain-related-label">Learn more:</span> : null}
           {shown.map((chapter) => (
-            <span key={chapter.href} className={styles.relatedItem}>
-              <span className="label text-ink-faint">Chapter</span>
-              <Link href={chapter.href} className="text-link">
-                {chapter.title}
-              </Link>
-            </span>
+            <Link key={chapter.href} href={chapter.href} className="text-link">
+              {chapter.title}
+            </Link>
           ))}
           {notes.map((entry) => (
-            <span key={entry} className={styles.relatedItem}>
-              <span className="label text-ink-faint">Field notes</span>
-              <Link href={noteHref(entry)} className="text-link">
-                entry {entry}
-              </Link>
-            </span>
+            <Link key={entry} href={noteHref(entry)} className="text-link">
+              Field note {entry}
+            </Link>
           ))}
         </p>
       ) : null}
-      {children}
+      <Reveal label="Show the numbers" openLabel="Hide the numbers" kind="numbers" className="lab-plain-numbers">
+        <p className={styles.read}>{read}</p>
+        {children}
+      </Reveal>
     </section>
   );
 }

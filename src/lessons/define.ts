@@ -6,6 +6,7 @@
  * One lesson = one folder, src/lessons/<slug>/, with
  *   lesson.ts          export default defineLesson({ ... })
  *   animations/*.tsx   one client component per animated beat
+ *   math.ts            optional: export default defineMath([ ... ]), "The math, step by step"
  * The folder is found automatically (src/lessons/index.ts); nothing else needs
  * to change. AUTHORING.md at the repository root is the full guide.
  *
@@ -59,4 +60,43 @@ export interface Lesson {
 /** Identity function that gives a lesson file its type. */
 export function defineLesson(lesson: Lesson): Lesson {
   return lesson;
+}
+
+/**
+ * The colour a symbol wears in "The math, step by step": the kit's meaning
+ * colours (a word is `language`, an image `vision`, an action `action`),
+ * `accent` for the one quantity to follow, `ink` for the rest. Optional:
+ * without it, symbols take accent, action, vision, language in turn.
+ */
+export type MathTone = "accent" | "action" | "vision" | "language" | "success" | "ink";
+
+/**
+ * One formula of the optional math section, in src/lessons/<slug>/math.ts
+ * (export default defineMath([...]) or export const math = ...). At most 3.
+ */
+export interface MathEntry {
+  /** What the formula does, in a few words: "Score a guess". */
+  title: string;
+  /** LaTeX for KaTeX, without $ signs: "\\mathcal{L} = \\lVert v_\\theta - (x_1 - x_0) \\rVert^2". */
+  formula: string;
+  /**
+   * Every symbol of the formula with its plain meaning: ["x_0", "where the noise starts"].
+   * Each symbol is coloured the same in the formula and in this list. An optional third
+   * item picks its colour.
+   */
+  symbols: (readonly [symbol: string, meaning: string] | readonly [symbol: string, meaning: string, tone: MathTone])[];
+  /** One everyday picture of what the formula does, one or two sentences. May use $...$ for a symbol. */
+  metaphor: string;
+  /**
+   * A worked example with small, concrete numbers. One step per line ("\n"); a single
+   * paragraph is split into sentences. May use $...$ for inline maths.
+   */
+  example: string;
+  /** Optional: an animation from ./animations that shows the formula at work. */
+  animation?: ComponentType;
+}
+
+/** Identity function that gives a math.ts file its type. */
+export function defineMath(entries: MathEntry[]): MathEntry[] {
+  return entries;
 }
