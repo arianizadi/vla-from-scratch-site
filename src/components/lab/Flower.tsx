@@ -836,7 +836,7 @@ function Pruning() {
         reached 56. Twice the demonstrations did not help, and neither did twice the budget again (80 at 40M samples). Most
         failures run out of time rather than touch the flower. Extra demonstrations in which the expert takes over from
         wherever the policy has got to first made it worse (0-28): the expert&rsquo;s moves after a takeover contradicted
-        the ordinary demonstrations. A corrected version is training.
+        the ordinary demonstrations. Corrected, they did no better on average (83, 24 and 68).
       </p>
       <TableBox label="The pruning tasks, their policies and the runs in progress">
         <thead>

@@ -312,7 +312,7 @@ export const flowerTrimming = {
   section: data.flower.section,
   recipe: data.flower.recipe,
   /** The pruning runs still training, by task; their roadmap steps are in Flower.tsx. */
-  inProgress: data.flower.inProgress.runs,
+  inProgress: data.flower.inProgress.runs as { task: string; run: string }[],
   /** The contact change after steps 1-5: what was wrong, and the scripted expert before and after. */
   physics: {
     ...data.flower.physics,
