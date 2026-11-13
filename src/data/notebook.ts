@@ -475,5 +475,35 @@ export const flowerTrimming = {
   },
 };
 
+const prune = data.flower.prune;
+
+/**
+ * Steps 6-8, pruning a potted plant (new physics): the lab page's headline
+ * results. `pruned` holds one count per training seed (averaged weights). The
+ * full task's film reports a result the notebook does not have yet; it stays
+ * text (`result`) with its source, so no check treats it as a notebook number.
+ */
+export const pruning = {
+  one: { section: prune.one.section, pruned: countsOf(prune.one.pruned), expert: countOf(prune.one.expert) },
+  turn: {
+    section: prune.turn.section,
+    pruned: countsOf(prune.turn.pruned),
+    expert: countOf(prune.turn.expert),
+    purposeful: {
+      pressedWhenNeeded: countOf(prune.turn.purposeful.pressedWhenNeeded),
+      aimMedianDeg: prune.turn.purposeful.aimMedianDeg,
+      aimMaxDeg: prune.turn.purposeful.aimMaxDeg,
+      facingWithinDeg: prune.turn.purposeful.facingWithinDeg,
+    },
+    film: { name: prune.turn.film.name, checkpoint: prune.turn.film.checkpoint, pruned: countOf(prune.turn.film.pruned) },
+  },
+  full: {
+    section: prune.full.section,
+    expert: countOf(prune.full.expert),
+    budgetM: prune.full.budgetM,
+    film: { name: prune.full.film.name, result: prune.full.film.pruned, source: prune.full.film.source },
+  },
+};
+
 /** The flower steps in the notebook's order, for the headings and their anchors. */
 export const flowerSteps = [drift.section, lookalike.section, clutter.section, stem.section, cut.section];

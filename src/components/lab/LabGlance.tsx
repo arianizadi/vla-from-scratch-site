@@ -1,72 +1,138 @@
 import Link from "next/link";
 import { bigNumbers } from "@/components/landing/Findings";
-import { formatCount } from "@/data/format";
-import { flowerTrimming } from "@/data/notebook";
+import { pruning } from "@/data/notebook";
+import type { Count } from "@/data/types";
 import { SECTIONS } from "./sections";
+import "./glance.css";
+
+/** "77–84" for counts out of the same number of tries, one per training seed. */
+function span(counts: Count[]): { value: string; of: number } {
+  const values = counts.map((count) => count.successes).sort((a, b) => a - b);
+  const low = values[0];
+  const high = values[values.length - 1];
+  return { value: low === high ? `${low}` : `${low}–${high}`, of: counts[0]?.episodes ?? 100 };
+}
 
 /**
- * The top of the lab page: the results to read first, as big numbers, and the
- * newest films. Every value comes from findings.json or notebook.json, which
- * `npm run sync` checks against the notebook.
+ * The top of the lab page: the newest results (pruning a potted plant) as
+ * plain headlines with one big number each, the two newest films, and below
+ * them the first headline results. Every number comes from notebook.json or
+ * findings.json; the full task's film result is the one value the notebook
+ * does not have yet (see `pruning.full.film.source`).
  */
 export function LabGlance() {
-  const { films } = flowerTrimming.cut;
-  const clips = [
+  const one = span(pruning.one.pruned);
+  const turn = span(pruning.turn.pruned);
+  const full = pruning.full.film.result.split("/");
+
+  const results = [
     {
-      name: films.cutOne.name,
-      title: "One flower: cut the stem",
-      caption: `With the corrected physics it cuts the stem in ${formatCount(films.cutOne.newPhysics.successes, films.cutOne.newPhysics.episodes)} unseen layouts.`,
+      value: one.value,
+      of: one.of,
+      title: "It cuts a side shoot off the stem.",
+      text: "One shoot, already facing the robot. Two training runs that differ only in their random start both land here.",
     },
     {
-      name: films.cutStem.name,
-      title: "Three flowers: cut the one named",
-      caption: `With the corrected physics it cuts the named stem in ${formatCount(films.cutStem.newPhysics.successes, films.cutStem.newPhysics.episodes)}.`,
+      value: turn.value,
+      of: turn.of,
+      title: "It turns the plant first, then cuts.",
+      text: "The shoot can point any way. The robot holds a button only when the shoot faces away, and lets go once it faces the arm.",
+    },
+    {
+      value: full[0] ?? pruning.full.film.result,
+      of: Number(full[1] ?? 100),
+      title: "It prunes the whole plant.",
+      text: "Two or three shoots: turn, cut, turn, cut. This needed a longer training run; more runs are still training.",
     },
   ];
 
+  const films = [
+    {
+      name: pruning.turn.film.name,
+      size: [1920, 1080],
+      title: "Turn the plant, then cut",
+      caption: `The learned policy partway through training, when it pruned ${pruning.turn.film.pruned.successes} of ${pruning.turn.film.pruned.episodes}.`,
+    },
+    {
+      name: pruning.full.film.name,
+      size: [1280, 720],
+      title: "Prune the whole plant",
+      caption: `The learned policy at ${full[0]} of ${full[1]}. Quiet stretches play at double speed.`,
+    },
+  ];
+
+  const earlier = bigNumbers();
+
   return (
-    <section aria-labelledby="glance-title" className="lab-glance">
-      <h2 id="glance-title" className="sr-only">
-        At a glance
+    <section aria-labelledby="glance-title" className="lab-glance prune-glance">
+      <p className="prune-kicker">Newest</p>
+      <h2 id="glance-title" className="prune-title">
+        A robot learns to prune a potted plant
       </h2>
-      <ul className="big-numbers lab-glance-numbers">
-        {bigNumbers().map((item) => (
-          <li key={item.value}>
-            <a href={item.href.replace(/^\/lab/, "")} className="big-number">
-              <span className="big-number-value">{item.value}</span>
-              <span className="big-number-caption">{item.caption}</span>
-            </a>
+      <p className="prune-lead">
+        The plant stands on a turntable with two buttons. The robot must cut every side shoot off the main stem and
+        leave the flower untouched: touching the flower counts as a failure.
+      </p>
+
+      <ul className="prune-results">
+        {results.map((result) => (
+          <li key={result.title} className="prune-result">
+            <p className="prune-number">
+              <span className="prune-number-value">{result.value}</span>
+              <span className="prune-number-of">of {result.of} tries</span>
+            </p>
+            <h3 className="prune-result-title">{result.title}</h3>
+            <p className="prune-result-text">{result.text}</p>
           </li>
         ))}
       </ul>
 
-      <div className="lab-glance-films">
-        <div className="lab-glance-films-text">
-          <h3 className="findings-plate-title">Newest: toward trimming a flower</h3>
-          <p>
-            The next task: cut the stem the instruction names, among one or three flowers. The learned policy drives
-            until the cut; a script then opens the jaws so the top can be seen to fall.
-          </p>
-          <p>
-            <Link href={`#${SECTIONS.flower.id}`} className="text-link">
-              Every step and its numbers
-            </Link>
-          </p>
-        </div>
-        {clips.map((clip) => (
-          <figure key={clip.name} className="lab-glance-film">
-            <video controls preload="none" playsInline muted poster={`/video/${clip.name}.jpg`} width={1920} height={1080} aria-label={clip.title}>
-              <source src={`/video/${clip.name}.mp4`} type="video/mp4" />
-              <a href={`/video/${clip.name}.mp4`} className="text-link">
-                {clip.title} (MP4)
+      <div className="prune-films">
+        {films.map((film) => (
+          <figure key={film.name} className="lab-glance-film">
+            <video
+              controls
+              preload="none"
+              playsInline
+              muted
+              poster={`/video/${film.name}.jpg`}
+              width={film.size[0]}
+              height={film.size[1]}
+              aria-label={film.title}
+            >
+              <source src={`/video/${film.name}.mp4`} type="video/mp4" />
+              <a href={`/video/${film.name}.mp4`} className="text-link">
+                {film.title} (MP4)
               </a>
             </video>
             <figcaption>
-              <strong>{clip.title}.</strong> {clip.caption}
+              <strong>{film.title}.</strong> {film.caption}
             </figcaption>
           </figure>
         ))}
       </div>
+      <p className="prune-note">
+        In both films a script opens the jaws and pulls the arm back after the last cut, so you can see the plant.{" "}
+        <Link href={`#${SECTIONS.flower.id}`} className="text-link">
+          Every step toward pruning, with its numbers
+        </Link>
+      </p>
+
+      {earlier.length > 0 ? (
+        <div className="prune-earlier">
+          <h3 className="prune-earlier-title">Where it started: picking up the object a sentence names</h3>
+          <ul className="big-numbers lab-glance-numbers">
+            {earlier.map((item) => (
+              <li key={item.value}>
+                <a href={item.href.replace(/^\/lab/, "")} className="big-number">
+                  <span className="big-number-value">{item.value}</span>
+                  <span className="big-number-caption">{item.caption}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }
