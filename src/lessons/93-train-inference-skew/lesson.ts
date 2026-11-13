@@ -15,12 +15,12 @@ export default defineLesson({
     },
     {
       title: "Same picture, different numbers",
-      text: "Pixel brightness is stored from 0 to 255. One path divided it by 255; the other did not. Same picture, numbers hundreds of times larger, no error. Training only checks itself, so its score looked fine. With the paths matched, a model that rarely listed a scene's objects in order got most right.",
+      text: "Pixel brightness is stored from 0 to 255. One path divided it by 255; the other did not. Same picture, numbers hundreds of times larger, and no error. That is why the [first caption test](/learn/32-testing-a-vlm) scored no better than guessing; matched, the model got most scenes right.",
       animation: PixelScale,
     },
     {
       title: "An answer hidden in the input",
-      text: "Picture practice tests with the first answer pencilled in the margin. A policy with **memory** gets its previous move as input. In training, the first “previous move” was copied from the expert and already pointed at the target. On the robot it said “stay still”. Fixing that slot lifted success from 1 to 22 in 100.",
+      text: "Picture practice tests with the first answer pencilled in the margin. A policy given its [last action](/learn/52-history-and-shortcuts) met the expert's first move in training, already pointing at the target. On the robot, that slot said “stay still”: skew again. Fixing it lifted success from 1 to 22 in 100.",
       animation: HiddenAnswer,
     },
     {

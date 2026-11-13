@@ -33,9 +33,9 @@ export function HiddenAnswer() {
   return (
     <AnimationFrame
       title="An answer hidden in the input"
-      description="A policy with memory gets its previous move as an input slot. In training, the first slot of an example was filled with a copy of the expert's first move, which already points at the target, so the policy learned to follow that hint. On the robot the same slot says stay still, the hint is gone, and the policy does not know where to go."
+      description="A policy with history gets its previous move as an input slot. In training, the first slot of an example was filled with a copy of the expert's first move, which already points at the target, so the policy learned to follow that hint. On the robot the same slot says stay still, the hint is gone, and the policy does not know where to go."
       steps={[
-        "A policy with memory gets its previous move as an input.",
+        "A policy with history gets its previous move as an input.",
         "A training example that starts at the beginning has no previous move. A copy of the expert's first move fills the gap.",
         "That copy already points at the target. The policy learns to follow the hint.",
         "On the robot, the slot says ‘stay still’. No hint, and the policy is lost.",

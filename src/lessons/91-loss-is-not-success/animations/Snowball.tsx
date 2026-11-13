@@ -24,7 +24,7 @@ export function Snowball() {
         "The demonstrations travel inside a narrow corridor of views.",
         "The policy's first move is a little off (a toy).",
         "Outside the corridor it sees views no demonstration showed. Its next guess is worse.",
-        "The error grows with every step. Recorded data never shows this: there the demonstrator always drove.",
+        "The error grows with every step. Recorded data never shows this: there the expert always drove.",
       ]}
       size={[480, 270]}
     >

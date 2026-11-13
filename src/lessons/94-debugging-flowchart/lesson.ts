@@ -15,17 +15,17 @@ export default defineLesson({
     },
     {
       title: "Ask questions that steer",
-      text: "A plumber checks the main valve before the tap. Check the earliest link first: a fault there spoils every later measurement. And ask only questions whose answer changes your next move. The training error fails that test: one policy ended with lower error than another, yet succeeded far less often.",
+      text: "A plumber checks the main valve before the tap. Check the earliest link first: a fault there spoils every later measurement. And ask only questions whose answer changes your next move. The loss fails that test: one policy ended with a lower loss than another, yet succeeded far less often.",
       animation: LossMisleads,
     },
     {
       title: "Walk down the questions",
-      text: "Ask in order. Does the hand-written **expert**, the controller that made the examples, pass the same test? Does the policy copy it on recorded examples? Does the gripper close? At the right object? Close enough to grasp? The first “no” points to a likely cause, and to the next thing to check.",
+      text: "Ask in order. Does the scripted expert pass the same test? Does the policy copy it on recorded examples? Does the gripper close? At the right object? Close enough to grasp? The first “no” points to a likely cause, and to the next thing to check.",
       animation: QuestionPath,
     },
     {
       title: "A worked case",
-      text: "One policy succeeded once in 100 tries. The expert passed, the policy copied it well, and it closed the gripper every time. But it closed at the asked-for object only one time in three: guessing. Its setup had never fed it the instruction. Four cheap questions found that, with no retraining.",
+      text: "One policy succeeded once in 100. The expert passed, the policy copied it well, and it closed the gripper every time. But it closed at the named object only one time in three: guessing. Its setup had never fed it the instruction. Four cheap questions found that, with no retraining.",
       animation: WorkedCase,
     },
   ],
@@ -36,7 +36,7 @@ export default defineLesson({
     "A policy that passes every question can still fail when the world changes mid-task: move the object and see.",
   ],
   tips: [
-    "Run the hand-written expert through the very same test before judging any policy.",
+    "Run the scripted expert through the very same test before judging any policy.",
     "Before you check something, write down what each answer would make you do. If nothing changes, skip it.",
     "Read the setup before running anything: a missing input needs no experiment.",
     "Sort failed policies by where they left the path, not by their score.",

@@ -22,10 +22,10 @@ export function Heartbeat() {
   return (
     <AnimationFrame
       title="A crash is loud, a hang is silent"
-      description="A pulse trace: every new line in the training log is a beat. Then a helper process dies and the trainer waits for it forever; the trace goes flat. The program has not crashed and shows no error, so from outside it still looks alive, while no work is being done."
+      description="A pulse trace: every new progress line is a beat. Then something gets stuck and the program waits forever; the trace goes flat. The program has not crashed and shows no error, so from outside it still looks alive, while no work is being done."
       steps={[
-        "While training moves, the log gains a line every second or so. Each line is a beat.",
-        "A helper process dies. The trainer waits for it, forever. The trace goes flat.",
+        "While training moves, a progress line appears every second or so. Each line is a beat.",
+        "Something gets stuck. The program waits, forever. The trace goes flat.",
         "No error and no crash: the program still exists, so it looks alive. Only the heartbeat tells.",
       ]}
       size={[480, 260]}
@@ -34,7 +34,7 @@ export function Heartbeat() {
       {(step) => (
         <>
           <Label x={START} y={40} tone="muted" size={14} anchor="start">
-            new log lines
+            new progress lines
           </Label>
           <Path d={ALIVE} tone="success" width={2.5} />
           <Path d={`M${STOP} ${BASE}H${END}`} tone="failure" width={2.5} drawn={step >= 1} />

@@ -11,12 +11,12 @@ export default defineLesson({
   beats: [
     {
       title: "Many ways to score zero",
-      text: "A failed maths test can mean you skipped it, misread the question, guessed, or slipped at the end. A **success rate**, the share of tries that end well, hides the same variety. The gripper may never close, grab the wrong object, close at random or miss slightly. Each needs a different fix.",
+      text: "A failed maths test can mean you skipped it, misread the question, guessed, or slipped at the end. A success rate hides the same variety. The gripper may never close, grab the wrong object, close at random or miss slightly. Each needs a different fix.",
       animation: FiveZeros,
     },
     {
       title: "Snapshot the moment it commits",
-      text: "Think of a photo finish. A **probe**, a recorder inside the test, notes where the gripper and every object are the instant the gripper first closes. Was the nearest object the one the instruction asked for? With three objects on the table, a policy that guesses is right one time in three.",
+      text: "Think of a photo finish. A recorder inside the test notes where the gripper and every object are the instant the gripper first closes. Was the nearest object the one the instruction named? With three objects, a policy that guesses is right one time in three: [chance](/learn/51-language-conditioning).",
       animation: Snapshot,
     },
     {
@@ -26,7 +26,7 @@ export default defineLesson({
     },
     {
       title: "How close is close enough",
-      text: "A key cut slightly wrong still opens some locks. To learn how much error a grasp forgives, its **tolerance**, take the hand-written controller that made the training examples and shift its grasp on purpose. Two centimetres off, the T-shaped block still lifts almost every time; the round can mostly slips away.",
+      text: "A key cut slightly wrong still opens some locks. To learn how much error a grasp forgives, its **tolerance**, take the scripted expert and shift its grasp on purpose. Two centimetres off, the T-shaped block still lifts almost every time; the round can mostly slips away.",
       animation: Tolerance,
     },
     {
@@ -43,7 +43,7 @@ export default defineLesson({
     "An average over objects hides the hard one: a rule like “within two centimetres” is fine for a block and too loose for a can.",
   ],
   tips: [
-    "Run the hand-written controller through the same test first. Its results are the ruler for every policy.",
+    "Run the scripted expert through the same test first. Its results are the ruler for every policy.",
     "Ask in order: did it close at all, at the right object, and close enough to grasp it?",
     "Test the saved stages of a training run, not only the last one. Looking shows up before success does.",
     "Measure how much error each object forgives, on the same setup that runs the tests.",

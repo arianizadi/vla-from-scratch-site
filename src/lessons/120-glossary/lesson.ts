@@ -16,7 +16,7 @@ export default defineLesson({
     },
     {
       title: "What comes out",
-      text: "An **action** is one command for the arm: where each joint should go next and whether to close the gripper. A **control step** is one tick of the robot's clock, about 20 a second. Most models plan a **chunk**, a run of actions, carry out part of it, then plan again.",
+      text: "An **action** is one command: where each joint should go next and whether to close the gripper. A **control step** is one tick of the robot's clock, about 20 a second. Most models plan an **action chunk**, a run of actions, carry out part of it, then plan again.",
       animation: ChunkAndSteps,
     },
     {
@@ -26,12 +26,12 @@ export default defineLesson({
     },
     {
       title: "How it learns",
-      text: "A **demonstration** is one recorded run of an expert doing the task. The **loss** measures how far the model's guesses are from the expert's moves. Each **training step** nudges the model to shrink it. A **checkpoint** is a saved copy of the model partway through, like a save point in a game.",
+      text: "A **demonstration** is one recorded run of an expert doing the task. The **loss** measures how far the model's guesses are from the expert's moves. Each **training step** nudges the model to shrink it. A **checkpoint** is a save point: a copy of the model partway through.",
       animation: LossFalls,
     },
     {
       title: "How we test it",
-      text: "Replaying a recording and checking the guesses is **open loop**. Letting the robot act, so its own moves make its next picture, is the **closed loop**. We test closed loop on **unseen layouts**, tables arranged in ways training never showed, and report the **success rate**: the share of tries that work.",
+      text: "Replaying a recording and checking the guesses is **open loop**. Letting the robot act, so its own moves make its next picture, is **closed loop**. We test closed loop on **unseen layouts**, tables arranged in ways training never showed, and report the **success rate**, the share of tries that work.",
       animation: ReplayOrLive,
     },
   ],

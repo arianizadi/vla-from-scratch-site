@@ -14,14 +14,9 @@ const pt = (m: number, v: number): [number, number] => [Math.round(sx(m)), Math.
 const SHORT = [pt(0.2, 0.5), pt(0.4, 0.5), pt(0.6, 0.5), pt(0.8, 2), pt(1.0, 3)];
 const EARLY = [pt(0.3, 1), pt(0.6, 1), pt(0.9, 1), pt(1.2, 3)];
 const RISE = [pt(1.2, 3), pt(1.5, 21)];
-const RANGES = [
-  { at: 1.8, low: 44, high: 59 },
-  { at: 2.1, low: 44, high: 59 },
-  { at: 2.4, low: 60, high: 64 },
-  { at: 2.6, low: 60, high: 64 },
-  { at: 2.8, low: 60, high: 64 },
-  { at: 3.0, low: 60, high: 64 },
-];
+/* After the climb the chapter gives ranges over several checkpoints (44-59%, then 60-64%);
+   the line runs through their middles. */
+const LATE = [pt(1.5, 21), pt(1.8, 52), pt(2.1, 52), pt(2.4, 62), pt(2.7, 62), pt(3.0, 62)];
 
 export function CutShort() {
   return (
@@ -56,18 +51,7 @@ export function CutShort() {
           <Label x={sx(1.5) + 12} y={sy(21) + 4} tone="accent" size={14} weight={700} anchor="start" opacity={step === 2 ? 1 : 0}>
             21%
           </Label>
-          {RANGES.map((range, index) => (
-            <g key={range.at} className="a-t" style={{ opacity: step >= 3 ? 1 : 0, transitionDelay: `${index * 80}ms` }}>
-              <rect
-                className="t-accent a-fill"
-                x={Math.round(sx(range.at)) - 4}
-                y={Math.round(sy(range.high))}
-                width={8}
-                height={Math.max(4, Math.round(sy(range.low) - sy(range.high)))}
-                rx={4}
-              />
-            </g>
-          ))}
+          <Line points={LATE} tone="accent" drawn={step >= 3} dots />
           <Label x={sx(3)} y={sy(64) - 18} tone="accent" size={14} weight={700} anchor="end" opacity={step >= 3 ? 1 : 0}>
             about 60%
           </Label>

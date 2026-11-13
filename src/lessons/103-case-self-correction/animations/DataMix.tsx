@@ -21,7 +21,7 @@ const OBJECTS: [number, number][] = [
 const STARTS: [number, number][] = [
   [-36, 20], [32, -22], [-34, -4], [36, 22], [-38, 22], [-32, -24], [38, 20], [30, -20], [-36, 10], [-26, -24], [36, 24], [32, 24],
 ];
-/** The demonstrations in which the object is moved and the teacher recovers, and where the object goes. */
+/** The demonstrations in which the object is moved and the expert recovers, and where the object goes. */
 const RECOVER: Record<number, [number, number]> = { 1: [32, 16], 4: [22, -18], 6: [-28, 16], 10: [-26, 16] };
 
 const centre = (i: number): [number, number] => [LEFT + W / 2 + (i % COLS) * (W + GAP_X), TOP + H / 2 + Math.floor(i / COLS) * (H + GAP_Y)];
@@ -32,11 +32,11 @@ export function DataMix() {
   return (
     <AnimationFrame
       title="Demonstrations that go wrong on purpose"
-      description="Twelve demonstrations drawn as small cards from above. At first every one starts from the same home pose and goes straight to the object, so the arm's first move gives the goal away. Then each starts from a random pose. Then in about a third of them the object is moved partway and the teacher turns toward its new place: these show the robot how to recover."
+      description="Twelve demonstrations drawn as small cards from above. At first every one starts from the same home pose and goes straight to the object, so the arm's first move gives the goal away. Then each starts from a random pose. Then in about a third of them the object is moved partway and the expert turns toward its new place: these show the robot how to recover."
       steps={[
         "Plain demonstrations: the arm starts from home and goes straight to the object.",
         "Random start poses: the arm's first move no longer gives the goal away.",
-        "In about a third, the object is moved and the teacher turns after it.",
+        "In about a third, the object is moved and the expert turns after it.",
         "Now the examples show how to recover, not only how to reach.",
       ]}
       size={[480, 302]}
@@ -85,7 +85,7 @@ export function DataMix() {
             one card = one recorded demonstration, seen from above
           </Label>
           <Label x={240} y={TOP + 3 * H + 2 * GAP_Y + 16} tone="ink" size={13} weight={700} opacity={step >= 2 ? 1 : 0}>
-            highlighted: the object moves, the teacher recovers
+            highlighted: the object moves, the expert recovers
           </Label>
         </>
       )}

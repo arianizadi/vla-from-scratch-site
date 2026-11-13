@@ -21,7 +21,7 @@ export default defineLesson({
     },
     {
       title: "A score is a count",
-      text: "Each attempt passes or fails, like tossing a coin whose bias you want to learn. So 93 out of 100 is an estimate: on the next 100 scenes, the same policy scored 96. A **confidence interval** is the range where the true rate plausibly lies. Fewer attempts give a wider range.",
+      text: "Each attempt passes or fails, like tossing a coin whose bias you want to learn. So 93 out of 100 is an estimate: on the next 100 scenes, the policy scored 96. A **confidence interval** is the range where the true rate plausibly lies. Fewer attempts give a wider range.",
       animation: CountWithNoise,
     },
     {
@@ -31,7 +31,7 @@ export default defineLesson({
     },
     {
       title: "The best score flatters",
-      text: "Score many policies and pick the top one, and part of what you picked is luck, like the best of many dice rolls. Eight finished policies, scored again on 100 new scenes, moved by up to 12 points and swapped places. Re-test your pick on fresh scenes and report that.",
+      text: "Score many policies and pick the top one, and part of what you picked is luck, like the best of many dice rolls. Eight finished policies, scored again on new scenes, moved by up to 12 points and swapped places. Re-test your pick on fresh scenes and report that.",
       animation: TwoLayoutSets,
     },
   ],
@@ -43,15 +43,15 @@ export default defineLesson({
     "Overlapping intervals never prove two policies equal. A real gap can hide inside them.",
   ],
   tips: [
-    "Run a scripted expert through the same test first. If it succeeds, the task is possible and the success check works.",
+    "Run the scripted expert through the same test first. If it succeeds, the task is possible and the success check works.",
     "Use the same scenes for every policy you compare.",
     "Re-test the checkpoint you choose on fresh scenes before you report it.",
     "Write down every test setting next to the score it produced.",
   ],
-  takeaway: "A success rate is a count on a handful of random scenes. Test on new scenes, compare on the same ones, and treat a gap of a few points as noise.",
+  takeaway: "A success rate is a count over a limited number of scenes. Test on new scenes, compare on the same ones, and treat a gap of a few points as noise.",
   related: ["91-loss-is-not-success", "92-measuring-failure", "41-flow-matching", "95-what-a-policy-looks-at"],
   lab: [
-    { label: "The scripted expert through the same test", href: "/lab#the-scripted-expert" },
+    { label: "The scripted expert through the same test", href: "/lab#task" },
     { label: "Final checkpoints on two sets of scenes", href: "/lab#final-checkpoints" },
   ],
   tryIt: ["loss-vs-success", "arm-replay"],

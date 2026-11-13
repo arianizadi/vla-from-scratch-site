@@ -9,7 +9,7 @@ export const math = [
     symbols: [
       [String.raw`x`, "the pixel's brightness as stored, from 0 (black) to 255 (white)"],
       [String.raw`x / 255`, "the same brightness on a 0 to 1 scale"],
-      [String.raw`- 0.5,\ \div 0.5`, "shift and stretch so mid-grey sits at 0"],
+      [String.raw`0.5`, "mid-grey: subtract it, then divide by it"],
       [String.raw`\hat{x}`, "what the model receives: from −1 (black) to 1 (white)"],
     ],
     metaphor: "Like converting a temperature before reading it off a thermometer the model knows: skip one step of the conversion and every reading lands far off the scale.",

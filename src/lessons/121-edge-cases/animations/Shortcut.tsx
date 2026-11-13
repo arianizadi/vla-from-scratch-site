@@ -44,7 +44,7 @@ export function Shortcut() {
             </Label>
             <Cells x={74} y={186} values={LAST} tone="action" cell={11} gap={3} />
             <Cells x={74} y={222} values={NEXT} tone="action" cell={11} gap={3} opacity={step === 1 ? 1 : 0} />
-            <Label x={74} y={244} tone="muted" size={14} opacity={step === 1 ? 1 : 0}>
+            <Label x={24} y={244} tone="muted" size={14} anchor="start" opacity={step === 1 ? 1 : 0}>
               next move: almost equal
             </Label>
 

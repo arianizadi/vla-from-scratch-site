@@ -52,7 +52,7 @@ export function ChunkAndSteps() {
       description="Time runs in control steps, one action each. The model plans a chunk of 15 actions at once, the arm carries out the first 8, and then the model looks again and plans a fresh chunk from there; the unused 7 are dropped."
       steps={[
         "Time runs in ticks called control steps. Each tick, the arm gets one action.",
-        "The model plans a chunk: 15 actions at once.",
+        "The model plans an action chunk: 15 actions at once.",
         "The arm carries out the first 8…",
         "…then the model looks again and plans a fresh chunk. The unused 7 are dropped.",
         "And so on, about 20 ticks every second.",
@@ -83,7 +83,7 @@ export function ChunkAndSteps() {
             </Label>
 
             <Chunk start={0} y={CHUNK_YS[0]} planned={step >= 1} done={step >= 2 ? DONE : 0} dropped={step >= 3} />
-            <Bracket x1={tickX(0) - 7} x2={tickX(PLANNED - 1) + 7} y={CHUNK_YS[0] - 28} label="a chunk: 15 planned" tone="action" opacity={step === 1 ? 1 : 0} />
+            <Bracket x1={tickX(0) - 7} x2={tickX(PLANNED - 1) + 7} y={CHUNK_YS[0] - 28} label="an action chunk: 15 planned" tone="action" opacity={step === 1 ? 1 : 0} />
             <Bracket x1={tickX(0) - 7} x2={tickX(DONE - 1) + 7} y={CHUNK_YS[0] - 28} label="8 carried out" tone="action" opacity={step >= 2 ? 1 : 0} />
 
             <Chunk start={DONE} y={CHUNK_YS[1]} planned={step >= 3} done={step >= 4 ? DONE : 0} dropped={false} />

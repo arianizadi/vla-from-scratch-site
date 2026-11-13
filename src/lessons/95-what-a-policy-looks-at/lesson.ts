@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Same score, different habits",
-      text: "Two drivers reach the same parking spot. One watches the road; the other memorised the route. On an empty road you can't tell them apart. A policy can also **look every time** it plans its next moves, or **look once** and then carry on. On a still table, both score the same.",
+      text: "Two drivers reach the same parking spot. One watches the road; the other memorised the route. On an empty road you can't tell them apart. A policy can **look every time** it plans, or **look once** and then carry on. On a still table, both score the same.",
       animation: TwoHabits,
     },
     {
@@ -20,12 +20,12 @@ export default defineLesson({
     },
     {
       title: "Freeze the cameras",
-      text: "Now tape a photo over the windscreen: show the policy only the first camera picture, for the whole try. It still headed for the right object nearly every time, so it chose its target from that first look. But it almost always fumbled the grasp: the last centimetres need fresh pictures.",
+      text: "Tape a photo over the windscreen: show the policy only the first camera picture, for the whole try. It still headed for the right object nearly every time, so it chose its target at that first look. But it almost always fumbled the grasp: the last centimetres need fresh pictures.",
       animation: FrozenCamera,
     },
     {
       title: "The habit comes from the examples",
-      text: "The hand-written **expert** that made the examples planned once per try, from one starting pose, and nothing ever moved. Probe it the same way and it fails the same way. The policy copied that habit. Examples with varied starts and moved objects, which the expert chases, taught a policy to turn back.",
+      text: "The scripted expert planned once per try, from one starting pose, and nothing ever moved. Probe it the same way and it fails the same way: the policy copied that habit. Examples with varied starts and moved objects, which the expert chases, taught a policy to turn back.",
       animation: DemoHabit,
     },
   ],

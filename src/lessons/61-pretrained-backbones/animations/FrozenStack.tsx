@@ -9,8 +9,8 @@ const W = 220;
 const PARTS = [
   { key: "eyes", label: "seeing part", x: X - 56, w: 108, y: 254, h: 34, learnsFrom: -1, reader: true },
   { key: "words", label: "word table", x: X + 56, w: 108, y: 254, h: 34, learnsFrom: -1, reader: true },
-  { key: "lower", label: "lower layers", sub: "reading words and pictures", x: X, w: W, y: 192, h: 62, learnsFrom: -1, reader: true },
-  { key: "top", label: "top 4 layers", x: X, w: W, y: 132, h: 40, learnsFrom: 2, reader: true },
+  { key: "lower", label: "lower blocks", sub: "reading words and pictures", x: X, w: W, y: 192, h: 62, learnsFrom: -1, reader: true },
+  { key: "top", label: "top 4 blocks", x: X, w: W, y: 132, h: 40, learnsFrom: 2, reader: true },
   { key: "mover", label: "mover", sub: "the action head", x: X, w: W, y: 58, h: 48, learnsFrom: 3, reader: false },
 ];
 
@@ -24,11 +24,11 @@ export function FrozenStack() {
   return (
     <AnimationFrame
       title="Freeze most, train the top"
-      description="The borrowed reader has about 2.2 billion adjustable numbers in layers stacked on its seeing part and its word table. All of them are frozen, so training will not change them. Then the top 4 layers are unfrozen and trained together with the mover: about 306 million numbers learn, the rest stay as they were."
+      description="The borrowed reader has about 2.2 billion adjustable numbers in blocks stacked on its seeing part and its word table. All of them are frozen, so training will not change them. Then the top 4 blocks are unfrozen and trained together with the mover: about 306 million numbers learn, the rest stay as they were."
       steps={[
         "The borrowed reader: about 2.2 billion adjustable numbers.",
         "Freeze it all: training will not change these numbers.",
-        "Unfreeze only the top 4 layers.",
+        "Unfreeze only the top 4 blocks.",
         "Train them with the mover. About 306 million numbers learn.",
       ]}
       size={[480, 290]}

@@ -7,9 +7,9 @@ export function QuestionPath() {
   return (
     <AnimationFrame
       title="Walk down the questions"
-      description="A path of five questions, asked in order from the top. Does the hand-written expert pass the same test? Does the policy copy the expert on recorded examples? Does the gripper close? At the named object? Close enough to grasp? Each no leads to the right, to a likely cause: the test itself, training or inputs, the motion, not looking, precision. If every answer is yes, what remains is the grasp itself."
+      description="A path of five questions, asked in order from the top. Does the scripted expert pass the same test? Does the policy copy the expert on recorded examples? Does the gripper close? At the named object? Close enough to grasp? Each no leads to the right, to a likely cause: the test itself, training or inputs, the motion, not looking, precision. If every answer is yes, what remains is the grasp itself."
       steps={[
-        "Start upstream: does the hand-written expert pass the same test? If not, fix the test.",
+        "Start upstream: does the scripted expert pass the same test? If not, fix the test.",
         "Does the policy copy the expert on recorded examples? If not, suspect training or its inputs.",
         "Does the gripper close at all? If not, look at the motion.",
         "Does it close at the object it was asked for? If not, it isn’t looking.",

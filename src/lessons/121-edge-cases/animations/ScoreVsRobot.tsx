@@ -19,19 +19,19 @@ export function ScoreVsRobot() {
   return (
     <AnimationFrame
       title="A good score, a robot that fails"
-      description="During training the error falls nicely, yet on the robot the policy succeeds 0 times. The reason: most moments of a demonstration can be guessed from the arm's own motion, and only the first moments need the camera. Fitting the easy part already gives a low error."
+      description="During training the loss falls nicely, yet on the robot the policy succeeds 0 times. The reason: most moments of a demonstration can be guessed from the arm's own motion, and only the first moments need the camera. Fitting the easy part already gives a low loss."
       steps={[
-        "Training: the error falls nicely.",
+        "Training: the loss falls nicely.",
         "On the robot: no successes at all.",
         "Why? Most of a demonstration can be guessed from how the arm is already moving…",
-        "…only the first moments need the eyes. Fitting the easy part already gives a low error.",
+        "…only the first moments need the eyes. Fitting the easy part already gives a low loss.",
       ]}
       size={[480, 280]}
     >
       {(step) => (
         <>
           <Label x={LOSS.x + LOSS.w / 2} y={26} tone="ink" size={15} weight={700}>
-            training error
+            training loss
           </Label>
           <Axes x={LOSS.x} y={LOSS.y} w={LOSS.w} h={LOSS.h} />
           <Line points={CURVE} tone="accent" width={3} drawn />

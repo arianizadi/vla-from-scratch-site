@@ -25,11 +25,11 @@ const SAVED = [0, 3, 6, 6];
 export function TeacherRecords() {
   return (
     <AnimationFrame
-      title="A teacher to copy"
-      description="A scripted teacher, a program that knows exactly where the cube is, reaches down, grasps the red cube and lifts it. Every moment is saved as a frame: what the cameras saw and how the arm moved. One such recording is a demonstration; with the cube in many places, there are hundreds to learn from."
+      title="An expert to copy"
+      description="A scripted expert, a program that knows exactly where the cube is, reaches down, grasps the red cube and lifts it. Every moment is saved as a frame: what the cameras saw and how the arm moved. One such recording is a demonstration; with the cube in many places, there are hundreds to learn from."
       steps={[
-        "One red cube, and a scripted teacher that knows exactly where it is.",
-        "The teacher reaches down and grasps the cube. Each moment is saved.",
+        "One red cube, and a scripted expert that knows exactly where it is.",
+        "The expert reaches down and grasps the cube. Each moment is saved.",
         "It lifts the cube. The saved frames pair what the cameras saw with how the arm moved.",
         "Repeat with the cube in many places: hundreds of demonstrations to copy.",
       ]}
@@ -45,7 +45,7 @@ export function TeacherRecords() {
             <Thing kind="cube" x={CUBE} y={lifted ? TABLE - LIFT : TABLE} tone="action" delay={lifted ? 100 : 0} />
             <Arm base={BASE} lengths={LENGTHS} angles={reach(BASE, pose.at, LENGTHS)} open={pose.open} tone="ink" />
             <Label x={110} y={TABLE + 18} tone="muted" size={13}>
-              scripted teacher
+              scripted expert
             </Label>
 
             <Label x={300 - 22} y={20} tone="muted" size={13} anchor="start">

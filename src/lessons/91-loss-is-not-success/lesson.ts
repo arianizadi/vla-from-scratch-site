@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "Two different questions",
-      text: "The **loss** asks: on recorded moments, how close are the predicted moves to the demonstrator's? Success asks: left alone, does the robot pick up the object? A student can copy worked examples perfectly and still freeze on a fresh problem. Here, the policy with the lowest loss was the weakest robot.",
+      text: "The loss asks: on recorded moments, how close are the predicted moves to the expert's? Success asks: left alone, does the robot pick up the object? A student can copy worked examples perfectly and still freeze on a fresh problem. The policy with the lowest loss was our weakest robot.",
       animation: LossRanking,
     },
     {
       title: "Most moments are easy",
-      text: "Once the arm is moving, the next move is almost the last one again, like guessing where a rolling ball goes next. Those moments fill nearly all the training data, and a policy can score well on them without looking. The moment that chooses the object is rare, and the loss averages it away.",
+      text: "Once the arm is moving, the next move is almost the last one again: the [shortcut](/learn/52-history-and-shortcuts) from earlier. Those moments fill nearly all the training data, and a policy can score well on them without looking. The moment that chooses the object is rare, and the loss averages it away.",
       animation: EasyMoments,
     },
     {
       title: "Small misses snowball",
-      text: "When the policy drives, its own moves decide what it sees next. A first move slightly off leads to a view no demonstration showed, where the next guess is worse, and the error grows. Recorded data never shows this, because there the demonstrator was always at the wheel.",
+      text: "When the policy drives, its own moves decide what it sees next. A first move slightly off leads to a view no demonstration showed, where the next guess is worse: the [compounding error](/learn/43-imitation-learning) from earlier. The loss never sees this, because in recordings the expert was always at the wheel.",
       animation: Snowball,
     },
     {
       title: "Test the robot, from the start",
-      text: "In one run the loss barely moved while success climbed from almost zero to 85%. Learning to use the camera arrived late, and the loss gave no sign of it. So let the robot drive in the simulator at every save point, from the very first one, and judge it by that.",
+      text: "In one run the loss barely moved while success climbed from near zero to 85%. Learning to use the camera arrived late, and the loss gave no sign of it. So let the robot drive in the simulator at every save point, from the first, and judge it by that.",
       animation: FlatLossRisingSuccess,
     },
   ],
