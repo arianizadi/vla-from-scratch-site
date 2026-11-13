@@ -73,11 +73,11 @@ export function Footer() {
         <div className="max-w-[320px]">
           <h2 className="font-sans text-14 font-bold tracking-normal text-ink">Licence and credit</h2>
           <p className="mt-3">
-            Free under the{" "}
-            <a href={repoUrl("LICENSE")} className="text-link">
-              MIT licence
-            </a>
-            . Built on{" "}
+            Free and open, copyleft: the lessons are{" "}
+            <a href={repoUrl("NOTICE.md")} className="text-link">
+              CC BY-SA 4.0
+            </a>{" "}
+            and the code AGPL-3.0, so anything built from them stays open, with credit. Built on{" "}
             <a href={site.foundryRepo} className="text-link">
               VLA Foundry
             </a>{" "}
