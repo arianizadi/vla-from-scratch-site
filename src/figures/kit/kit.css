@@ -54,6 +54,7 @@
 .plate-stage {
   position: relative;
   min-width: 0;
+  overflow-x: clip; /* a drawing that spills past its frame must not widen the page */
   padding: 12px;
 }
 @media (min-width: 640px) {

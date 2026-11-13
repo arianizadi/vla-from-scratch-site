@@ -1271,3 +1271,9 @@
 .prose .katex-display > .katex > .katex-html {
   display: inline-block;
 }
+
+/* Guard: nothing may make a page scroll sideways on a phone (clip, not hidden, so sticky headers keep working). */
+html,
+body {
+  overflow-x: clip;
+}
