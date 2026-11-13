@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Cut the picture into tiles",
-      text: "Like a mosaic, a camera picture is a grid of tiny coloured dots, three numbers each. A **Vision Transformer**, a model that reads images in pieces, cuts it into square tiles called **patches**. One shared recipe turns each patch into a **token**: a list of numbers, like a word.",
+      text: "Like a mosaic, a camera picture is a grid of tiny coloured dots, **pixels**, three numbers each. A **Vision Transformer**, a model that reads images, cuts it into square tiles called **patches**. One shared recipe turns each patch into a **patch token**: a list of numbers, like a word's row.",
       animation: PatchTokens,
     },
     {

@@ -16,7 +16,7 @@ const TURNED: [number, number] = [tidy(BASE[0] + LEVER * Math.cos(DRAWN_ANGLE)),
 export function LeverArm() {
   return (
     <AnimationFrame
-      title="From radians to millimetres"
+      title="From a tiny turn to millimetres"
       description="Seen from above, the base joint turns the whole arm. The gripper is half a metre from that joint: the lever arm. Turning the joint by about half a degree moves the gripper along an arc of 5 millimetres, because the arc is the lever arm times the angle. A grasp forgives only about a centimetre."
       steps={[
         "Seen from above: the base joint turns the whole arm, like a door on its hinge.",

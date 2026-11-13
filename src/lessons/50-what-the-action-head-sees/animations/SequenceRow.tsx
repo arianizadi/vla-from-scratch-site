@@ -46,11 +46,11 @@ export function SequenceRow() {
   return (
     <AnimationFrame
       title="What the action head reads"
-      description="The action head reads a single row of tokens and nothing else: one token for how noisy the actions are, the scene as tokens handed over by the backbone (words and image pieces), one token for the arm's joint angles, and one slot for each of the 15 future actions. The action slots come out as the chunk of actions."
+      description="The action head reads a single row of tokens and nothing else: one token for how noisy the actions are, the scene as tokens handed over by the backbone (words and patches), one token for the arm's joint angles, and one slot for each of the 15 future actions. The action slots come out as the chunk of actions."
       steps={[
         "The action head reads one row of tokens. Nothing else reaches it.",
         "A token saying how noisy the actions still are.",
-        "The scene, as tokens from the backbone: a few for the words, many for image pieces.",
+        "The scene, as tokens from the backbone: a few for the words, many for patches.",
         "One token for the arm's joint angles.",
         "One slot per future action. These are what come out, as the chunk.",
       ]}
@@ -97,7 +97,7 @@ export function SequenceRow() {
             );
           })}
           <Label x={layout[1].centre} y={ROW_Y + 54} tone="muted" size={13} opacity={step >= 2 ? 1 : 0}>
-            words + image pieces
+            words + patches
           </Label>
         </>
       )}

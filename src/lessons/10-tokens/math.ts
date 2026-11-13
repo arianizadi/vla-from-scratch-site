@@ -26,6 +26,6 @@ export const math = [
     ],
     metaphor: "A row of light switches with one switch on: only that row of the table gets through.",
     example:
-      "For id 2 out of three tokens, $\\mathbf{h} = (0, 0, 1)$. Multiplying by the table above adds $0 \\times$ row 0, $0 \\times$ row 1 and $1 \\times$ row 2, which is $(0.3,\\ 0.7)$ again. This is why the table can be learned like any other weights.",
+      "For id 2 out of three tokens, $\\mathbf{h} = (0, 0, 1)$. Multiplying by the table above adds $0 \\times$ row 0, $0 \\times$ row 1 and $1 \\times$ row 2, which is $(0.3,\\ 0.7)$ again. This is why the table can be learned like every other number in the model.",
   },
 ];

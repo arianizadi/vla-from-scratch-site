@@ -8,8 +8,8 @@ const ROWS = [
   ["pick", "␣up", "␣the", "␣yellow", "␣T", "␣block"],
 ];
 const LENGTH = 6;
-const SLOT = 68;
-const X0 = 70;
+const SLOT = 70;
+const X0 = 65;
 const xAt = (index: number) => X0 + index * SLOT;
 const ROW_Y = [66, 156];
 
@@ -37,11 +37,11 @@ export function PaddingMask() {
                 text={token}
                 tone="language"
                 size={14}
-                width={62}
+                width={66}
               />
             )),
           )}
-          <Chip x={xAt(5)} y={ROW_Y[0]} text="pad" tone="faint" variant="outline" size={14} width={62} opacity={step >= 1 ? 1 : 0} scale={step >= 1 ? 1 : 0.6} />
+          <Chip x={xAt(5)} y={ROW_Y[0]} text="pad" tone="faint" variant="outline" size={14} width={66} opacity={step >= 1 ? 1 : 0} scale={step >= 1 ? 1 : 0.6} />
 
           {ROWS.map((row, rowIndex) =>
             Array.from({ length: LENGTH }, (_, index) => {

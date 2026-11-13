@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "A bag of words",
-      text: "Tip Scrabble tiles into a bag and the order is gone. Attention has the same blind spot: it compares words by what they are, not where they are. So “red cube left of green can” and “green can left of red cube” look identical. For a robot, that order decides which object moves.",
+      text: "Tip Scrabble tiles into a bag: the order is gone. Attention has the same blind spot: it compares words by what they are, not where. So “red cube left of green can” and “green can left of red cube” look identical. For a robot, that order decides which object moves.",
       animation: OrderBlind,
     },
     {
       title: "Turn each word by its place",
-      text: "Picture each word as a clock hand. **Rotary positions** turn the hand by an angle set by the word's **position**, its place number in the line. When two words compare, only the angle between them counts, and that depends on how far apart they sit. Same gap, same match, anywhere in the sentence.",
+      text: "Picture each word as a clock hand. **Rotary positions** turn the hand by an angle set by the word's **position**, its place number. When two words compare, only the angle between them counts, and that depends on how far apart they sit. Same gap, same match, anywhere.",
       animation: RotaryDial,
     },
     {
       title: "Same gaps in practice and on the job",
-      text: "If friends sit two seats apart at every rehearsal, moving them on opening night confuses everyone. In training, prompts are stacked with blank padding; served alone, a prompt has none. That would change the gaps between words and actions. So every prompt gets the same number of seats, and each word always sits in the same place.",
+      text: "Actors rehearse in fixed seats; move them on opening night and cues go wrong. In training, prompts are stacked with blank padding; on the robot, a prompt arrives alone. The gaps between words and actions would change. So every prompt gets the same number of seats, always.",
       animation: OffsetGap,
     },
     {
       title: "Every word needs its own place",
-      text: "If a post office rounded house numbers, three houses would share one number and their mail would mix. Positions stored with too few digits do the same: neighbours round to one place and lose their order, with no error. When we gave every step its own exact place, our robot picked the named object more often.",
+      text: "If a post office rounded house numbers, three houses would share one and mix their mail. Positions stored with too few digits do the same: neighbours share a place and silently lose their order. Once every action step had its own place, our robot picked the named object more often.",
       animation: PositionCollapse,
     },
   ],

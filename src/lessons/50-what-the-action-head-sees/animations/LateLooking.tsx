@@ -17,7 +17,7 @@ const points = (from: number, to: number): [number, number][] =>
 export function LateLooking() {
   return (
     <AnimationFrame
-      title="In the input is not in use"
+      title="Being there is not being used"
       description="A sketch of how often a policy closes its gripper at the named object as training goes on. The scene is in its input from the first step, yet for a long stretch it does no better than chance, one in three with three objects. Then, fairly suddenly, it starts to use the scene and closes at the named object every time."
       steps={[
         "From the very first training step, the scene is in the row the action head reads.",

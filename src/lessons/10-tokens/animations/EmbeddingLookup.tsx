@@ -27,7 +27,7 @@ export function EmbeddingLookup() {
       steps={[
         "cubes arrives as two ids: 9 (cube) and 4 (s).",
         "The table has one row per token. Id 9 points at row 9.",
-        "The model copies that row out: a vector of numbers for cube.",
+        "The model copies that row out: a list of numbers for cube.",
         "Same for id 4. A real table has tens of thousands of rows.",
       ]}
       size={[480, 280]}
@@ -68,7 +68,7 @@ export function EmbeddingLookup() {
               <Move key={`out-${input.text}`} x={out ? 418 : TABLE_X + 20} y={out ? input.y : rowY(input.id)} opacity={out ? 1 : 0} delay={index === 1 ? 500 : 0}>
                 <Cells x={0} y={0} values={ROWS[input.id]} tone="language" cell={12} gap={3} />
                 <Label x={0} y={22} tone="muted" size={13}>
-                  {`vector for ${input.text}`}
+                  {`numbers for ${input.text}`}
                 </Label>
               </Move>
             );

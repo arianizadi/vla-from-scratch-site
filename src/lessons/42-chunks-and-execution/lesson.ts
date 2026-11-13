@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Plan a little, act, look again",
-      text: "A driver glances at the road, then drives a moment on that glance. A policy does the same. It predicts an **action chunk**, a run of future actions (here 15, under a second), plays the first 8, then looks at the cameras again and plans a fresh chunk: a **re-plan**.",
+      text: "A driver glances at the road, then drives a moment on that glance. A policy does the same. It predicts an **action chunk**, the next 15 actions, plays the first 8, then looks at the cameras again and plans a fresh chunk: a **re-plan**.",
       animation: Decisions,
     },
     {
@@ -25,7 +25,7 @@ export default defineLesson({
     },
     {
       title: "Looking again is not seeing",
-      text: "A re-plan hands the policy fresh images, but nothing forces it to use them. We moved the object halfway through a reach: the policy kept going to the old spot, and re-planning more often did not help. Demonstrations that showed [recovering](/learn/103-case-self-correction) did.",
+      text: "A re-plan hands the policy fresh images, but nothing forces it to use them. We moved the object halfway through a reach: the policy kept going to the old spot, and re-planning more often did not help. Demonstrations that showed [recovering](/learn/43-imitation-learning) did.",
       animation: MovedObject,
     },
   ],
@@ -33,11 +33,11 @@ export default defineLesson({
     "“Re-plan more often and the robot reacts better” is a misconception. It reacts only if the policy actually reads the new images.",
     "On a real robot the world keeps moving while the model thinks. A slow model acts on a view that is already out of date.",
     "Playing very few actions per chunk brings back some of the zigzag; playing all of them leaves the robot blind for longer.",
-    "The first plan of an episode has no earlier plan to continue. Make sure training and use agree on what fills that gap.",
+    "The first plan of a try has no earlier plan to continue. Make sure training and use agree on what fills that gap.",
   ],
   tips: [
     "Test reactivity by moving the object mid-reach. A scene where nothing moves cannot show it.",
-    "Count the model's thinking time in robot ticks: anything over one tick means acting on old plans.",
+    "Compare the model's thinking time with the time between two actions: anything longer means acting on an old view.",
     "Compare a few “how many to play” settings on the same scenes before drawing a conclusion.",
   ],
   takeaway: "Plan a short run, play part of it, look again; a fresh look helps only if the policy actually uses what it sees.",

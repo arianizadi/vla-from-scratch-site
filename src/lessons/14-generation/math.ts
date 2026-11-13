@@ -19,14 +19,16 @@ export const math = [
   },
   {
     title: "Cutting the tail (top-p)",
-    formula: "\\text{keep the fewest top words with } \\sum p_i > p, \\text{ then divide each kept } p_i \\text{ by their total}",
+    formula: "p_i' = \\frac{p_i}{\\sum_{j \\in K} p_j}",
     symbols: [
-      ["p", "how much of the chance to keep, such as 0.9"],
-      ["p_i", "the chance of word i, sorted from most to least likely"],
+      ["K", "the kept words: the fewest favourites whose chances pass a cut-off, like 0.9"],
+      ["p_i", "the chance of word i before the cut"],
+      ["\\sum_{j \\in K} p_j", "the kept words' chances added up"],
+      ["p_i'", "word i's new chance; a word outside K gets 0"],
     ],
     metaphor: "Picking a restaurant: shortlist the favourites until they cover most of the group's votes, ignore the rest, then draw from the shortlist.",
     example:
-      "With chances $0.644, 0.237, 0.087, 0.032$ and $p = 0.9$: the first two add up to $0.881$, not yet above $0.9$, so the third joins ($0.968$). The last word is dropped. Dividing the kept three by $0.968$ gives $0.665, 0.245, 0.090$, and $0$ for the last.",
+      "Chances $0.644, 0.237, 0.087, 0.032$ and a cut-off of $0.9$. The first two add up to $0.881$, not yet above $0.9$, so the third joins: $0.968$. The last word is dropped. Dividing the kept three by $0.968$ gives $0.665$, $0.245$ and $0.090$.",
   },
   {
     title: "What the cache saves",

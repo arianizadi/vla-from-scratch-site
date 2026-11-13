@@ -713,6 +713,7 @@
 }
 .math-cards {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a wide formula must not widen the page */
   gap: 28px;
   margin: 28px 0 0;
   padding: 0;
@@ -745,6 +746,7 @@
   font-variant-numeric: tabular-nums;
 }
 .math-formula {
+  position: relative; /* KaTeX's hidden MathML is absolutely positioned: keep it inside this scroll box */
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -876,8 +878,13 @@
   font-weight: 700;
   content: counter(math-step);
 }
+/* KaTeX's hidden MathML is absolutely positioned: keep it inside the formula's own box. */
+.math-inline {
+  position: relative;
+}
 /* A line may break between the pieces of a list ("1.65, 1.11, ...") and, as KaTeX allows,
-   after a relation or an operator ("= 1.5"); never inside a number. */
+   after a relation or an operator ("= 1.5"); never inside a number. A piece still too long
+   for a phone scrolls inside its step (.math-steps > li above). */
 .math-piece .katex {
   white-space: normal;
 }
@@ -903,4 +910,9 @@
 }
 .msym-ink {
   color: var(--text);
+}
+
+/* KaTeX's MathML copy is absolutely positioned; anchor it to its own formula everywhere in a lesson. */
+.lesson-math .katex {
+  position: relative;
 }

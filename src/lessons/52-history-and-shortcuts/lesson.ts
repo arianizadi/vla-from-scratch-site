@@ -15,7 +15,7 @@ export default defineLesson({
     },
     {
       title: "The easy answer: keep going",
-      text: "Forecasting “same as yesterday” is right most days. The expert moves smoothly, so “the last action, a bit further” predicts almost every recorded step without the cameras. Only the very first step, where the reach chooses which object, truly needs the scene. That is a tempting **shortcut**.",
+      text: "History hands the policy the [shortcut](/learn/43-imitation-learning) on a plate. The expert moves smoothly, so “the last action, a bit further” predicts almost every recorded step without the cameras. Only the very first step, where the reach chooses which object, truly needs the scene.",
       animation: KeepGoing,
     },
     {

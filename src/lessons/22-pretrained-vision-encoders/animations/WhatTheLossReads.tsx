@@ -80,7 +80,7 @@ export function WhatTheLossReads() {
             <Arrow from={[LOSS[0], 232]} to={[LOSS[0], 190]} tone="language" drawn={step >= 1 && clip} opacity={step >= 1 && clip ? 1 : 0} />
 
             <Label x={LOSS[0]} y={248} tone="vision" size={14} weight={700} opacity={step === 3 ? 1 : 0}>
-              hidden patches
+              no caption needed
             </Label>
           </>
         );

@@ -379,13 +379,6 @@
     text-size-adjust: 100%;
   }
 
-  /* A guard, not a fix: nothing may widen the page on a phone (wide content scrolls inside its
-     own box). clip, unlike hidden, keeps sticky positioning working. */
-  html,
-  body {
-    overflow-x: clip;
-  }
-
   body {
     background-color: var(--bg);
     color: var(--text);
@@ -1279,9 +1272,11 @@
    ========================================================================== */
 
 .prose .katex {
+  position: relative; /* keeps KaTeX's absolutely positioned MathML copy inside its scroll box */
   font-size: 1.05em;
 }
 .prose .katex-display {
+  position: relative;
   display: block;
   margin: 24px 0;
   padding: 4px 0 4px 24px;
@@ -1296,4 +1291,10 @@
 }
 .prose .katex-display > .katex > .katex-html {
   display: inline-block;
+}
+
+/* Guard: nothing may make a page scroll sideways on a phone (clip, not hidden, so sticky headers keep working). */
+html,
+body {
+  overflow-x: clip;
 }

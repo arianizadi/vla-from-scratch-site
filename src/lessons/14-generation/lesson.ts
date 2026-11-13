@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "One word at a time",
-      text: "Tap your phone's suggested next word again and again and a sentence appears. Generation works the same way. The model gives every possible next token a chance, one is picked and added, and the longer text goes back in. The loop stops at a special **end token** or at a length limit.",
+      text: "Tap your phone's suggested next word again and again and a sentence appears. **Generation** does the same: the model gives every possible next token a chance, one is picked and added, and the longer text goes back in. It stops at a special **end token** or a length limit.",
       animation: GenerationLoop,
     },
     {
       title: "Take the favourite, or roll a die",
-      text: "**Greedy** picking always takes the most likely token: same prompt, same text. **Sampling** rolls a die weighted by the chances, so the text varies. Greedy can get stuck repeating itself; sampling can wander off. To test whether our robot's vision model sees a scene, we ask it to name the objects, greedily, so the test repeats exactly.",
+      text: "**Greedy** picking always takes the likeliest token: same prompt, same text. **Sampling** rolls a die weighted by the chances, so the text varies. Greedy can loop; sampling can wander off. Robot tests later use greedy picking, so they repeat exactly.",
       animation: GreedyVsSampling,
     },
     {
       title: "The boldness dial",
-      text: "**Temperature** is a boldness dial. Turned down, the favourite takes almost all the chance; turned up, the chances even out and long shots get picked. A second trick cuts the tail: thousands of tiny chances add up to a real risk of nonsense, so the unlikeliest words are dropped before the die is rolled.",
+      text: "**Temperature** is a boldness dial. Turned down, the favourite takes almost all the chance; turned up, chances even out and long shots get picked. A second trick cuts the tail: thousands of tiny chances add up to a real risk of nonsense, so the unlikeliest words are dropped first.",
       animation: TemperatureDial,
     },
     {
       title: "Keep notes, don't re-read",
-      text: "Reading aloud, you don't restart the book for every new word. Earlier words never change, so the model keeps their notes in a **cache**, a memory of past work, and works out only the newest token each pass. For one of our captions, that cut the work from about 8,000 token passes to 300.",
+      text: "Reading aloud, you don't restart the book for every word. Earlier words never change, so the model keeps their notes in a **cache**, a memory of past work, and works out only the newest token. For one caption, that cut the work from about 8,000 token passes to 300.",
       animation: KeepNotes,
     },
   ],

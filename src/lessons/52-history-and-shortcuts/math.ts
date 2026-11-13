@@ -4,8 +4,8 @@ export const math = [
     title: "The keep-going guess",
     formula: String.raw`\hat{a}_t = a_{t-1} + (a_{t-1} - a_{t-2})`,
     symbols: [
-      [String.raw`a_t`, "the action at step t"],
-      [String.raw`\hat{a}_t`, "the guess for it"],
+      [String.raw`a_{t-1}`, "the action one step earlier"],
+      [String.raw`\hat{a}_t`, "the guess for the action at step t"],
       [String.raw`a_{t-1} - a_{t-2}`, "the last change: how far the previous step moved"],
     ],
     metaphor: "Catching a ball by assuming it keeps flying the way it was flying.",

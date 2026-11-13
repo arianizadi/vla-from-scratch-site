@@ -6,16 +6,16 @@ import { WordsMeetPictures } from "./animations/WordsMeetPictures";
 
 export default defineLesson({
   slug: "51-language-conditioning",
-  idea: "An instruction can steer the arm only if its words reach the action head beside the image pieces, and the policy learns it needs them.",
+  idea: "An instruction can steer the arm only if its words reach the action head beside the patch tokens, and the policy learns it needs them.",
   beats: [
     {
       title: "Only the words say which",
-      text: "Three objects lie on the table and the picture looks the same whatever you ask for. “Pick up the green can” is the only clue to which one. So the sentence must reach the **action head**, the part that writes the moves, or the robot can only guess.",
+      text: "Three objects lie on the table and the picture looks the same whatever you ask for. “Pick up the green can” is the only clue to which one. So the sentence must reach the action head, the part that writes the moves, or the robot can only guess.",
       animation: WhichObject,
     },
     {
       title: "Words say which, pictures say where",
-      text: "Like a friend pointing at a photo while you say “that one”, the policy joins two clues. The sentence becomes word **tokens** placed in the same row as the image pieces. The word “can” says which; the piece showing the can says where. Change two words, and the target moves.",
+      text: "Like a friend pointing at a photo while you say “that one”, the policy joins two clues. The sentence becomes word tokens placed in the same row as the patch tokens. The word “can” says which; the patch showing the can says where. Change two words, and the target moves.",
       animation: WordsMeetPictures,
     },
     {

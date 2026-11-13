@@ -19,7 +19,7 @@ export function Handshakes() {
         "Four tokens. Each one compares itself with every token.",
         "That is a 4 by 4 square: 16 comparisons.",
         "Double to 8 tokens: 64 comparisons, four times the work.",
-        "Every patch of four pictures is hundreds of tokens, paid each time the robot acts.",
+        "A robot reading every patch reads hundreds of tokens, and pays this each time it acts.",
       ]}
       size={[480, 290]}
     >

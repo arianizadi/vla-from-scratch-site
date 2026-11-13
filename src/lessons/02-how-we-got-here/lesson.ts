@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Reading a whole sentence at once",
-      text: "Repeat a long sentence after hearing it once and details slip. Early translators had that problem: they squeezed each sentence into one small memory. **Attention**, where each word looks back at every other word and takes what it needs, fixed it. That is how a robot can tell which cube “red” means.",
+      text: "Repeat a long sentence after hearing it once and details slip. Early translation programs squeezed each sentence into one small memory, and lost details. **Attention** fixed it: each word looks back at every other word and takes what it needs. That is how a robot tells which cube “red” means.",
       animation: LookAtEveryWord,
     },
     {
@@ -31,7 +31,7 @@ export default defineLesson({
   ],
   edgeCases: [
     "“Robot models came from robotics.” Most of their parts were invented for translation, photo search and captions, then borrowed.",
-    "“A bigger language model makes a better robot.” On our simple task a model built from scratch did as well; the pretrained one mainly started learning sooner.",
+    "“A bigger language model makes a better robot.” On our simple task a model built from scratch did as well; the one that first learned from the web mainly started learning sooner.",
     "“Copying is enough.” A copier that never saw a mistake cannot recover from its own; it needs examples of recovering.",
     "“Robot data is everywhere, like text.” It is not: every demonstration has to be driven by a person or by a program.",
   ],

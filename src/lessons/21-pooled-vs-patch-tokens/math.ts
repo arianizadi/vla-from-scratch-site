@@ -20,7 +20,7 @@ export const math = [
     formula: String.raw`C = N^{2}`,
     symbols: [
       [String.raw`N`, "the number of tokens the model reads"],
-      [String.raw`C`, "the number of token-to-token comparisons in one layer"],
+      [String.raw`C`, "the number of token-to-token comparisons in one block"],
     ],
     metaphor: "Guests at a party who all greet each other: double the guests, four times the greetings.",
     example: String.raw`$4$ tokens make $16$ comparisons, $8$ make $64$. A summary-based robot reading about $24$ tokens makes $576$; one reading about $800$ patch tokens makes about $640{,}000$.`,

@@ -51,6 +51,3 @@ export const CHANNELS: Channel[] = [
   channel("busy joint", normals(COUNT, 11).map((z) => 0.22 * z)),
   channel("gripper", Array.from({ length: COUNT }, (_, i) => (i % 5 < 3 ? 1 : 0))),
 ];
-
-/** Unit noise, as flow matching draws it, for comparison. */
-export const NOISE = normals(COUNT, 29).map(round);

@@ -20,7 +20,7 @@ export default defineLesson({
     },
     {
       title: "Frozen or still learning",
-      text: "**Freezing** an encoder means locking its numbers while the rest of the robot trains. It keeps what it learned and saves memory, but cannot adapt to the robot's camera. **Fine-tuning** keeps it learning so it can adapt, at the risk of a few thousand robot examples wearing away what it knew.",
+      text: "Like a book written in ink or in pencil. **Freezing** an encoder locks its numbers while the rest of the robot trains: it keeps what it knew but cannot adapt to the robot's camera. **Fine-tuning** keeps it learning, but a few thousand robot examples can wear away what it knew.",
       animation: FreezeOrTune,
     },
     {

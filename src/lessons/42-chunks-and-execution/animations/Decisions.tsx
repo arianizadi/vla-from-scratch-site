@@ -37,10 +37,10 @@ function Cell({ x, y, tone, executed, opacity, delay }: { x: number; y: number; 
 export function Decisions() {
   return (
     <AnimationFrame
-      title="Predict 15, execute 8, look again"
+      title="Plan 15, play 8, look again"
       description="Over 24 control steps, a policy that predicts one action per look decides at every step. A chunked policy decides once and gets 15 actions ahead. It executes the first 8, throws the other 7 away, then looks at the cameras again and predicts a new chunk. It decides every 0.4 s instead of every 0.05 s."
       steps={[
-        "A little over a second of robot time: 24 ticks.",
+        "A little over a second of robot time: 24 ticks, one action each.",
         "One action per look: the policy looks and decides at every tick.",
         "A chunk: one look, 15 actions planned ahead.",
         "The robot plays the first 8. The rest are thrown away.",

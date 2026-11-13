@@ -15,16 +15,16 @@ export default defineLesson({
     },
     {
       title: "Writing moves, or sketching them",
-      text: "Some models write a motion like a sentence: each joint's move is rounded to one of 256 notches and said as a number, one after another. Others start from a random scribble and clean it into a smooth motion in a few steps, so two equally good moves never blur together.",
+      text: "Some models write a motion like a sentence: each joint's move is rounded to one of 256 notches and said as a number, one after another. Others start from a random scribble and clean it into a smooth motion, so two equally good moves never blur together.",
       animation: TwoWaysToMove,
     },
     {
       title: "A fresh start, or a head start",
-      text: "A model can learn everything from robot demonstrations, or start from a big model that has already read and seen much of the web. That **pretraining**, learning from general data first, brings knowledge of objects and words. On our simple task it mainly helped the robot start using its eyes sooner.",
+      text: "A model can learn everything from robot demonstrations, or start from a big model that has already read and seen much of the web. That **pretraining**, learning from general data first, brings knowledge of objects and words. On our simple task it mainly helped the robot [use its eyes sooner](/learn/22-pretrained-vision-encoders).",
       animation: HeadStart,
     },
     {
-      title: "One summary, or every piece",
+      title: "One summary, or every patch",
       text: "Describe a room in one sentence and you lose where things are. A mover given one summary of the picture knows a cube is there, not exactly where. Hand it every patch and it can find the cube. We tried both: every patch grasped far more often.",
       animation: SummaryOrPieces,
     },

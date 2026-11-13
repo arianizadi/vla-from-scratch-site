@@ -79,8 +79,8 @@ export function LookAtEveryWord() {
             <Label x={MEMORY[0]} y={MEMORY[1] + 36} tone="muted" size={14} opacity={squeezed ? 1 : 0}>
               one small memory
             </Label>
-            <Label x={MEMORY[0]} y={MEMORY[1] + 96} tone="failure" size={15} weight={700} opacity={step === 2 ? 1 : 0}>
-              which cube was it? lost
+            <Label x={240} y={ROW_Y + 50} tone="failure" size={15} weight={700} opacity={step === 2 ? 1 : 0}>
+              details lost: which cube was it?
             </Label>
 
             {WEIGHTS.map((weight, index) => (

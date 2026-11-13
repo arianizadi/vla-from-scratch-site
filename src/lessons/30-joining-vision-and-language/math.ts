@@ -33,8 +33,10 @@ export const math = [
     formula: String.raw`N' = \frac{N}{r^{2}}, \qquad d' = d\,r^{2}`,
     symbols: [
       [String.raw`r`, "how many patches per side are glued into one, here 2"],
-      [String.raw`N, N'`, "tokens per picture before and after"],
-      [String.raw`d, d'`, "numbers per token before and after"],
+      [String.raw`N`, "tokens per picture before gluing"],
+      [String.raw`N'`, "tokens per picture after gluing"],
+      [String.raw`d`, "numbers per token before"],
+      [String.raw`d'`, "numbers per token after"],
     ],
     metaphor: "Packing four small parcels into one bigger box: fewer boxes to carry, same contents, but you no longer know which corner each parcel sat in.",
     example: String.raw`$256$ patch tokens of $256$ numbers, glued with $r = 2$: $256 / 4 = 64$ tokens of $256 \times 4 = 1{,}024$ numbers. Same information, a quarter of the seats.`,

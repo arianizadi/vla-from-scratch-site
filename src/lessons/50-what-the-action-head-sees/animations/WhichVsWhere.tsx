@@ -7,7 +7,7 @@ import { scatter } from "./scatter";
 const MM = 0.6;
 const PANELS = [
   { cx: 122, title: "one summary", median: 83 * MM, seed: 4, at: 1 },
-  { cx: 358, title: "every image piece", median: 7 * MM, seed: 9, at: 3 },
+  { cx: 358, title: "every patch", median: 7 * MM, seed: 9, at: 3 },
 ];
 const CY = 146;
 const W = 216;
@@ -28,12 +28,12 @@ export function WhichVsWhere() {
   return (
     <AnimationFrame
       title="Which object, and exactly where"
-      description="Seen from above, three objects lie on a table and the instruction names the middle one. Each dot is where a policy's gripper closed, drawn as toy dots at the typical miss we measured. A policy given one summary vector learned which object, roughly, but missed it by about 8 centimetres. A policy given every image piece closed within millimetres."
+      description="Seen from above, three objects lie on a table and the instruction names the middle one. Each dot is where a policy's gripper closed, drawn as toy dots at the typical miss we measured. A policy given one summary vector learned which object, roughly, but missed it by about 8 centimetres. A policy given every patch token closed within millimetres."
       steps={[
         "Seen from above: three objects, and the instruction names the ringed one.",
         "One summary: the policy learned which object, and closes near it…",
         "…but about 8 cm off on a typical try. A grasp forgives about 1 cm.",
-        "Every image piece: it closes within millimetres of the object.",
+        "Every patch token: it closes within millimetres of the object.",
       ]}
       size={[480, 270]}
     >

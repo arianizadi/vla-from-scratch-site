@@ -18,12 +18,12 @@ export function NoisePath() {
   return (
     <AnimationFrame
       title="One training example"
-      description="Training takes a demonstrated action and random noise of the same size. It picks a noise level between 0 and 1 and mixes the two: a point on the straight line from the action (level 0) to the noise (level 1). The network sees that point and is trained to point along the line, from the action toward the noise. Every point on the line has the same answer."
+      description="Training takes a demonstrated action and random noise of the same size. It picks a noise level between 0 and 1 and mixes the two: a point on the straight line from the action (level 0) to the noise (level 1). The policy sees that point and is trained to point along the line, from the action toward the noise. Every point on the line has the same answer."
       steps={[
         "Take one demonstrated action: a point in the space of all actions.",
         "Draw random noise of the same size.",
         "Pick a noise level and blend the two: a point on the straight line between them.",
-        "The network sees the blend and learns which way the line runs.",
+        "The policy sees the blend and learns which way the line runs.",
         "A different level, the same direction. One clear answer per training example.",
       ]}
       size={[480, 270]}
