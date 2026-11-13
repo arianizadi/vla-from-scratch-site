@@ -25,7 +25,7 @@ function Chunk({ start, y, planned, done, dropped }: { start: number; y: number;
             className="a-t t-action"
             style={{
               transform: `translate(${tickX(start + index)}px, ${y}px)`,
-              opacity: planned ? (gone ? 0.15 : 1) : 0,
+              opacity: planned ? (gone ? 0.3 : 1) : 0,
               transitionDelay: `${index * 30}ms`,
             }}
           >
@@ -84,7 +84,7 @@ export function ChunkAndSteps() {
 
             <Chunk start={0} y={CHUNK_YS[0]} planned={step >= 1} done={step >= 2 ? DONE : 0} dropped={step >= 3} />
             <Bracket x1={tickX(0) - 7} x2={tickX(PLANNED - 1) + 7} y={CHUNK_YS[0] - 28} label="a chunk: 15 planned" tone="action" opacity={step === 1 ? 1 : 0} />
-            <Bracket x1={tickX(0) - 7} x2={tickX(DONE - 1) + 7} y={CHUNK_YS[0] - 28} label="8 carried out" tone="action" opacity={step === 2 || step === 3 ? 1 : 0} />
+            <Bracket x1={tickX(0) - 7} x2={tickX(DONE - 1) + 7} y={CHUNK_YS[0] - 28} label="8 carried out" tone="action" opacity={step >= 2 ? 1 : 0} />
 
             <Chunk start={DONE} y={CHUNK_YS[1]} planned={step >= 3} done={step >= 4 ? DONE : 0} dropped={false} />
             <Label x={tickX(DONE + PLANNED - 1) + 4} y={CHUNK_YS[1] - 24} tone="action" size={14} weight={700} anchor="end" opacity={step >= 3 ? 1 : 0}>
