@@ -10,17 +10,17 @@ export default defineLesson({
   beats: [
     {
       title: "The test: slide the object away",
-      text: "Imagine reaching for your mug while someone slides it aside. Our robot lifted the named object 93 times in 100. But slide the object mid-reach and it failed every time, closing its hand where the object used to be. It chose its target at the first look, then followed its own arm.",
+      text: "Imagine someone sliding your mug aside as you reach for it. Our robot lifted the named object 93 times in 100. With the object slid aside mid-reach, it failed every time. It closed where the object used to be: it chose at the first look, then followed its own arm.",
       animation: MoveTest,
     },
     {
       title: "Can anyone recover?",
-      text: "Before blaming the learner, check the teacher. A **scripted teacher** (a hand-written program that knows where everything is) that plans once fails this test too. One that plans again whenever the object moves succeeds every time. So recovering is possible; the robot's examples had never shown it.",
+      text: "Before blaming the learner, check the expert. A scripted expert that plans once fails this test too. One that plans again whenever the object moves succeeds every time. So recovering is possible; the robot's demonstrations had never shown it.",
       animation: TwoTeachers,
     },
     {
       title: "Examples that go wrong on purpose",
-      text: "So we recorded new **demonstrations** (examples the robot copies). The arm starts from random poses, and in about a third the object is moved while the teacher recovers. Think of a driving instructor who practises skids, not only straight roads. The robot itself and its training stayed the same.",
+      text: "So we recorded new demonstrations. The arm starts from random poses, and in about a third the object is moved while the expert recovers. Think of a driving instructor who practises skids, not only straight roads. The robot itself and its training stayed the same.",
       animation: DataMix,
     },
     {
@@ -38,7 +38,7 @@ export default defineLesson({
   ],
   tips: [
     "Disturb your robot on purpose: move the object mid-reach and at the grasp, and watch what it does.",
-    "Check that a scripted teacher can recover before you expect a learner to.",
+    "Check that the scripted expert can recover before you expect a learner to.",
     "Put mistakes and their fixes into the examples, not only perfect runs.",
     "Freeze the cameras after the first picture to test whether the robot uses what it sees later.",
   ],

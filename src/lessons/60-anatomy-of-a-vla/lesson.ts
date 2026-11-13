@@ -9,26 +9,26 @@ export default defineLesson({
   beats: [
     {
       title: "A reader and a mover",
-      text: "Think of reading a sticky note, glancing at the table, then reaching. A **VLA** (vision-language-action model) splits the job the same way. The **backbone** reads the camera picture and the instruction into notes: lists of numbers. The **action head** turns those notes into arm motion. Reading and moving are different skills, so each part can be trained its own way.",
+      text: "Read a sticky note, glance at the table, then reach. A VLA splits the job the same way. The **reader**, its backbone, turns the camera picture and the instruction into notes: lists of numbers. The **mover**, its action head, turns those notes into arm motion.",
       animation: TwoParts,
     },
     {
       title: "Many notes, not one summary",
-      text: "Describe a room in one word and nobody can find the keys. The reader cuts each picture into small squares, **patches**, and can hand over one note per patch and per word. When we squeezed everything into a single note, the arm moved smoothly and closed on empty table. Many notes keep where things are.",
+      text: "Describe a room in one word and nobody finds the keys. The reader can hand over one note per picture patch and per word, or squeeze everything into one note. With one note, our arm moved smoothly and closed on empty table. Many notes keep [where things are](/learn/21-pooled-vs-patch-tokens).",
       animation: ManyNotes,
     },
     {
       title: "From a scribble to a plan",
-      text: "The mover plans the next 15 moves at once, a **chunk**. It starts from random noise and cleans it up in a few passes, like sharpening a sketch ([how that works](/learn/41-flow-matching)). The reader looks once per plan. The arm carries out about half the moves, then looks again, so it can react if something changed.",
+      text: "The mover plans the next 15 moves at once, an [action chunk](/learn/42-chunks-and-execution). It starts from random noise and cleans it up in a few passes, like sharpening a sketch ([how](/learn/41-flow-matching)). The arm carries out about half the moves, then the reader looks again, so the robot can react to change.",
       animation: SamplingPass,
     },
     {
       title: "What made it work",
-      text: "We tried a small reader, a homemade one and a big borrowed one. Every version that worked handed the mover many notes and did not feed it its own last move, which it could copy instead of looking. What the reader handed over mattered more than how big the reader was.",
+      text: "We tried a small reader, a homemade one and a big borrowed one. Every version that worked handed the mover many notes and did not feed it its own [last move](/learn/52-history-and-shortcuts), which it could copy instead of looking. What the reader handed over mattered more than how big it was.",
     },
   ],
   edgeCases: [
-    "A low training error does not mean the robot works: the one-note version learned smooth, confident motions and still closed on nothing.",
+    "A low training loss does not mean the robot works: the one-note version learned smooth, confident motions and still closed on nothing.",
     "Feeding the mover its own previous move sounds helpful, yet it can coast on that move and never learn to look.",
     "The mover never sees the camera itself. Whatever the notes leave out, it cannot get back.",
     "A bigger reader is not automatically better. It is slower, and it still has to hand over the right notes.",

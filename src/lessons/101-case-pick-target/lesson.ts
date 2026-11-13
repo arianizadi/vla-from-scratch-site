@@ -10,17 +10,17 @@ export default defineLesson({
   beats: [
     {
       title: "Every first robot failed",
-      text: "Three objects stand on the table and the instruction names one: “pick up the green can”. Every first robot moved well, closed its hand at the right height, and almost never lifted the named object: at most 6 times in 100. A **scripted teacher** (a program that knows where everything is) managed 99.",
+      text: "Three objects stand on the table and the instruction names one: “pick up the green can”. Every first robot moved well and closed its hand at the right height, yet almost never lifted the named object: at most 6 times in 100. The scripted expert managed 99.",
       animation: IgnoresScene,
     },
     {
       title: "Not aiming between: not aiming at all",
-      text: "First guess: it aimed between the objects. To check, compare how far the hand's closing point moves with how far the object moved: the **slope**. Following the object gives 1; aiming at the middle of three, about a third. The robots measured about 0: they ignored the scene.",
+      text: "First guess: it aimed between the objects. The [slope](/learn/92-measuring-failure) can check that: following the object gives 1; aiming at the middle of three, about a third. The robots measured about 0. They were not aiming between the objects; they ignored the scene.",
       animation: SlopeTest,
     },
     {
       title: "Practice long enough, and it clicks",
-      text: "More **demonstrations** (recorded examples of the teacher) and a much longer training run changed that. First the slope rose: it headed for the right object. Then its misses shrank. Then it lifted the object, 85 times in 100. A run that stops before this looks exactly like a run that cannot learn.",
+      text: "More demonstrations and a much longer training run changed that. First the slope rose: it headed for the right object. Then its misses shrank. Then it lifted the object, 85 times in 100. A run that stops before this looks exactly like a run that cannot learn.",
       animation: OnsetOrder,
     },
     {
@@ -30,13 +30,13 @@ export default defineLesson({
     },
   ],
   edgeCases: [
-    "A low training score said nothing here: robots with tiny training error lifted nothing. Only driving the real task tells you.",
+    "A low training score said nothing here: robots with tiny training loss lifted nothing. Only driving the real task tells you.",
     "Watching the robot fail is not enough. Measure where its hand closes, or you will guess the wrong cause, as we first did.",
     "Giving the robot its previous move as an input let it copy that move instead of looking, so it never learned to look.",
     "A training run that is too short never reaches the click, and resuming it later does not give you the long run.",
   ],
   tips: [
-    "Score a new robot against a scripted teacher on the same tests: if the teacher fails too, the test is the problem.",
+    "Run the scripted expert through the same tests as a new robot: if the expert fails too, the test is the problem.",
     "Plot where the hand closes against where the object stood. The slope says whether the robot looks at all.",
     "Decide the training length before you start, and test saved snapshots along the way.",
     "Freeze the camera or move the object to see what the robot really depends on.",

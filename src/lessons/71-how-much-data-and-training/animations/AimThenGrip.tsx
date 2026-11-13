@@ -11,7 +11,8 @@ const sy = scale([0, 100], [PLOT.y + PLOT.h, PLOT.y]);
 const pt = (m: number, v: number): [number, number] => [Math.round(sx(m)), Math.round(sy(v))];
 
 const AIMED = [pt(1, 35), pt(1.5, 61), pt(2, 95), pt(2.5, 98), pt(3, 100), pt(5, 100)];
-const LIFTED = [pt(1, 0), pt(1.5, 4), pt(2, 4), pt(2.5, 56)];
+/* 3M to 5M: drawn flat at 83%, the middle of the chapter's 81-86% range. */
+const LIFTED = [pt(1, 0), pt(1.5, 4), pt(2, 4), pt(2.5, 56), pt(3, 83), pt(5, 83)];
 
 export function AimThenGrip() {
   return (
@@ -46,21 +47,11 @@ export function AimThenGrip() {
 
           <Line points={AIMED} tone="accent" drawn={step >= 1} dots />
           <Line points={LIFTED} tone="action" drawn={step >= 2} dots delay={200} />
-          <rect
-            className="a-t t-action a-fill"
-            x={sx(3)}
-            y={sy(86)}
-            width={Math.round(sx(5) - sx(3))}
-            height={Math.round(sy(81) - sy(86))}
-            rx={3}
-            style={{ opacity: step >= 2 ? 0.55 : 0, transitionDelay: "700ms" }}
-          />
-          <Path d={`M${pt(2.5, 56)[0]} ${pt(2.5, 56)[1]}L${Math.round(sx(3))} ${Math.round(sy(83))}`} tone="action" width={2} dashed drawn={step >= 2} delay={700} />
 
           <Path d={`M${sx(2)} ${PLOT.y}V${PLOT.y + PLOT.h}`} tone="mark" width={2} dashed drawn={step >= 3} />
           <Dot x={sx(2)} y={sy(95)} r={9} tone="accent" hollow opacity={step >= 3 ? 1 : 0} />
           <Dot x={sx(2)} y={sy(4)} r={9} tone="action" hollow opacity={step >= 3 ? 1 : 0} />
-          <Label x={sx(2) + 14} y={sy(95) + 22} tone="accent" size={14} weight={700} anchor="start" opacity={step >= 3 ? 1 : 0}>
+          <Label x={sx(2) - 14} y={sy(95) + 4} tone="accent" size={14} weight={700} anchor="end" opacity={step >= 3 ? 1 : 0}>
             95% aimed
           </Label>
           <Label x={sx(2) + 14} y={sy(4) - 20} tone="action" size={14} weight={700} anchor="start" opacity={step >= 3 ? 1 : 0}>

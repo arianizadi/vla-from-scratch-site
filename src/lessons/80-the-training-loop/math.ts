@@ -5,19 +5,6 @@
 
 export const math = [
   {
-    title: "One step downhill",
-    formula: String.raw`w \leftarrow w - \eta \, \frac{\partial L}{\partial w}`,
-    symbols: [
-      [String.raw`w`, "one weight: one adjustable number inside the model"],
-      [String.raw`L`, "the loss: how far the guessed actions are from the demonstrated ones"],
-      [String.raw`\frac{\partial L}{\partial w}`, "the slope: how much the loss rises if this weight grows a little (the gradient)"],
-      [String.raw`\eta`, "the learning rate: the length of the stride"],
-      [String.raw`\leftarrow`, "replace the old value with the new one"],
-    ],
-    metaphor: "A hiker in fog feels which way the ground tilts and takes one stride the other way. Steep ground means a long step, flat ground a short one.",
-    example: String.raw`Say $w = 2$, the slope there is $4$ and the stride is $\eta = 0.1$. The new weight is $2 - 0.1 \times 4 = 1.6$. At $w = 1.6$ the slope is gentler, so the next step is shorter. Training does this for every weight at once, millions of times.`,
-  },
-  {
     title: "A stride that shrinks on a plan",
     formula: String.raw`\eta(t) = \eta_{\min} + \tfrac{1}{2}\,(\eta_{\max} - \eta_{\min})\left(1 + \cos\frac{\pi t}{T}\right)`,
     symbols: [

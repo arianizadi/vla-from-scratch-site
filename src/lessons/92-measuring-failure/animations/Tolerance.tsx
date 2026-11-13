@@ -42,7 +42,7 @@ export function Tolerance() {
   return (
     <AnimationFrame
       title="How much error a grasp forgives"
-      description="The hand-written expert grasps a T block and a can, seen from above, with its grasp shifted sideways on purpose by 0, 1, 2 and 3 centimetres. Bars show how often the object is still lifted. The T block forgives 2 centimetres (98%); the round can drops to 29% at 2 centimetres and 3% at 3."
+      description="The scripted expert grasps a T block and a can, seen from above, with its grasp shifted sideways on purpose by 0, 1, 2 and 3 centimetres. Bars show how often the object is still lifted. The T block forgives 2 centimetres (98%); the round can drops to 29% at 2 centimetres and 3% at 3."
       steps={[
         "The expert grasps dead centre. Both objects lift every time.",
         "Shift its grasp 1 cm sideways. Both still lift almost always.",

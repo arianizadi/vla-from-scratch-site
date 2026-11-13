@@ -6,27 +6,15 @@
 export const math = [
   {
     title: "The loss is an average over moments",
-    formula: String.raw`L = \frac{1}{N} \sum_{i=1}^{N} \left(\hat a_i - a_i\right)^2`,
+    formula: String.raw`L = \frac{1}{N} \sum_{i=1}^{N} (\hat a_i - a_i)^2`,
     symbols: [
       [String.raw`L`, "the loss: one number for how far off the policy is"],
       [String.raw`N`, "how many recorded moments are averaged"],
       [String.raw`\hat a_i`, "the move the policy predicts at moment i"],
-      [String.raw`a_i`, "the move the demonstrator actually made at moment i"],
+      [String.raw`a_i`, "the move the expert actually made at moment i"],
       [String.raw`(\hat a_i - a_i)^2`, "the miss at that moment, squared so that misses in either direction count"],
     ],
     metaphor: "A class average: one failed exam hides easily among 65 good ones, even if that one exam was the only one that mattered.",
     example: String.raw`A toy demonstration of $66$ moments. Policy A misses every easy moment by $0.05$ but the deciding first moment by $0.5$, heading for the wrong object: $L = (65 \times 0.0025 + 0.25)/66 \approx 0.006$. Policy B misses every moment, the first included, by $0.1$: $L = 66 \times 0.01 / 66 = 0.01$. A has the lower loss, yet only B goes to the right object.`,
-  },
-  {
-    title: "Why small misses snowball",
-    formula: String.raw`\text{mistakes while recorded} \approx T\varepsilon, \qquad \text{mistakes while driving} \lesssim T^2 \varepsilon`,
-    symbols: [
-      [String.raw`T`, "how many moves an attempt takes"],
-      [String.raw`\varepsilon`, "the chance of a mistake at one move, measured on recorded data"],
-      [String.raw`T\varepsilon`, "expected mistakes when every moment starts from the demonstrator's own path"],
-      [String.raw`T^2\varepsilon`, "the worst case when each mistake leads to unfamiliar views and more mistakes"],
-    ],
-    metaphor: "A hiker who takes one wrong turn is now on a trail the map never covered, so every later turn is a guess too.",
-    example: String.raw`With $T = 20$ moves and $\varepsilon = 0.01$: on recordings, about $20 \times 0.01 = 0.2$ mistakes per attempt, which looks harmless. Driving itself, the bound is $20^2 \times 0.01 = 4$: twenty times more room for things to go wrong, from the same policy.`,
   },
 ];

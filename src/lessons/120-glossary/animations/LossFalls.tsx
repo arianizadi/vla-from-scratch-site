@@ -38,7 +38,7 @@ export function LossFalls() {
           </Label>
           <Line points={FIRST} tone="accent" width={3} drawn={step >= 1} opacity={step >= 1 ? 1 : 0} />
           <Line points={CURVE.slice(8)} tone="accent" width={3} drawn={step >= 1} opacity={step >= 1 ? 1 : 0} delay={500} />
-          <Label x={X(0.5)} y={Y(0.5)} tone="accent" size={14} weight={700} opacity={step >= 1 ? 1 : 0} delay={400}>
+          <Label x={X(0.5)} y={Y(0.5)} tone="accent" size={14} weight={700} opacity={step === 1 ? 1 : 0} delay={400}>
             falls step by step
           </Label>
           {CHECKPOINTS.map((t, index) => (

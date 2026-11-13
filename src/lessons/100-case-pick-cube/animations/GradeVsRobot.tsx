@@ -27,14 +27,14 @@ export function GradeVsRobot() {
   return (
     <AnimationFrame
       title="A good grade, a bad robot"
-      description="Two learners copy the same demonstrations. Learner A squeezes each camera picture into one summary; learner B keeps it as many small patches. In training, A matches the teacher's moves more closely: a training error of 0.040 against 0.091. On the robot, with the cube in 50 new places, A lifts it twice and B 15 times."
+      description="Two learners copy the same demonstrations. Learner A squeezes each camera picture into one summary; learner B keeps it as many small patches. In training, A matches the expert's moves more closely: a training loss of 0.040 against 0.091. On the robot, with the cube in 50 new places, A lifts it twice and B 15 times."
       steps={[
         "Two learners. A squeezes each camera picture into one summary; B keeps many small patches.",
-        "Training error: how far their guesses are from the teacher's moves. A gets the better grade.",
+        "Training loss: how far their guesses are from the expert's moves. A gets the better grade.",
         "The real test: drive the robot with the cube in 50 new places. B lifts it far more often.",
         "A better grade in training did not make a better robot.",
       ]}
-      size={[480, 296]}
+      size={[480, 312]}
       hold={[2800, 2800, 2800, 3600]}
     >
       {(step) => (
@@ -62,7 +62,7 @@ export function GradeVsRobot() {
           <Path d="M240 16V116" tone="faint" width={1.5} dashed />
 
           <Label x={120} y={140} tone="muted" size={13} opacity={step >= 1 ? 1 : 0}>
-            training error (lower looks better)
+            training loss (lower looks better)
           </Label>
           <Label x={360} y={140} tone="muted" size={13} opacity={step >= 2 ? 1 : 0}>
             {`cube lifted, out of ${OF}`}
@@ -100,7 +100,7 @@ export function GradeVsRobot() {
           <Label x={360} y={BASE + 36} tone="success" size={13} weight={700} opacity={step >= 2 ? 1 : 0}>
             B: better robot
           </Label>
-          <rect x={20} y={124} width={440} height={164} rx={12} fill="none" className="a-t t-mark a-stroke" strokeWidth={3} style={{ opacity: step === 3 ? 1 : 0 }} />
+          <rect x={20} y={124} width={440} height={176} rx={12} fill="none" className="a-t t-mark a-stroke" strokeWidth={3} style={{ opacity: step === 3 ? 1 : 0 }} />
         </>
       )}
     </AnimationFrame>

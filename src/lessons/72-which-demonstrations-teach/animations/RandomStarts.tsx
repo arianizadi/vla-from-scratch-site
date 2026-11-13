@@ -75,8 +75,11 @@ export function RandomStarts() {
           </Label>
 
           <Dot x={MID[0]} y={MID[1]} r={7} tone="ink" />
-          <Label x={MID[0] + 14} y={MID[1] - 2} tone="ink" size={14} weight={700} anchor="start">
-            {step >= 2 ? "going where?" : "mid-reach"}
+          <Label x={MID[0] + 14} y={MID[1] - 2} tone="ink" size={14} weight={700} anchor="start" opacity={step < 2 ? 1 : 0}>
+            mid-reach
+          </Label>
+          <Label x={300} y={24} tone="ink" size={14} weight={700} opacity={step >= 2 ? 1 : 0}>
+            mid-reach: going where?
           </Label>
 
           <Path d={`M24 ${TABLE}H456`} tone="faint" width={2} />

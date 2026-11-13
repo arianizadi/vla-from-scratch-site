@@ -23,7 +23,7 @@ const NUMBERS = [
   { big: "224", unit: "pixels a side", detail: "one camera picture" },
   { big: "196", unit: "small squares", detail: "14 × 14" },
   { big: "49", unit: "tokens", detail: "each 2 × 2 block merged" },
-  { big: "64", unit: "tokens", detail: "a picture 256 pixels a side" },
+  { big: "64", unit: "tokens", detail: "picture 256 a side" },
   { big: "196", unit: "tokens every look", detail: "4 pictures × 49" },
 ];
 

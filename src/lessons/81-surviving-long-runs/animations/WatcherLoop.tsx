@@ -17,12 +17,12 @@ export function WatcherLoop() {
   return (
     <AnimationFrame
       title="A watcher that restarts"
-      description="A supervisor starts the run from the newest save point, lets it train, and checks the heartbeat every half minute. If the log is still moving it keeps waiting. If it has been silent for minutes, it stops the run and starts again from the newest save. It stops watching only when training reports it has finished."
+      description="A supervisor starts the run from the newest save point, lets it train, and checks the heartbeat every half minute. If the heartbeat is still beating it keeps waiting. If it has been silent for minutes, it stops the run and starts again from the newest save. It stops watching only when training reports it has finished."
       steps={[
         "The watcher starts the run from the newest save point.",
         "The run trains. Every half minute the watcher checks the heartbeat.",
         "Still beating? Keep waiting and check again.",
-        "Silent for minutes? Stop the run, helpers and all.",
+        "Silent for minutes? Stop the run.",
         "Start again from the newest save. Only a few minutes are lost.",
         "It stops watching only when training says it has finished.",
       ]}

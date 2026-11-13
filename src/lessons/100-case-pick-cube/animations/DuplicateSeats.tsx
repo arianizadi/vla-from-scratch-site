@@ -30,20 +30,20 @@ function layout(row: number[], buggy: boolean): { seat: number; x: number; share
 }
 
 const ROWS = [
-  { name: "without memory: shorter input", y: 92, row: SHORT_ROW, buggyFrom: 1 },
-  { name: "with memory: longer input", y: 222, row: LONG_ROW, buggyFrom: 2 },
+  { name: "without history: shorter input", y: 92, row: SHORT_ROW, buggyFrom: 1 },
+  { name: "with history: longer input", y: 222, row: LONG_ROW, buggyFrom: 2 },
 ];
 
 export function DuplicateSeats() {
   return (
     <AnimationFrame
-      title="A rounding bug: shared seat numbers"
-      description="Inside the model every piece of the input has a seat number that tells the model the order. A rounding bug gave neighbouring pieces the same number. In the shorter input, used without memory, pieces shared numbers in threes; in the longer input, used with memory, in groups of three and five. Fixed, every piece has its own number again, and the version with memory went from 62 to 96 lifts in 100."
+      title="Rounded seat numbers"
+      description="Inside the model every piece of the input has a seat number that tells the model the order. Rounding gave neighbouring pieces the same number. In the shorter input, used without memory, pieces shared numbers in threes; in the longer input, used with memory, in groups of three and five. Fixed, every piece has its own number again, and the version with memory went from 62 to 96 lifts in 100."
       steps={[
         "Inside the model, each piece of the input has a seat number, so the order is known.",
-        "A rounding bug: neighbouring pieces got the same number and blurred together.",
-        "The longer input, used with memory, blurred even more.",
-        "Fixed, every piece has its own seat again. With memory: from 62 to 96 lifts in 100.",
+        "Rounding: neighbouring pieces got the same number and blurred together.",
+        "The longer input, used with history, blurred even more.",
+        "Fixed, every piece has its own seat again. With history: from 62 to 96 lifts in 100.",
       ]}
       size={[480, 296]}
       hold={[2600, 2800, 2800, 3800]}
@@ -86,7 +86,7 @@ export function DuplicateSeats() {
             same number = same seat: the order blurs
           </Label>
           <Label x={240} y={272} tone="success" size={15} weight={700} opacity={step === 3 ? 1 : 0}>
-            {"fixed: memory version 62 → 96 in 100"}
+            {"fixed: history version 62 → 96 in 100"}
           </Label>
         </>
       )}

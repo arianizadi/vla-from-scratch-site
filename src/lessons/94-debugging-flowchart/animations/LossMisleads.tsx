@@ -11,7 +11,7 @@ const BASE = 222;
 const MAX = 150;
 const PANELS = [
   {
-    name: "training error",
+    name: "training loss",
     hint: "lower looks better",
     x: 128,
     bars: [
@@ -47,12 +47,12 @@ export function LossMisleads() {
   return (
     <AnimationFrame
       title="A score that points the wrong way"
-      description="Two policies on the same one-cube task. Policy A ended training with the lower error, 0.040 against 0.058 for policy B, so by that score A looks better. On the robot, A succeeded 2 times in 50 and B 37 times in 50. The training error pointed the wrong way, so it cannot tell you what to fix."
+      description="Two policies on the same one-cube task. Policy A ended training with the lower error, 0.040 against 0.058 for policy B, so by that score A looks better. On the robot, A succeeded 2 times in 50 and B 37 times in 50. The training loss pointed the wrong way, so it cannot tell you what to fix."
       steps={[
         "Two policies finish training. A ends with the lower error.",
         "By that score, A looks like the better one.",
         "On the robot: A succeeds 2 times in 50. B succeeds 37 times.",
-        "The training error pointed the wrong way. It can’t tell you what to fix.",
+        "The training loss pointed the wrong way. It can’t tell you what to fix.",
       ]}
       size={[480, 280]}
     >

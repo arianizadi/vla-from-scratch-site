@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "Borrow a reader that already knows",
-      text: "Hiring a translator beats teaching someone a language from zero. A **pretrained vision-language model** learned from huge piles of captioned photos before it ever saw a robot. It already links the words “green can” to the green can in view. A reader trained only on robot demonstrations has to discover that link slowly.",
+      text: "Hiring a translator beats teaching someone a language from zero. A pretrained [vision-language model](/learn/30-joining-vision-and-language) learned from huge piles of captioned photos before it met a robot. It already links the words “green can” to the green can in view. A homemade reader must discover that link slowly from demonstrations.",
       animation: WordToObject,
     },
     {
       title: "Every picture costs tokens",
-      text: "The reader cuts each camera picture into small squares and merges neighbours into **tokens**, a few dozen per picture. Every token is more work at every layer, every time the robot looks. A slightly bigger picture means many more tokens. This big reader trained about 20 times slower than a small one built from scratch.",
+      text: "Like any vision-language model, the reader [glues neighbouring patches](/learn/30-joining-vision-and-language) into tokens, a few dozen per picture. Every token is more work each time the robot looks, and a slightly bigger picture means many more tokens. This big reader trained about 20 times slower than a small homemade one.",
       animation: PatchMerge,
     },
     {
       title: "Freeze most, train the top",
-      text: "Think of renovating only the top floor while the foundations stay. **Freezing** a layer means training leaves its numbers alone. The lower layers, which already see and read well, stay frozen; only the top few layers and the mover learn. That keeps the borrowed knowledge and saves a lot of memory.",
+      text: "Renovate the top floor and leave the foundations. The lower blocks already see and read well, so they stay [frozen](/learn/22-pretrained-vision-encoders): training leaves their numbers alone. Only the top few blocks and the mover learn. That keeps the borrowed knowledge and saves a lot of memory.",
       animation: FrozenStack,
     },
     {
       title: "It pointed, but did not grasp",
-      text: "Early in training it closed the gripper at the named object far more often than luck, while our homemade readers were still guessing. Yet it picked the object up only about 1 time in 20. Knowing which object is not knowing how to grip it. With [many notes](/learn/60-anatomy-of-a-vla) and more examples it later reached about 70%.",
+      text: "Early in training it closed the gripper at the named object far more often than chance, while our homemade readers still guessed. Yet it lifted the object only about 1 time in 20. Knowing which is not knowing how to grip. Handed [many notes](/learn/60-anatomy-of-a-vla), it later reached about 70%.",
       animation: PointedNotGrasped,
     },
   ],

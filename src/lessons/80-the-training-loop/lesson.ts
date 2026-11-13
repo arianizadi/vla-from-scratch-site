@@ -11,7 +11,7 @@ export default defineLesson({
   beats: [
     {
       title: "Walking downhill in the dark",
-      text: "Picture a hiker in fog, feeling the ground underfoot. The **loss**, a score of how far the model's guessed actions are from the demonstrated ones, is the height. The **gradient** is the slope: which way is down. Each training step moves every **weight**, one of the model's adjustable numbers, a little downhill.",
+      text: "Training a policy is the same foggy walk downhill as [training a language model](/learn/13-training-a-language-model). The height is the loss: how far the guessed actions are from the demonstrated ones. The **gradient** is the slope underfoot. Each training step moves every **weight**, one of the model's adjustable numbers, a little downhill.",
       animation: Downhill,
     },
     {

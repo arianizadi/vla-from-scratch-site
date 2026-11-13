@@ -16,10 +16,10 @@ const PANELS = [
 export function TwoTeachers() {
   return (
     <AnimationFrame
-      title="Two scripted teachers, the same test"
-      description="Two scripted teachers reach for the same can, seen from above. Halfway, the can is slid to a new place. The teacher that made one plan at the start keeps going and closes where the can was: a failure. The teacher that plans again whenever the can moves turns toward the new place and grasps it: it succeeds every time. So recovering is possible."
+      title="Two scripted experts, the same test"
+      description="Two scripted experts reach for the same can, seen from above. Halfway, the can is slid to a new place. The expert that made one plan at the start keeps going and closes where the can was: a failure. The expert that plans again whenever the can moves turns toward the new place and grasps it: it succeeds every time. So recovering is possible."
       steps={[
-        "Two scripted teachers reach for the same can.",
+        "Two scripted experts reach for the same can.",
         "Halfway, the can is slid to a new place.",
         "The one that planned once goes on to the old place: it fails every time.",
         "The one that plans again turns toward the new place: it succeeds every time.",

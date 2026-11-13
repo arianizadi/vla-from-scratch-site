@@ -10,12 +10,12 @@ export default defineLesson({
   beats: [
     {
       title: "Three stages, like school",
-      text: "First learn to read: a word model studies web text. Then learn to see: add eyes and train on captioned pictures of the robot's scenes. Then learn to act: add a mover and train on demonstrations. Each stage starts from what the last one learned. This head start is called **pretraining**.",
+      text: "First learn to read: a word model studies web text. Then learn to see: add eyes and train on captioned pictures of the robot's scenes. Then learn to act: add a mover and train on demonstrations. Each stage starts from what the last one learned: that head start is [pretraining](/learn/03-the-landscape).",
       animation: ThreeStages,
     },
     {
-      title: "Captions that say where",
-      text: "A robot needs to know where things are, so the captions say it: “from left to right: a red cube, a green can and a blue nut.” They use the instructions' own words. Tested on scenes it had never seen, the model listed the order right most of the time. Rough places only; the exact grip comes later.",
+      title: "Test each stage before the next",
+      text: "The seeing stage learns from captions that list the objects [from left to right](/learn/31-training-a-vlm). Before moving on, test it: on scenes it had never seen, our model listed the objects in the right order most of the time. A stage that fails its test spoils every stage after it.",
       animation: CaptionCheck,
     },
     {
@@ -30,13 +30,13 @@ export default defineLesson({
     },
   ],
   edgeCases: [
-    "A low training error can hide a broken stage: one picture model trained well, then failed its test because it saw pictures differently in use.",
+    "A low training loss can hide a broken stage: one picture model trained well, then failed its test because it saw pictures differently in use.",
     "Each stage must pass its own test before the next is worth training. A half-trained stage is accepted without complaint.",
     "If both twins fail, the comparison says nothing. Both must be clearly above luck before you compare them.",
     "One run of each twin is thin evidence; run-to-run luck can move results by several points.",
   ],
   tips: [
-    "Judge the seeing stage by a test of what its captions teach, not by its training error.",
+    "Judge the seeing stage by a test of what its captions teach, not by its training loss.",
     "Compare the twins at the same moments in training, not only at the end.",
     "Change exactly one thing between the twins, and write down what it was.",
     "Watch when a run starts aiming at the named object: that is where a head start shows first.",

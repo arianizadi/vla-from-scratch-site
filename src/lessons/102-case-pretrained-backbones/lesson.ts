@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Eyes and hands",
-      text: "The robot's model has two parts. The **backbone** turns camera pictures and words into notes; the **action head** turns notes into motion. A backbone can start blank or **pretrained**: already taught another job, here describing these very scenes. Like hiring a cook who already knows the kitchen.",
+      text: "Recall the [reader and the mover](/learn/60-anatomy-of-a-vla). The reader, or backbone, can start blank or pretrained: already taught another job, here describing these very scenes. Like hiring a cook who already knows the kitchen. We trained one robot each way and compared them.",
       animation: BackboneHead,
     },
     {
@@ -25,7 +25,7 @@ export default defineLesson({
     },
     {
       title: "The same finish, within the wobble",
-      text: "At the end they lifted the object 87 and 85 times in 100. A test of 100 tries wobbles by several points, and each version was trained only once, so these scores cannot rank them. On this simple task, pretraining bought time, not a better robot.",
+      text: "At the end they lifted the object 87 and 85 times in 100. A test of 100 tries [wobbles by several points](/learn/90-closed-loop-evaluation), and each version was trained only once, so these scores cannot rank them. On this simple task, pretraining bought time, not a better robot.",
       animation: FinishRanges,
     },
   ],

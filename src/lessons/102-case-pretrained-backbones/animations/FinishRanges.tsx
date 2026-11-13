@@ -28,7 +28,7 @@ export function FinishRanges() {
       steps={[
         "At the end of training: 87 and 85 lifts in 100 tries.",
         "One test of 100 tries wobbles. Each score has a band of equally believable values.",
-        "The bands overlap almost entirely. One run each cannot rank them.",
+        "The bands overlap almost entirely (marked on the scale). One run each cannot rank them.",
         "On this simple task, pretraining bought an earlier start, not a better finish.",
       ]}
       size={[480, 270]}
@@ -48,14 +48,11 @@ export function FinishRanges() {
           <Label x={sx(100)} y={26} tone="muted" size={13} anchor="end">
             lifted, out of 100 tries
           </Label>
-          <rect
-            x={sx(Math.max(...RUNS.map((r) => wilson(r.k, N)[0])))}
-            y={88}
-            width={sx(Math.min(...RUNS.map((r) => wilson(r.k, N)[1]))) - sx(Math.max(...RUNS.map((r) => wilson(r.k, N)[0])))}
-            height={106}
-            rx={8}
-            className="a-t t-mark a-fill-soft"
-            style={{ opacity: step === 2 ? 0.7 : 0 }}
+          <Path
+            d={`M${sx(Math.max(...RUNS.map((r) => wilson(r.k, N)[0])))} 222H${sx(Math.min(...RUNS.map((r) => wilson(r.k, N)[1])))}`}
+            tone="mark"
+            width={8}
+            opacity={step >= 2 ? 1 : 0}
           />
           {RUNS.map((run) => {
             const [low, high] = wilson(run.k, N);

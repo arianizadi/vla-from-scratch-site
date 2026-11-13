@@ -31,10 +31,10 @@ export function Snapshot() {
   return (
     <AnimationFrame
       title="A snapshot at the first close"
-      description="Seen from above, the gripper moves toward the can. The moment it first closes, a probe records where the gripper and every object are. The nearest object is the can, the one that was asked for. Over twelve toy tries, a policy that guesses closes nearest the can about one time in three; one that looks does so every time."
+      description="Seen from above, the gripper moves toward the can. The moment it first closes, a recorder notes where the gripper and every object are. The nearest object is the can, the one that was asked for. Over twelve toy tries, a policy that guesses closes nearest the can about one time in three; one that looks does so every time."
       steps={[
         "The instruction asks for the can. The arm sets off.",
-        "The instant the gripper first closes, the probe records every position.",
+        "The instant the gripper first closes, a recorder notes every position.",
         "Measure from the gripper to each object. The nearest is the can: right object.",
         "Repeat many times. A guesser picks the asked-for object about 1 time in 3.",
       ]}

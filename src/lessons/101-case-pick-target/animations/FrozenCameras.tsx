@@ -53,7 +53,7 @@ export function FrozenCameras() {
                 </g>
               );
             })}
-            <circle cx={frameX(0) + FW / 2} cy={STRIP_Y + FH / 2} r={36} fill="none" className="a-t t-mark a-stroke" strokeWidth={3} style={{ opacity: step === 3 ? 1 : 0 }} />
+            <rect x={frameX(0) - 5} y={STRIP_Y - 5} width={FW + 10} height={FH + 10} rx={8} fill="none" className="a-t t-mark a-stroke" strokeWidth={3} style={{ opacity: step === 3 ? 1 : 0 }} />
             <Label x={frameX(3) + FW / 2} y={STRIP_Y + FH + 16} tone="accent" size={14} weight={700} opacity={frozen ? 1 : 0}>
               frozen: always the first picture
             </Label>
