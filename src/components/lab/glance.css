@@ -1,0 +1,113 @@
+/* The top of the lab page: the newest results (LabGlance.tsx). */
+
+.prune-glance {
+  max-width: 1120px;
+}
+.prune-kicker {
+  display: inline-flex;
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background-color: var(--mark);
+  color: #15171e;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.prune-title {
+  margin: 14px 0 0;
+  max-width: 22ch;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.4vw, 3.25rem);
+  font-weight: 800;
+  font-stretch: 85%;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.prune-lead {
+  max-width: 58ch;
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.prune-results {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 900px) {
+  .prune-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.prune-result {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 24px 22px 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.prune-number {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+}
+.prune-number-value {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 4.6vw, 4.25rem);
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.prune-number-of {
+  color: var(--text-faint);
+  font-size: 0.9375rem;
+}
+.prune-result-title {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.prune-result-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.prune-films {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+@media (min-width: 900px) {
+  .prune-films {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.prune-note {
+  max-width: 70ch;
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.prune-earlier {
+  margin-top: 48px;
+}
+.prune-earlier-title {
+  margin: 0 0 16px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
