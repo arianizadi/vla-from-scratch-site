@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "Text has to become numbers",
-      text: "Think of a cloakroom: you hand in a coat and get a ticket number. A model can only do arithmetic, so “pick up the red cube” is cut into pieces called **tokens**, and each piece is swapped for its ticket, an **id** (its number in a fixed list). The robot's instruction reaches the model only as these numbers.",
+      text: "A cloakroom: hand in a coat, get a ticket number. A model only does arithmetic, so “pick up the red cube” is cut into **tokens** by a **tokenizer**, and each is swapped for its ticket, an **id**: its number in a fixed list. A robot's instruction arrives only as numbers.",
       animation: SplitIntoTokens,
     },
     {
       title: "Pieces, not letters or words",
-      text: "A few common bricks can build almost anything. Single letters make sentences long; a list of whole words fails on any new word. **Subwords** sit in between: start from letters and keep gluing together the pair seen side by side most often. A word never seen before still breaks into known pieces.",
+      text: "A few common bricks can build almost anything. Single letters make sentences long; whole words fail on any new word. **Subwords** sit in between: start from letters and keep gluing the pair seen side by side most often. A word never seen before still breaks into known pieces.",
       animation: BpeMerges,
     },
     {
       title: "Each number opens a row",
-      text: "An id works like a locker number. It points to one row of a big table, the **embedding table**, which holds a list of numbers for every token. The model reads that row and works with it from then on. The rows are learned in training, so a model only understands ids from its own tokenizer.",
+      text: "An id works like a locker number: it opens one row of the **embedding table**, a list of numbers for every token. The model works with that row from then on. The rows are learned in training, so a model understands only the ids of its own tokenizer.",
       animation: EmbeddingLookup,
     },
     {
       title: "Short sentences get padding",
-      text: "Training reads many instructions at once, stacked like rows of a grid, so a short row is filled up with blank **pad** tokens. A **mask**, a row of 1s and 0s, marks which slots are real. The model reads left to right and the blanks come last, so no real word ever looks at them.",
+      text: "Training reads many instructions at once, stacked like rows of a grid, so short rows are filled with blank **pad** tokens. A **mask**, a row of 1s and 0s, marks which slots are real. The model reads left to right and blanks come last, so no real word sees them.",
       animation: PaddingMask,
     },
   ],

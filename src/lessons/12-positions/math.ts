@@ -8,9 +8,10 @@ export const math = [
     formula:
       "R(m)\\,\\mathbf{q} = \\begin{bmatrix} \\cos m & -\\sin m \\\\ \\sin m & \\cos m \\end{bmatrix} \\begin{bmatrix} q_1 \\\\ q_2 \\end{bmatrix}",
     symbols: [
-      ["\\mathbf{q} = (q_1, q_2)", "a word's arrow: two numbers, read as a point on a page"],
-      ["m", "the word's place in the line, counting from 0; also the angle it is turned by"],
-      ["\\cos m,\\ \\sin m", "how far across and how far up a unit arrow points after turning by angle m"],
+      ["\\mathbf{q}", "a word's arrow: two numbers, read as a point on a page"],
+      ["m", "the word's place, counting from 0; also the angle it is turned by"],
+      ["\\cos m", "how far across an arrow of length 1 points after turning by m"],
+      ["\\sin m", "how far up it points after that turn"],
       ["R(m)", "the turning machine: it spins any arrow by angle m without changing its length"],
     ],
     metaphor: "A clock hand that moves on one notch for every place further along the sentence.",
@@ -22,7 +23,8 @@ export const math = [
     formula: "\\big(R(m)\\,\\mathbf{q}\\big) \\cdot \\big(R(n)\\,\\mathbf{k}\\big) = \\mathbf{q} \\cdot R(n - m)\\,\\mathbf{k}",
     symbols: [
       ["\\mathbf{k}", "the arrow of the word being looked at"],
-      ["m,\\ n", "the places of the asking word and the word looked at"],
+      ["m", "the place of the asking word"],
+      ["n", "the place of the word looked at"],
       ["\\cdot", "the match: multiply the two arrows number by number and add"],
       ["n - m", "the gap between the two words"],
     ],

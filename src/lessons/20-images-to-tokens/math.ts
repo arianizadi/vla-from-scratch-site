@@ -15,7 +15,7 @@ export const math = [
     example: String.raw`A $224$-pixel picture with $16$-pixel patches: $224 / 16 = 14$ patches per side, so $N = 14^2 = 196$ tokens. Halve the patch to $p = 8$: $28^2 = 784$ tokens, four times as many.`,
   },
   {
-    title: "One recipe for every patch, plus a place tag",
+    title: "One shared recipe, plus a place tag",
     formula: String.raw`z_i = W x_i + e_i`,
     symbols: [
       [String.raw`x_i`, "the colour numbers of patch i, laid out in one line"],

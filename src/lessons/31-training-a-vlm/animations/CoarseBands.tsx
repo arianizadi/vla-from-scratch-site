@@ -39,8 +39,8 @@ export function CoarseBands() {
 
           <Bracket x1={FRAME.x + BAND} x2={FRAME.x + 2 * BAND} y={FRAME.y + FRAME.h + 18} label="about 30 cm" tone="ink" below opacity={step >= 1 ? 1 : 0} />
           <Bracket x1={CUBE_X - 7} x2={CUBE_X + 7} y={FLOOR - 40} tone="action" opacity={step === 2 ? 1 : 0} />
-          <Label x={CUBE_X + 16} y={FLOOR - 44} tone="action" size={14} weight={700} anchor="start" opacity={step === 2 ? 1 : 0}>
-            grasp: about 1 cm
+          <Label x={FRAME.x + FRAME.w / 2} y={232} tone="action" size={14} weight={700} opacity={step === 2 ? 1 : 0}>
+            a grasp must land within about 1 cm (orange mark)
           </Label>
 
           <Chip x={140} y={250} text="captions: which object" tone="language" size={13} mono={false} opacity={step === 3 ? 1 : 0} />

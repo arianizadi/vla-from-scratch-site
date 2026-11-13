@@ -48,7 +48,7 @@ function Result({ y, offset, shown, ok }: { y: number; offset: number; shown: bo
 export function SummaryOrPieces() {
   return (
     <AnimationFrame
-      title="One summary, or every piece"
+      title="One summary, or every patch"
       description="A camera picture is cut into nine patches, one of which shows the cube. Squeezed into one summary, the picture still says a cube is there but blurs where, and the grasp lands a few centimetres off. Handed every patch, the action head can find the cube's patch and the grasp lands on target."
       steps={[
         "A picture as patches. One patch shows the cube.",

@@ -10,7 +10,7 @@ export default defineLesson({
   beats: [
     {
       title: "Learning by copying",
-      text: "Think of learning to cook from recordings of a chef. **Behaviour cloning** works that way: record an expert's **demonstrations**, what it saw and what it did at every moment, then train the policy to give the same action for the same view. It is ordinary practice with an answer key.",
+      text: "Think of learning to cook from recordings of a chef. **Behaviour cloning**, the plainest kind of [imitation learning](/learn/02-how-we-got-here), works that way: record an expert's demonstrations, what it saw and did at every moment, then train the policy to give the same action for the same view.",
       animation: CopyPairs,
     },
     {
@@ -30,7 +30,7 @@ export default defineLesson({
     },
   ],
   edgeCases: [
-    "Low error on recorded data does not mean success on the robot. On recordings the expert's path is handed over; when running, the policy makes its own.",
+    "A low loss on recorded data does not mean success on the robot. On recordings the expert's path is handed over; when running, the policy makes its own.",
     "More inputs are not always better. An input that hints at the answer, like the last move, can stop the policy from looking.",
     "Two experts doing the task differently can blur into a wrong average; [flow matching](/learn/41-flow-matching) is the cure for that one.",
     "Keeping only successful demonstrations removes every example of a mistake and its fix.",

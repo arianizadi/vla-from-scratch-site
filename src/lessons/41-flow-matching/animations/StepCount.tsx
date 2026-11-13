@@ -26,7 +26,7 @@ export function StepCount() {
       title="How many flow steps?"
       description="The same random starting points are run through the sampler with 1, 2, 4 and 10 flow steps. With 1 step every draw lands in the middle, on the average. With 2, most still end between the targets. With 4, most land on a target, and with 10 all of them do."
       steps={[
-        "The same noise, run through four samplers.",
+        "The same noise, walked back in 1, 2, 4 and 10 flow steps.",
         "1 step is one jump, aimed at the average: nothing lands on a target.",
         "2 steps: the side is picked halfway, too late. Most end in between.",
         "4 steps: most draws reach a target.",

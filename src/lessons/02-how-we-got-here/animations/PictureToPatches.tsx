@@ -20,13 +20,13 @@ const ROW_X = 240 - (SHADE.length * ROW_CELL + (SHADE.length - 1) * ROW_GAP) / 2
 export function PictureToPatches() {
   return (
     <AnimationFrame
-      title="A picture becomes a row of pieces"
+      title="A picture becomes a row of patches"
       description="A camera picture is cut into a grid of small squares called patches. The patches are laid out in a row, like the words of a sentence, so the same kind of model that reads words can read the picture. Pairing pictures with captions then teaches which patches show a red cube."
       steps={[
         "A camera picture.",
         "Cut it into small squares: patches.",
         "Lay them out in a row, like words in a sentence.",
-        "Pictures paired with captions teach what the pieces show.",
+        "Pictures paired with captions teach what the patches show.",
       ]}
       size={[480, 270]}
     >

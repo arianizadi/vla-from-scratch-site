@@ -28,7 +28,7 @@ export function Copycat() {
         "The guess is nearly right almost everywhere, and needs no camera.",
         "Except at the start: from rest, the reach could go either way. Only the cameras can tell.",
       ]}
-      size={[480, 270]}
+      size={[480, 286]}
     >
       {(step) => (
         <>
@@ -36,7 +36,7 @@ export function Copycat() {
           <Label x={xAt(N - 1) + 10} y={BASE_Y + 122} tone="faint" size={13} anchor="end">
             {"time →"}
           </Label>
-          <rect x={X0 - 12} y={30} width={PITCH * 3 + 8} height={226} rx={8} className="a-t t-mark a-fill-soft" style={{ opacity: step >= 3 ? 1 : 0 }} />
+          <rect x={X0 - 12} y={30} width={PITCH * 3 + 8} height={226} rx={8} className="a-t t-mark a-fill-soft" style={{ opacity: step >= 3 ? 0.55 : 0 }} />
           <Label x={X0 + 14} y={20} tone="ink" size={13} weight={700} opacity={step >= 3 ? 1 : 0}>
             needs the camera
           </Label>

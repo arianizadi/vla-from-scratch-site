@@ -72,7 +72,7 @@ export function ReservedSeats() {
           })}
 
           <Arrow from={[seatX(0) - 10, ROW - 34]} to={[446, ROW - 34]} tone="accent" drawn={step === 3} opacity={step === 3 ? 1 : 0} flow={step === 3} />
-          <Bracket x1={seatX(0) - 17} x2={451} y={ROW + 56} label="one row, read like words" tone="accent" below opacity={step === 3 ? 1 : 0} />
+          <Bracket x1={seatX(0) - 17} x2={451} y={ROW + 48} label="one row, read like words" tone="accent" below opacity={step === 3 ? 1 : 0} />
         </>
       )}
     </AnimationFrame>

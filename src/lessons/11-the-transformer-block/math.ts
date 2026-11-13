@@ -23,13 +23,13 @@ export const math = [
       ["Q", "the questions: one list of numbers per word, saying what it looks for"],
       ["K", "the labels: one list per word, saying what it can be found by"],
       ["V", "the contents: one list per word, saying what it hands over if chosen"],
-      ["Q K^{\\top}", "every question matched against every label (a dot product: multiply place by place, then add)"],
-      ["\\sqrt{d}", "the square root of the list length d, which keeps scores from growing too large"],
+      ["Q K^{\\top}", "every question matched with every label: multiply place by place, then add"],
+      ["\\sqrt{d}", "the square root of the list length d; keeps scores from growing too big"],
       ["\\mathrm{softmax}", "turn each word's scores into shares that add up to 1, as above"],
     ],
     metaphor: "A library: you bring a question, compare it with every book's label, and walk out with a blend of the books that matched best.",
     example:
-      "With lists of length $d = 4$, a question $(1, 0, 1, 0)$ and a label $(1, 1, 1, 0)$ match with $1 + 0 + 1 + 0 = 2$; divided by $\\sqrt{4} = 2$ the score is $1$. If two words get shares $0.75$ and $0.25$ and hand over contents $(4, 0)$ and $(0, 8)$, the asker takes in $0.75 \\cdot (4, 0) + 0.25 \\cdot (0, 8) = (3, 2)$.",
+      "With lists of length $d = 4$, a question $(1, 0, 1, 0)$ and a label $(1, 1, 1, 0)$ match with $1 + 0 + 1 + 0 = 2$; divided by $\\sqrt{4} = 2$ the score is $1$. If two words get shares $0.75$ and $0.25$ and hand over contents $(4, 0)$ and $(0, 8)$, the asker takes in $0.75 \\cdot (4, 0) = (3, 0)$ plus $0.25 \\cdot (0, 8) = (0, 2)$: together $(3, 2)$.",
   },
   {
     title: "Adding, never replacing",

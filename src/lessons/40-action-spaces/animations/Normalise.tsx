@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimationFrame, Dot, Label, Path } from "@/animations";
-import { CHANNELS, NOISE } from "./channels";
+import { AnimationFrame, Bracket, Dot, Label, Path } from "@/animations";
+import { CHANNELS } from "./channels";
 
 const ZERO = 300;
 const RAW_UNIT = 95;
@@ -20,13 +20,13 @@ function xOf(step: number, value: number, mean: number, std: number): number {
 export function Normalise() {
   return (
     <AnimationFrame
-      title="Normalising each channel"
-      description="Three numbers of the action across many moments, with toy values: a stiff joint that sits far from zero and barely moves, a busy joint that swings around zero, and the gripper, which is only open (1) or closed (0). Subtracting each one's average centres all three on zero; dividing by how much each one varies gives them the same spread, the spread of the noise the policy starts from. The policy's answers are stretched back before they reach the arm."
+      title="Normalising each number"
+      description="Three numbers of the action across many moments, with toy values: a stiff joint that sits far from zero and barely moves, a busy joint that swings around zero, and the gripper, which is only open (1) or closed (0). Subtracting each one's average centres all three on zero; dividing by how much each one varies gives them about the same spread: one common scale for the policy. The policy's answers are stretched back before they reach the arm."
       steps={[
         "Three numbers of the action over many moments (toy values). One barely moves; the gripper is only 0 or 1.",
         "Subtract each one's average: all three are centred on zero.",
         "Divide each by how much it varies: now they spread about the same.",
-        "That matches the noise the policy starts from. Answers are stretched back before reaching the arm.",
+        "Now all three share one scale. Answers are stretched back before they reach the arm.",
       ]}
       size={[480, 260]}
     >
@@ -56,12 +56,7 @@ export function Normalise() {
             </g>
           ))}
 
-          <Label x={16} y={ROW_Y[3]} tone="muted" size={14} anchor="start" weight={700} opacity={step >= 3 ? 1 : 0}>
-            noise
-          </Label>
-          {NOISE.map((z, index) => (
-            <Dot key={index} x={tidy(ZERO + z * NORM_UNIT)} y={ROW_Y[3] + jitter(index)} r={4.5} tone="muted" opacity={step >= 3 ? 0.85 : 0} delay={index * 20} />
-          ))}
+          <Bracket x1={ZERO - 2 * NORM_UNIT} x2={ZERO + 2 * NORM_UNIT} y={ROW_Y[3] - 8} label="one common scale" tone="accent" below opacity={step >= 3 ? 1 : 0} />
         </>
       )}
     </AnimationFrame>

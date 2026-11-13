@@ -19,14 +19,14 @@ const SUMMARY = [0.7, 0.2, 0.9, 0.4, 0.6, 0.3, 0.8, 0.5];
 export function OneVsMany() {
   return (
     <AnimationFrame
-      title="One summary or many pieces"
-      description="A camera image shows a cube near the top. One design squeezes the whole image into a single summary vector, so where the cube is must be written into those numbers. The other cuts the image into a grid of pieces and passes each piece as its own token; the cube's piece keeps its place in the row, so where the cube is comes built in."
+      title="One summary or every patch"
+      description="A camera image shows a cube near the top. One design squeezes the whole image into a single summary vector, so where the cube is must be written into those numbers. The other cuts the image into a grid of patches and passes each patch as its own token; the cube's patch keeps its place in the row, so where the cube is comes built in."
       steps={[
         "A camera image, with the cube in one spot.",
         "Option one: squeeze the whole picture into one summary, a single list of numbers.",
         "Where the cube is must now be written into those numbers, somehow.",
-        "Option two: cut the picture into pieces, one token each.",
-        "The cube's piece keeps its place in the row. Where is built in.",
+        "Option two: cut the picture into patches, one token each.",
+        "The cube's patch keeps its place in the row. Where is built in.",
       ]}
       size={[480, 290]}
     >
@@ -73,7 +73,7 @@ export function OneVsMany() {
             </Label>
 
             <Label x={240} y={214} tone="ink" size={14} weight={700} opacity={cut ? 1 : 0}>
-              many pieces, one token each
+              many patches, one token each
             </Label>
             <Label x={ROW_X0 + CUBE_TILE * (ROW_TILE + ROW_GAP) + ROW_TILE / 2} y={ROW_Y + 26} tone="ink" size={13} opacity={step >= 4 ? 1 : 0}>
               the cube is here

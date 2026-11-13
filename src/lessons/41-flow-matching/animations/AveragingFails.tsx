@@ -17,11 +17,11 @@ export function AveragingFails() {
   return (
     <AnimationFrame
       title="The average of two good reaches"
-      description="Two identical cubes stand on a table and nothing says which to pick. Half of the demonstrations reach for the left cube and half for the right one. A network trained with squared error learns their average and reaches for the gap between the cubes, where it closes the gripper on empty table: an action no demonstration contains."
+      description="Two identical cubes stand on a table and nothing says which to pick. Half of the demonstrations reach for the left cube and half for the right one. A policy trained with squared error learns their average and reaches for the gap between the cubes, where it closes the gripper on empty table: an action no demonstration contains."
       steps={[
         "Two cubes, and nothing in the scene says which one to pick.",
         "Half the demonstrations reach left, half reach right. Both are correct.",
-        "Trained to give one answer, the network settles on the average: the middle.",
+        "Trained to give one answer, the policy settles on the average: the middle.",
         "So the policy closes on the empty gap. No demonstration ever did that.",
       ]}
       size={[480, 290]}

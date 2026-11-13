@@ -10,12 +10,12 @@ export default defineLesson({
   beats: [
     {
       title: "A summary or the whole map",
-      text: "Describe a photo in one sentence and the layout is gone. **Pooling** does that to a picture: it blends all the patch tokens into one **summary vector**. **Patch tokens** keep one token per patch, still in their grid. The summary can say what is there; only the grid says where.",
+      text: "Describe a photo in one sentence and the layout is gone. **Pooling** does that: it blends every patch token into one list of numbers, a **summary vector**. Keep the patch tokens instead and their grid survives. The summary can say what is there; only the grid says where.",
       animation: PooledVsPatches,
     },
     {
       title: "A caption never says where",
-      text: "Some encoders, models that turn pictures into numbers, learn by matching pictures to captions. “A red cube on a table” stays true when the cube slides 3 cm, so nothing pushes their summary to tell those pictures apart. A robot hand cares: a few centimetres decide whether a grasp holds.",
+      text: "Some **encoders**, models that turn pictures into numbers, learn by matching pictures to captions. “A red cube on a table” stays true when the cube slides 3 cm, so nothing pushes their summary to tell those pictures apart. A robot hand cares: a few centimetres decide whether a grasp holds.",
       animation: SameCaption,
     },
     {
@@ -25,7 +25,7 @@ export default defineLesson({
     },
     {
       title: "More tokens, more comparisons",
-      text: "Inside the model, every token compares itself with every other, like guests at a party who all shake hands. Double the guests and the handshakes grow fourfold. Every patch from four pictures is hundreds of tokens, so keeping where costs real work each time the robot acts.",
+      text: "Inside the model, every token compares itself with every other, like guests at a party who all shake hands. Double the guests and the handshakes grow fourfold. Every patch of every camera picture adds up to hundreds of tokens, so keeping where costs real work each time the robot acts.",
       animation: Handshakes,
     },
   ],
@@ -33,7 +33,7 @@ export default defineLesson({
     "Having every patch token is not the same as using it. Robots given all the patches still failed until other parts of the recipe let them look.",
     "A summary is not empty of position. Some survives inside its numbers, blurred and hard to read.",
     "Big patches blur position too. A patch two or three cubes wide hides where inside it the cube sits.",
-    "A robot can reach a low training error and still grasp thin air. A low error does not prove it looks at the scene.",
+    "A robot can reach a low training loss and still grasp thin air. A low loss does not prove it looks at the scene.",
   ],
   tips: [
     "Ask what the robot needs: naming objects can live with a summary, grasping needs where.",

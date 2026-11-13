@@ -8,8 +8,8 @@ export const math = [
     formula: "L = -\\frac{1}{N} \\sum_{t=1}^{N} \\log p\\,(x_{t+1} \\mid x_1, \\dots, x_t)",
     symbols: [
       ["x_t", "the token at place t of the text"],
-      ["p\\,(x_{t+1} \\mid x_1, \\dots, x_t)", "the chance the model gave to the token that really came next, having read everything before it"],
-      ["\\log", "the natural logarithm: it turns a chance of 1 into 0 and small chances into big negative numbers"],
+      ["p\\,(x_{t+1} \\mid x_1, \\dots, x_t)", "the chance the model gave the true next token, after reading all before it"],
+      ["\\log", "the natural logarithm: a chance of 1 gives 0, small chances give big negatives"],
       ["N", "how many places were scored"],
       ["L", "the loss: the average surprise; the minus sign makes it positive"],
     ],
@@ -23,7 +23,7 @@ export const math = [
     symbols: [
       ["w", "one of the model's numbers (a weight)"],
       ["\\frac{\\partial L}{\\partial w}", "the slope: how much the loss rises if w grows a little"],
-      ["\\eta", "the step size, also called the learning rate: small at the start, larger in the middle, small again at the end"],
+      ["\\eta", "the step size, or learning rate: small, then larger, then small again"],
       ["\\leftarrow", "becomes"],
     ],
     metaphor: "Walking down a hill in fog: feel which way the ground rises, then step the other way. The step size is how long a stride you dare.",

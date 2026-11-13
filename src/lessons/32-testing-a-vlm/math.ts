@@ -12,7 +12,7 @@ export const math = [
       [String.raw`P_{\text{guess}}`, "the chance a blind guess names all three in the right order"],
     ],
     metaphor: "Drawing three cards from four, one at a time, and needing them in exactly the order on the table.",
-    example: String.raw`With $k = 4$: $4 \times 3 \times 2 = 24$ ordered lists, so $P_{\text{guess}} = 1/24$. On $300$ test scenes, luck alone gets about $300 / 24 \approx 12$ right. A model that gets about $256$ right is not guessing.`,
+    example: String.raw`With $k = 4$: $4 \times 3 \times 2 = 24$ ordered lists, so $P_{\text{guess}} = 1/24$. On $300$ test scenes, luck alone gets about $300 / 24 = 12.5$ right. A model that gets about $256$ right is not guessing.`,
   },
   {
     title: "The swap test: how much the picture matters",

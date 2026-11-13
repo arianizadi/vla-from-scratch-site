@@ -54,7 +54,8 @@ export function CountSuccesses() {
             const fail = FAILS.has(index);
             const lifted = step >= 2 && !fail;
             const cubeX = cx + offset;
-            const gripX = step >= 1 ? cubeX + (fail ? 15 : 0) : cx;
+            // A miss lands beside the cube, on the side towards the middle of the tile, so it stays inside.
+            const gripX = step >= 1 ? cubeX + (fail ? (offset > 0 ? -15 : 15) : 0) : cx;
             const gripTips = step === 0 ? cy - 10 : lifted ? table - 22 : table - 2;
             const delay = stagger(index, 60);
             return (

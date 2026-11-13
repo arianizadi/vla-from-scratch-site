@@ -48,11 +48,8 @@ export function SameCaption() {
           <Label x={240} y={256} tone="failure" size={14} weight={700} opacity={step === 2 ? 1 : 0}>
             same score for both pictures
           </Label>
-          <Label x={130} y={256} tone="ink" size={14} weight={700} opacity={step === 3 ? 1 : 0}>
-            2 cm off: mostly holds
-          </Label>
-          <Label x={350} y={256} tone="failure" size={14} weight={700} opacity={step === 3 ? 1 : 0}>
-            3 cm off: mostly fails
+          <Label x={240} y={256} tone="failure" size={14} weight={700} opacity={step === 3 ? 1 : 0}>
+            a grasp 2 cm off mostly holds; 3 cm off, mostly fails
           </Label>
         </>
       )}

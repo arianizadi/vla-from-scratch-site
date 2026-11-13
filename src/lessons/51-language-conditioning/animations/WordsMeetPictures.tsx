@@ -16,12 +16,12 @@ export function WordsMeetPictures() {
   return (
     <AnimationFrame
       title="Words say which, pictures say where"
-      description="The sentence pick up the red cube becomes five word tokens, and the camera image becomes image-piece tokens, all in one row. The action head joins the word cube, which says which object, with the image piece that shows the cube, which says where. Changing two words to green can changes two tokens, and now the piece that shows the can matters instead."
+      description="The sentence pick up the red cube becomes five word tokens, and the camera image becomes patch tokens, all in one row. The action head joins the word cube, which says which object, with the patch that shows the cube, which says where. Changing two words to green can changes two tokens, and now the patch that shows the can matters instead."
       steps={[
-        "Word tokens and image-piece tokens sit side by side in one row.",
+        "Word tokens and patch tokens sit side by side in one row.",
         "The word “cube” says which object.",
-        "The piece that shows the cube says where. The action head joins the two.",
-        "Change two words to “green can”: two tokens change, and another piece matters.",
+        "The patch that shows the cube says where. The action head joins the two.",
+        "Change two words to “green can”: two tokens change, and another patch matters.",
       ]}
       size={[480, 250]}
     >
@@ -67,7 +67,7 @@ export function WordsMeetPictures() {
               words
             </Label>
             <Label x={380} y={ROW_Y + 36} tone="vision" size={14} weight={700}>
-              image pieces
+              patches
             </Label>
 
             <Arrow from={[WORD_X[4], ROW_Y - 24]} to={[HEAD[0] - 10, HEAD[1] + 26]} tone="language" width={2.5} drawn={step >= 2 && !b} opacity={step >= 2 && !b ? 1 : 0} />

@@ -25,12 +25,12 @@ export default defineLesson({
     },
     {
       title: "What captions cannot teach",
-      text: "Captions say left, middle or right: bands about 30 cm wide on the table. A grasp needs about 1 cm. So captions teach the model which object is which, and the exact spot has to come from robot demonstrations. We saw that: captions mainly bought an earlier start.",
+      text: "Captions say left, middle or right: bands about 30 cm wide on the table. A grasp needs about 1 cm. So captions teach the model which object is which, and the exact spot has to come from robot demonstrations. We saw that: captions mainly bought an [earlier start](/learn/22-pretrained-vision-encoders).",
       animation: CoarseBands,
     },
   ],
   edgeCases: [
-    "A low training error can come from the guessable words alone. It does not show the picture is being used.",
+    "A low training loss can come from the guessable words alone. It does not show the picture is being used.",
     "If every caption only listed objects in random order, the model could ace it knowing what is there and never where.",
     "A caption checks only an object's centre, so an object hidden behind the arm can still be named. Some labels are wrong.",
     "A caption too long for the row gets cut, and the cut can remove the start of the prompt without warning.",
@@ -38,7 +38,7 @@ export default defineLesson({
   tips: [
     "Write captions whose key words can only come from the picture: the order, which is leftmost, which band.",
     "When the vision part starts from nothing, train every part together. A locked, untrained encoder cannot learn to see.",
-    "Judge the model by a test of what only the picture knows, not by its training error.",
+    "Judge the model by a test of what only the picture knows, not by its training loss.",
   ],
   takeaway: "A vision-language model learns to see by guessing caption words; only the words that depend on the picture teach vision, so the captions decide what it sees.",
   related: ["30-joining-vision-and-language", "32-testing-a-vlm", "13-training-a-language-model"],

@@ -68,7 +68,10 @@ export function OffsetGap() {
     >
       {(step) => (
         <>
-          <Label x={22} y={ROW_TRAIN - 52} tone="faint" size={13} anchor="start">
+          <Label x={22} y={ROW_TRAIN - 52} tone="faint" size={13} anchor="start" opacity={step === 0 ? 1 : 0}>
+            one prompt
+          </Label>
+          <Label x={22} y={ROW_TRAIN - 52} tone="faint" size={13} anchor="start" opacity={step >= 1 ? 1 : 0}>
             in training
           </Label>
           <Label x={22} y={ROW_SERVE - 52} tone="faint" size={13} anchor="start" opacity={step >= 1 ? 1 : 0}>

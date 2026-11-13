@@ -10,12 +10,12 @@ export default defineLesson({
   beats: [
     {
       title: "Two right answers, one wrong average",
-      text: "Told “meet me at the left door or the right door”, splitting the difference walks you into the wall. A network trained to give one answer does exactly that: it learns the **average** of the right answers. With two identical cubes, the robot grabs the empty gap between them.",
+      text: "Told “meet me at the left door or the right door”, splitting the difference walks you into the wall. A policy trained to give one answer does exactly that: it learns the **average** of the right answers. With two identical cubes, the robot grabs the empty gap between them.",
       animation: AveragingFails,
     },
     {
       title: "Learn which way is clean",
-      text: "Training blends a real action with random noise, sometimes a little, sometimes a lot. The network sees the blend and learns one thing: the direction from the action toward the noise. Every blend has one clear answer, so nothing gets averaged away. This recipe is called **flow matching**.",
+      text: "Training blends a real action with random noise, sometimes a little, sometimes a lot. The policy sees the blend and learns one thing: the direction from the action toward the noise. Every blend has one clear answer, so nothing gets averaged away. This recipe is called **flow matching**.",
       animation: NoisePath,
     },
     {
@@ -37,10 +37,10 @@ export default defineLesson({
   ],
   tips: [
     "Try a few step counts on the exact policy you will run; the best number varies.",
-    "Draw twice for the same scene. Two different but sensible actions mean the sampler works.",
-    "One step behaves like plain averaging, which makes it a useful baseline.",
+    "Draw twice for the same scene. Two different but sensible actions mean the walk from noise works.",
+    "One step behaves like plain averaging, which makes it a useful yardstick to compare against.",
   ],
-  takeaway: "Flow matching teaches a network to walk from noise to an action, so it lands on one right answer instead of the average of several.",
+  takeaway: "Flow matching teaches a policy to walk from noise to an action, so it lands on one right answer instead of the average of several.",
   related: ["40-action-spaces", "42-chunks-and-execution", "52-history-and-shortcuts", "92-measuring-failure"],
   lab: [
     { label: "Success and speed with different numbers of flow steps", href: "/lab#sampler" },

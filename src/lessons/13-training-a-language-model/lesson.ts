@@ -9,22 +9,22 @@ export default defineLesson({
   beats: [
     {
       title: "Text is its own answer key",
-      text: "Cover the rest of a sentence with your hand and guess the next word. That is the whole exercise. The answer at each place is the word that follows, so any text works and nobody writes labels. With the mask from the last lesson, one pass checks every guess in a sentence at once.",
+      text: "Cover the rest of a sentence with your hand and guess the next word. The answer at each place is the word that follows, so any text works and nobody writes labels. With the [causal mask](/learn/11-the-transformer-block), one pass checks every guess in a sentence at once.",
       animation: NextTokenTargets,
     },
     {
       title: "Measuring surprise",
-      text: "The **loss** is the model's surprise at the true next word: low when it had given that word a high chance. Knowing nothing is like a blind pick among about 50,000 tokens. Our small model ended training about as unsure as a pick among 60: far from perfect, but it wrote readable English.",
+      text: "The **loss** is the model's surprise at the true next word: low when it had given that word a high chance. Knowing nothing is a blind pick among about 50,000 tokens. Our small model ended as unsure as a pick among 60, and it wrote readable English.",
       animation: LossMeter,
     },
     {
       title: "Small steps downhill",
-      text: "Picture walking down a valley in fog: feel the slope, take a small step down. After each batch of text, every number in the model moves a little in the direction that would have lowered the surprise. Steps start small, grow, then shrink at the end so the model settles. Repeat thousands of times.",
+      text: "Walking down a valley in fog, you feel the slope and step downhill. After each **batch**, a handful of texts read together, every number in the model moves a little in the direction that lowers the surprise. Steps start small, grow, then shrink so the model settles.",
       animation: GradientSteps,
     },
     {
       title: "Low loss is not the goal",
-      text: "A student can memorise last year's answers and still fail a new exam. A low loss only says the model predicts its practice text well. What counts is what it does next: we built a model that looks at camera images on top of it, and then a robot policy, and judged each by its task.",
+      text: "A student can memorise last year's answers and still fail a new exam. A low loss only says the model predicts its practice text well. We judged ours by what was built on it: a model that reads pictures, then a robot policy.",
     },
   ],
   edgeCases: [

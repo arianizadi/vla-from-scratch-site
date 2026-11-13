@@ -10,22 +10,22 @@ export default defineLesson({
   beats: [
     {
       title: "From numbers to a guess",
-      text: "Picture an assembly line. Each token's row of numbers passes through a stack of stations called **blocks**, all built alike but tuned differently. At the end, every place in the sentence gives a score to each possible next token. A robot's instruction travels down the same line before any action is chosen.",
+      text: "Picture an assembly line. Each token's row of numbers passes through a stack of stations called **blocks**, all built alike but tuned differently. At the end, every place gives a score to each possible next token. A robot's instruction travels down the same line before any action is chosen.",
       animation: IdsToLogits,
     },
     {
       title: "Listening to the right words",
-      text: "At a noisy party you listen most to whoever matters to you. **Attention** works the same way: each word asks a question, every word offers a label, and good matches get a bigger share. In “pick up the red cube”, `cube` listens mostly to `red`, so it now carries the colour of the right object.",
+      text: "At a noisy party you listen most to whoever matters to you. In **attention**, each word asks a question, every word offers a label, and good matches get a bigger share. In “pick up the red cube”, `cube` listens mostly to `red`, so it now carries the right colour.",
       animation: AttentionMix,
     },
     {
       title: "No peeking at the answer",
-      text: "The model learns by guessing the next word at every place at once, like a quiz with the answers covered. If a word could see the word after it, it would copy the answer. The **causal mask**, a rule that hides later words, keeps it honest. A robot's action part drops this mask, because it plans all its steps together.",
+      text: "Like a quiz with the answers covered, the model guesses the next word at every place at once. A word that could see the next one would copy it. The **causal mask** hides later words. A robot's [action head](/learn/03-the-landscape) drops this mask: it plans all its moves together.",
       animation: CausalMask,
     },
     {
       title: "Adding notes, never erasing",
-      text: "Think of a shared notebook passed down the line. Each block reads it, works something out and writes it in the margin. Attention adds what words learned from each other; a **feed-forward network**, a small calculator for each word alone, adds its own result. Nothing is erased, so later blocks can read everything.",
+      text: "Think of a notebook passed down the line. Each block reads it, works something out and writes in the margin. Attention adds what words learned from each other; a **feed-forward network**, a small calculator for each word alone, adds its own result. Nothing is erased, so later blocks read everything.",
       animation: ResidualStream,
     },
   ],
@@ -33,7 +33,7 @@ export default defineLesson({
     "Attention is not understanding. It is a weighted mix decided by learned matches, and it can lean on the wrong word.",
     "Blocks look alike but are not copies: each has its own learned numbers.",
     "Without the mask in training, the model would score perfectly and learn nothing, because it would read the answer.",
-    "In a small model, most of the numbers can sit in the word table and the final scorer, not in the blocks.",
+    "In a small model, most of the numbers can sit in the embedding table and the final scorer, not in the blocks.",
   ],
   tips: [
     "To guess what a word attends to, ask which other word would help you understand it.",

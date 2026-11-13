@@ -21,12 +21,12 @@ export default defineLesson({
     },
     {
       title: "Taught by showing, not by rules",
-      text: "Like learning a knot by watching a friend tie it. An expert does the task many times while we record what it saw and did: these are **demonstrations**. Training compares the model's guess with the expert's move and nudges it closer. Nobody writes rules; the examples are the lesson.",
+      text: "Like learning a knot by watching a friend tie it. An expert does the task many times while we record what it saw and did: **demonstrations**. Training measures the gap between the model's guess and the expert's move, the **training error**, and nudges the model to shrink it.",
       animation: CopyTheExpert,
     },
     {
       title: "Graded by what it does",
-      text: "A student can memorise answers without understanding them. So we never trust the training score alone. We put the robot in front of tables it never saw, let it act, and count how often it lifts the right object. That **success rate** is the grade that counts.",
+      text: "A student can memorise answers without understanding them. So we never trust the training error alone. We put the robot in front of tables it never saw, let it act, and count how often it lifts the right object. That **success rate** is the grade that counts.",
       animation: CountSuccesses,
     },
     {
@@ -44,7 +44,7 @@ export default defineLesson({
   tips: [
     "Keep the loop in mind: picture and words in, a small move out, repeat. Every lesson zooms into one box of it.",
     "When a lesson names a new part, ask two questions: what does it receive, and what does it pass on?",
-    "Colours mean the same thing everywhere: blue is words, green is images, orange is actions.",
+    "Colours mean the same thing everywhere: blue is words, teal is images, orange is actions.",
   ],
   takeaway: "A robot policy looks, reads and makes a small move, again and again. It learns that from demonstrations, and we grade it only by what it does on tables it never saw.",
   related: ["10-tokens", "20-images-to-tokens", "40-action-spaces", "43-imitation-learning", "90-closed-loop-evaluation"],
