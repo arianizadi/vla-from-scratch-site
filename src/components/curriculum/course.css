@@ -617,12 +617,14 @@
 }
 .math-cards {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a wide formula must not widen the page */
   gap: 28px;
   margin: 28px 0 0;
   padding: 0;
   list-style: none;
 }
 .math-card {
+  min-width: 0;
   padding: 24px 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-stage);
@@ -767,6 +769,10 @@
   content: counter(math-step);
 }
 .math-inline {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: bottom;
   white-space: nowrap;
 }
 .math-inline .katex {
