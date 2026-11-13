@@ -860,9 +860,11 @@
       "quotes": ["Same policy and recipe as the runs above unless stated: `dp_vit_lang_reactive`, 4000 demonstrations with random start poses and recoveries (`--random_start --disturb_prob 0.5`), 5M samples, 100 unseen layouts per evaluation, final checkpoint, trained / averaged weights where both are given."]
     },
     "inProgress": {
-      "quotes": ["**In progress:** the full pruning task (step 8) for a 40M-sample budget (`..._prune2k_rs_tail10_40m`)."],
+      "quotes": ["**In progress:** the full pruning task (step 8) from 2000 demonstrations plus 2000 takeover demonstrations, 20M samples, three seeds (`..._prune2k_takeover2k_20m`, `..._seed43`, `..._seed44`)."],
       "runs": [
-        { "task": "prune", "run": "..._prune2k_rs_tail10_40m" }
+        { "task": "prune", "run": "..._prune2k_takeover2k_20m" },
+        { "task": "prune", "run": "..._seed43" },
+        { "task": "prune", "run": "..._seed44" }
       ]
     },
 
