@@ -148,7 +148,6 @@ export const ANIMATIONS: Record<string, () => Promise<Record<string, unknown>>> 
   "80-the-training-loop/animations/StrideSize": () => import("../80-the-training-loop/animations/StrideSize"),
   "81-surviving-long-runs/animations/Heartbeat": () => import("../81-surviving-long-runs/animations/Heartbeat"),
   "81-surviving-long-runs/animations/SavePoints": () => import("../81-surviving-long-runs/animations/SavePoints"),
-  "81-surviving-long-runs/animations/ThreadFlood": () => import("../81-surviving-long-runs/animations/ThreadFlood"),
   "81-surviving-long-runs/animations/WatcherLoop": () => import("../81-surviving-long-runs/animations/WatcherLoop"),
   "81-surviving-long-runs/animations/WhatASaveHolds": () => import("../81-surviving-long-runs/animations/WhatASaveHolds"),
   "90-closed-loop-evaluation/animations/CountWithNoise": () => import("../90-closed-loop-evaluation/animations/CountWithNoise"),
