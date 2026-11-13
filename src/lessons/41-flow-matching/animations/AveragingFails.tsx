@@ -21,7 +21,7 @@ export function AveragingFails() {
       steps={[
         "Two cubes, and nothing in the scene says which one to pick.",
         "Half the demonstrations reach left, half reach right. Both are correct.",
-        "Squared error is smallest at the average of the two: the middle.",
+        "Trained to give one answer, the network settles on the average: the middle.",
         "So the policy closes on the empty gap. No demonstration ever did that.",
       ]}
       size={[480, 290]}

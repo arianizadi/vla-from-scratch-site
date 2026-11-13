@@ -24,7 +24,7 @@ export function FlowSampling() {
         "First steps: everything drifts toward the middle, the average.",
         "Halfway, each point's best guess picks a side and the paths bend.",
         "The points commit to the nearest demonstrated action.",
-        "After 10 flow steps every draw sits on a real action. None is left in the gap.",
+        "After 10 steps every point sits on a real action. None is left in the gap.",
       ]}
       size={[480, 330]}
       hold={[1800, 1800, 1800, 1800, 3400]}

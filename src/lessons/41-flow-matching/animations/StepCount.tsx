@@ -5,10 +5,10 @@ import { TARGETS, noise, tidy, trajectory } from "./toy";
 
 /** The chapter's table: share of 10,000 toy draws within 0.1 of a target, by number of flow steps. */
 const ROWS = [
-  { steps: 1, landed: "0%" },
-  { steps: 2, landed: "13.9%" },
-  { steps: 4, landed: "89.6%" },
-  { steps: 10, landed: "100%" },
+  { steps: 1, landed: "none" },
+  { steps: 2, landed: "a few" },
+  { steps: 4, landed: "most" },
+  { steps: 10, landed: "all" },
 ];
 
 const UNIT = 72;
@@ -24,11 +24,11 @@ export function StepCount() {
   return (
     <AnimationFrame
       title="How many flow steps?"
-      description="The same random starting points are run through the sampler with 1, 2, 4 and 10 flow steps. With 1 step every draw lands in the middle, on the average. With 2, most still end between the targets. With 4, most land on a target, and with 10 all of them do. In the full toy, 0%, 13.9%, 89.6% and 100% of 10,000 draws land within 0.1 of a target."
+      description="The same random starting points are run through the sampler with 1, 2, 4 and 10 flow steps. With 1 step every draw lands in the middle, on the average. With 2, most still end between the targets. With 4, most land on a target, and with 10 all of them do."
       steps={[
         "The same noise, run through four samplers.",
-        "1 flow step is one jump, aimed at the average: nothing lands on a target.",
-        "2 steps: the side is chosen mid-path, too late. Most draws end in between.",
+        "1 step is one jump, aimed at the average: nothing lands on a target.",
+        "2 steps: the side is picked halfway, too late. Most end in between.",
         "4 steps: most draws reach a target.",
         "10 steps: all of them. Fewer steps are faster but can fall short.",
       ]}
