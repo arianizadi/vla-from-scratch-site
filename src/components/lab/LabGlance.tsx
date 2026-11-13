@@ -17,8 +17,7 @@ function span(counts: Count[]): { value: string; of: number } {
  * The top of the lab page: the newest results (pruning a potted plant) as
  * plain headlines with one big number each, the two newest films, and below
  * them the first headline results. Every number comes from notebook.json or
- * findings.json; the full task's film result is the one value the notebook
- * does not have yet (see `pruning.full.film.source`).
+ * findings.json.
  */
 export function LabGlance() {
   const one = span(pruning.one.pruned);

@@ -1632,8 +1632,9 @@
         ],
         "film": {
           "name": "flower-step8-prune",
-          "pruned": "67/100",
-          "source": "The film's own end card (checkpoint 3 of 11 of a 20M-sample run, averaged weights). Not in the lab notebook yet, so stored as text and not checked by the sync."
+          "pruned": "84/100",
+          "source": "Checkpoint 6 of 11 of a 20M-sample run from 4000 demonstrations, averaged weights.",
+          "quotes": ["prunes 84/100 at checkpoint 6 (12 out of time, the flower damaged in 4; successful episodes take about 660"]
         }
       }
     }
