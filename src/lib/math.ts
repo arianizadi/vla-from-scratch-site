@@ -40,7 +40,17 @@ interface Token {
 
 const TOKEN = /\\[a-zA-Z]+|\\[\s\S]|\s+|[\s\S]/g;
 /** Commands whose braced argument is text, not symbols. */
-const TEXT_COMMANDS = new Set(["\\text", "\\textrm", "\\textbf", "\\textit", "\\mathrm", "\\operatorname", "\\mbox"]);
+const TEXT_COMMANDS = new Set([
+  "\\text",
+  "\\textrm",
+  "\\textbf",
+  "\\textit",
+  "\\mathrm",
+  "\\operatorname",
+  "\\mbox",
+  "\\begin", // environment names: never wrap a letter of {bmatrix}
+  "\\end",
+]);
 
 function tokens(tex: string): Token[] {
   return [...tex.matchAll(TOKEN)]
@@ -105,7 +115,9 @@ export function colourSymbols(formula: string, symbols: { tex: string; tone: Mat
     }
     index += 1;
   }
-  return out + formula.slice(cursor);
+  const coloured = out + formula.slice(cursor);
+  // Colouring must never break a formula: fall back to the plain one if KaTeX rejects the wrapped version.
+  return texError(coloured) === undefined ? coloured : formula;
 }
 
 /** Splits text into plain parts and $...$ maths. */
