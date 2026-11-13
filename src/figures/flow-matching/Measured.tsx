@@ -116,6 +116,7 @@ export function Measured({ sweep, steps, onSelect, onSweep }: MeasuredProps) {
             {sweep.checkpoint ? `Checkpoint: ${sweep.checkpoint}. ` : ""}Success on{" "}
             {layouts === null ? "" : `${layouts} `}unseen layouts, {EXECUTED} actions executed per chunk.
           </p>
+          <div className="overflow-x-auto">
           <table className="mt-1 w-full border-collapse tabular-nums">
             <caption className="sr-only">
               Closed-loop success and median time per action chunk for each number of flow steps
@@ -200,6 +201,7 @@ export function Measured({ sweep, steps, onSelect, onSweep }: MeasuredProps) {
               })}
             </tbody>
           </table>
+          </div>
           <p className="border-t border-line px-3 py-2 text-13 leading-[1.125rem] text-ink-faint stretch-88">
             A dot is the share of episodes that succeeded, the bar through it the 95% interval
             {anySecond ? "; an open dot is a second set of layouts, where one was run" : ""}. Per chunk: median time to

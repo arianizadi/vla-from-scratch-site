@@ -120,6 +120,32 @@ export function colourSymbols(formula: string, symbols: { tex: string; tone: Mat
   return texError(coloured) === undefined ? coloured : formula;
 }
 
+/**
+ * Inline maths as pieces a line may break between: a list such as "1.65, 1.11, 1.22" becomes
+ * "1.65," "1.11," "1.22" (split at commas outside braces and \left...\right). KaTeX keeps each
+ * piece on one line, so an unsplit list runs off a phone screen.
+ */
+export function inlinePieces(tex: string): string[] {
+  const pieces: string[] = [];
+  let depth = 0;
+  let start = 0;
+  const token = /\\left\b|\\right\b|\\[a-zA-Z]+|\\[\s\S]|[{}]|,/g;
+  for (const match of tex.matchAll(token)) {
+    const text = match[0];
+    const index = match.index ?? 0;
+    if (text === "{" || text === "\\left") depth += 1;
+    else if (text === "}" || text === "\\right") depth = Math.max(0, depth - 1);
+    else if (text === "," && depth === 0) {
+      pieces.push(tex.slice(start, index + 1));
+      start = index + 1;
+    }
+  }
+  pieces.push(tex.slice(start));
+  const trimmed = pieces.map((piece) => piece.trim()).filter((piece) => piece !== "" && piece !== ",");
+  // Every piece must render on its own; otherwise keep the formula whole.
+  return trimmed.length > 1 && trimmed.every((piece) => texError(piece) === undefined) ? trimmed : [tex];
+}
+
 /** Splits text into plain parts and $...$ maths. */
 export function splitMath(text: string): { math: boolean; text: string }[] {
   const parts: { math: boolean; text: string }[] = [];

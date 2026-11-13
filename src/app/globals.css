@@ -17,9 +17,12 @@
    language blue, vision teal, action orange, a highlighter for "now", and a
    violet for whatever the reader can press.
 
-   Light values on :root. The dark values appear twice on purpose: once for an
-   explicit choice (data-theme="dark", set by the theme toggle) and once for
-   the system preference when no choice is stored. Keep the two blocks equal.
+   Light values on :root. The dark values appear twice on purpose: once for
+   <html data-theme="dark">, which the inline script in <head> always sets
+   (the stored choice, else the system preference) and the toggle switches;
+   once for the system preference when scripts never ran (no data-theme at
+   all). Keep the two blocks equal. Never key a rule on :not([data-theme=...])
+   with a value: Safari does not always restyle when such an attribute flips.
    Every value is a plain hex: client code reads them with readToken().
    ========================================================================== */
 
@@ -121,7 +124,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme]) {
     color-scheme: dark;
 
     --bg: #10131a;
@@ -207,6 +210,10 @@
 
   /* Layout. */
   --header-height: 56px;
+  /* The iPhone's status bar area (viewport-fit=cover): the header grows into it, so nothing
+     scrolls visibly behind the clock. 0 everywhere else. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --header-offset: calc(var(--header-height) + var(--safe-top));
   --measure: 680px;
   --wide: 960px;
 }
@@ -321,16 +328,20 @@
 }
 
 /* The page gutters: 16px, 24px from 640px, 32px from 1024px; page max 1360px. */
+/* Gutters never shrink below an iPhone's notch or rounded corners in landscape (viewport-fit=cover). */
 @utility page-frame {
   width: 100%;
   max-width: 1360px;
   margin-inline: auto;
-  padding-inline: 16px;
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
   @media (min-width: 640px) {
-    padding-inline: 24px;
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
   }
   @media (min-width: 1024px) {
-    padding-inline: 32px;
+    padding-right: max(32px, env(safe-area-inset-right, 0px));
+    padding-left: max(32px, env(safe-area-inset-left, 0px));
   }
 }
 
@@ -359,12 +370,19 @@
      air. Below 1024px a chapter page also has its 44px section bar. Elements
      carry no scroll-margin of their own; the two would add up. */
   html {
-    scroll-padding-top: 120px;
+    scroll-padding-top: calc(120px + var(--safe-top));
     @media (min-width: 1024px) {
-      scroll-padding-top: 88px;
+      scroll-padding-top: calc(88px + var(--safe-top));
     }
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+
+  /* A guard, not a fix: nothing may widen the page on a phone (wide content scrolls inside its
+     own box). clip, unlike hidden, keeps sticky positioning working. */
+  html,
+  body {
+    overflow-x: clip;
   }
 
   body {
@@ -505,12 +523,14 @@
     }
   }
 
-  /* Site header: paper with a hairline, slightly see-through over what scrolls under it. */
+  /* Site header: opaque paper with a hairline, so nothing that scrolls under it shows
+     through. On an iPhone it also covers the status bar area above it. */
   .site-header {
+    box-sizing: content-box;
+    height: var(--header-height);
+    padding-top: var(--safe-top);
     border-bottom: 1px solid var(--border);
-    background-color: color-mix(in srgb, var(--bg) 86%, transparent);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    backdrop-filter: blur(14px) saturate(1.4);
+    background-color: var(--bg);
   }
   .site-wordmark {
     color: var(--text);
@@ -550,10 +570,10 @@
     display: block;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .theme-icon-light {
+    :root:not([data-theme]) .theme-icon-light {
       display: none;
     }
-    :root:not([data-theme="light"]) .theme-icon-dark {
+    :root:not([data-theme]) .theme-icon-dark {
       display: block;
     }
   }
@@ -988,6 +1008,13 @@
   }
   .prose code.nowrap {
     white-space: nowrap;
+  }
+  /* On the narrowest phones a long identifier may break anywhere rather than widen the page. */
+  @media (max-width: 399px) {
+    .prose code.nowrap {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
   .prose a > code {
     color: inherit;

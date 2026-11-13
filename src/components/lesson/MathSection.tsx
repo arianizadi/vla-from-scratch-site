@@ -1,5 +1,5 @@
 import type { MathEntry, MathTone } from "@/lessons/define";
-import { DEFAULT_TONES, colourSymbols, exampleSteps, renderTex, splitMath } from "@/lib/math";
+import { DEFAULT_TONES, colourSymbols, exampleSteps, inlinePieces, renderTex, splitMath } from "@/lib/math";
 import { Inline } from "./Inline";
 
 /** Plain text with $...$ maths and the lesson's inline marks. */
@@ -19,8 +19,20 @@ export function MathText({ text }: { text: string }) {
       {parts.map((part, index) =>
         part.math ? (
           <span key={index} className="math-inline">
-            <span dangerouslySetInnerHTML={{ __html: renderTex(part.text) }} />
-            {part.trail}
+            {inlinePieces(part.text).map((piece, at, pieces) => {
+              const html = { __html: renderTex(piece) };
+              // The last piece keeps a full stop or comma that follows it on its line (a word joiner).
+              return at === pieces.length - 1 ? (
+                <span key={at} className="math-piece">
+                  <span dangerouslySetInnerHTML={html} />
+                  {part.trail ? `⁠${part.trail}` : null}
+                </span>
+              ) : (
+                <span key={at}>
+                  <span className="math-piece" dangerouslySetInnerHTML={html} />{" "}
+                </span>
+              );
+            })}
           </span>
         ) : (
           <Inline key={index} text={part.text} />

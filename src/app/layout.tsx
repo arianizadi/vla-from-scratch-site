@@ -4,7 +4,7 @@ import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { RevealOnHash } from "@/components/ui/RevealOnHash";
 import { site } from "@/lib/site";
-import { THEME_SCRIPT } from "@/lib/theme";
+import { THEME_COLORS, THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 // Every route is prerendered; a change that adds request-time rendering fails the build.
@@ -63,9 +63,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // The page runs under the iPhone's status bar; the opaque header covers it (--safe-top).
+  viewportFit: "cover",
+  // Before scripts run, the chrome follows the system; the theme toggle then sets both to its theme.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f4f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#10131a" },
+    { media: "(prefers-color-scheme: light)", color: THEME_COLORS.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLORS.dark },
   ],
 };
 

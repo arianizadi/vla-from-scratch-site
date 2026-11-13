@@ -13,7 +13,7 @@ interface NavLinkProps {
 }
 
 const BASE =
-  "inline-flex h-9 items-center rounded-full px-2.5 text-15 font-semibold whitespace-nowrap transition-colors duration-100 ease-standard sm:px-3.5 pointer-coarse:h-11";
+  "inline-flex h-9 items-center rounded-full px-2.5 text-15 font-semibold whitespace-nowrap transition-colors duration-100 ease-standard sm:px-3.5 pointer-coarse:h-11 max-[359px]:px-1.5 max-[359px]:text-14";
 
 function Label({ label, short }: Pick<NavLinkProps, "label" | "short">) {
   if (!short) return <>{label}</>;

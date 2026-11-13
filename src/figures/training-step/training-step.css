@@ -136,6 +136,11 @@
   height: auto;
   overflow: visible;
 }
+/* The figure's drawing never reaches past its plate on a phone. */
+.ts-figure,
+.plate:has(.ts-svg) {
+  overflow-x: clip;
+}
 .ts-plot-area {
   fill: var(--surface);
   stroke: var(--border);

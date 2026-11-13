@@ -623,6 +623,7 @@
   list-style: none;
 }
 .math-card {
+  min-width: 0;
   padding: 24px 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-stage);
@@ -648,7 +649,9 @@
   font-variant-numeric: tabular-nums;
 }
 .math-formula {
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   margin: 24px 0 0;
   padding: 20px 8px;
   border-radius: var(--radius-card);
@@ -691,6 +694,10 @@
 }
 .math-visual {
   margin-top: 24px;
+}
+.math-pair > *,
+.math-symbol > * {
+  min-width: 0;
 }
 .math-pair {
   display: grid;
@@ -739,6 +746,13 @@
   list-style: none;
   counter-reset: math-step;
 }
+/* A formula too long for a phone scrolls inside its own line, never the page. */
+.math-steps > li,
+.math-metaphor-text,
+.math-symbol dd {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
 .math-steps > li {
   position: relative;
   padding: 10px 0 10px 36px;
@@ -766,8 +780,10 @@
   font-weight: 700;
   content: counter(math-step);
 }
-.math-inline {
-  white-space: nowrap;
+/* A line may break between the pieces of a list ("1.65, 1.11, ...") and, as KaTeX allows,
+   after a relation or an operator ("= 1.5"); never inside a number. */
+.math-piece .katex {
+  white-space: normal;
 }
 .math-inline .katex {
   font-size: 1.05em;
