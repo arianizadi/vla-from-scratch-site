@@ -650,6 +650,7 @@
   font-variant-numeric: tabular-nums;
 }
 .math-formula {
+  position: relative; /* KaTeX's hidden MathML is absolutely positioned: keep it inside this scroll box */
   overflow-x: auto;
   margin: 24px 0 0;
   padding: 20px 8px;
@@ -769,6 +770,7 @@
   content: counter(math-step);
 }
 .math-inline {
+  position: relative;
   display: inline-block;
   max-width: 100%;
   overflow-x: auto;
@@ -797,4 +799,9 @@
 }
 .msym-ink {
   color: var(--text);
+}
+
+/* KaTeX's MathML copy is absolutely positioned; anchor it to its own formula everywhere in a lesson. */
+.lesson-math .katex {
+  position: relative;
 }

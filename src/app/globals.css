@@ -1251,9 +1251,11 @@
    ========================================================================== */
 
 .prose .katex {
+  position: relative; /* keeps KaTeX's absolutely positioned MathML copy inside its scroll box */
   font-size: 1.05em;
 }
 .prose .katex-display {
+  position: relative;
   display: block;
   margin: 24px 0;
   padding: 4px 0 4px 24px;
