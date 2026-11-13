@@ -6,7 +6,7 @@
 
 import { isFigureId } from "@/figures/catalog";
 import { splitMath, texError } from "@/lib/math";
-import type { Lesson } from "./define";
+import { isAnimationMarker, type Lesson } from "./define";
 
 export const LIMITS = {
   beats: [3, 6],
@@ -72,6 +72,22 @@ export function validateLesson(lesson: Lesson, folder: string, knownSlugs: Reado
   if (!knownSlugs.has(lesson.slug)) error(`there is no chapter content/chapters/${lesson.slug}.md for this lesson.`);
 
   const texts: { field: string; text: string }[] = [];
+
+  if (lesson.title !== undefined) {
+    const title = lesson.title;
+    if (typeof title !== "string" || title.trim() === "") error("title, when set, must be a non-empty string.");
+    else {
+      if (countWords(title) > LIMITS.titleWords) error(`title has ${countWords(title)} words; keep it to ${LIMITS.titleWords} or fewer.`);
+      if (/[.:;!]$/.test(title.trim()) || title.includes(":")) error("title: no colon and no full stop; a short phrase in sentence case.");
+      if (title.trim() !== title) error("title has spaces at the start or the end.");
+      if (/[*`[\]]/.test(title)) error("title: no inline marks (bold, code or links).");
+      if (/^[a-z]/.test(title)) warn("title should start with a capital letter (sentence case).");
+      if (title.split(/\s+/).slice(1).filter((word) => /^[A-Z][a-z]+$/.test(word)).length > 1) {
+        warn("title looks like Title Case; use sentence case (only the first word capitalised).");
+      }
+      texts.push({ field: "title", text: title });
+    }
+  }
 
   const ideaWords = countWords(lesson.idea);
   if (ideaWords === 0) error("idea is empty.");
@@ -238,7 +254,8 @@ export function validateMath(entries: unknown, where: string): Report {
       for (const pattern of PRIVATE) if (pattern.test(entry.example)) error(`${label}, example: private or hardware detail (matched ${pattern}).`);
     }
 
-    if (entry.animation !== undefined && typeof entry.animation !== "function") {
+    // A component, or the marker that src/lessons/index.ts reads in its place (scripts/lesson-data-loader.cjs).
+    if (entry.animation !== undefined && typeof entry.animation !== "function" && !isAnimationMarker(entry.animation)) {
       error(`${label}: animation must be a component from ./animations.`);
     }
   });

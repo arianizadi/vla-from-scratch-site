@@ -41,7 +41,7 @@ export function ReadingProgress({ targetId }: { targetId: string }) {
   }, [targetId]);
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-[55px] z-50 h-0.5">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-[calc(var(--header-offset)-1px)] z-50 h-0.5">
       <div ref={bar} className="h-full origin-left bg-accent" style={{ transform: "scaleX(0)" }} />
     </div>
   );

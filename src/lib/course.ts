@@ -123,11 +123,61 @@ const EXTRAS: Extra[] = [
   },
 ];
 
-/** Plain titles where the chapter's own title would mean little to a beginner. */
+/**
+ * The title every lesson goes by: on its page, in the course outline, the sidebar, the pager and
+ * the page metadata. Short, concrete, sentence case, no colon or full stop: what the reader will be
+ * able to picture, not the chapter's technical name. A lesson may override its title with `title`
+ * in its lesson.ts; a chapter missing here falls back to its own title in sentence case.
+ */
 const TITLES: Record<string, string> = {
   "00-the-route": "How a robot learns from examples",
-  "121-edge-cases": "Common problems",
+  "02-how-we-got-here": "From chatbots to robot arms",
+  "03-the-landscape": "How today's robot models differ",
+  "10-tokens": "Turning words into numbers",
+  "11-the-transformer-block": "How words share what they know",
+  "12-positions": "How a model knows word order",
+  "13-training-a-language-model": "Learning by guessing the next word",
+  "14-generation": "Writing one word at a time",
+  "20-images-to-tokens": "Cutting a picture into tiles",
+  "21-pooled-vs-patch-tokens": "Why a robot needs to know where",
+  "22-pretrained-vision-encoders": "Borrowing eyes someone else trained",
+  "30-joining-vision-and-language": "Reading pictures and words together",
+  "31-training-a-vlm": "Teaching a model to describe pictures",
+  "32-testing-a-vlm": "Checking that a model really looks",
+  "40-action-spaces": "What a robot's move is made of",
+  "41-flow-matching": "Turning noise into a good move",
+  "42-chunks-and-execution": "Plan a few moves, then look again",
+  "43-imitation-learning": "Copying a teacher, and where it breaks",
+  "50-what-the-action-head-sees": "What the moving part gets to see",
+  "51-language-conditioning": "How the instruction reaches the arm",
+  "52-history-and-shortcuts": "When memory becomes a shortcut",
+  "60-anatomy-of-a-vla": "The parts of a robot model",
+  "61-pretrained-backbones": "Starting from a model that reads and sees",
+  "62-the-from-scratch-path": "Building every part yourself",
+  "70-demonstrations": "Where the examples come from",
+  "71-how-much-data-and-training": "How many examples, how much practice",
+  "72-which-demonstrations-teach": "Examples that teach the robot to look",
+  "80-the-training-loop": "How practice changes the model",
+  "90-closed-loop-evaluation": "Testing a robot fairly",
+  "91-loss-is-not-success": "Why good practice scores can fool you",
+  "92-measuring-failure": "Telling one failure from another",
+  "93-train-inference-skew": "Same inputs in testing and training",
+  "94-debugging-flowchart": "Finding out why a robot fails",
+  "95-what-a-policy-looks-at": "What a working robot pays attention to",
+  "110-toward-real-tasks": "From picking cubes to pruning plants",
+  "100-case-pick-cube": "Picking up one cube",
+  "101-case-pick-target": "Picking the object you asked for",
+  "102-case-pretrained-backbones": "Borrowed eyes or fresh ones",
+  "103-case-self-correction": "A robot that recovers from mistakes",
+  "120-glossary": "The words of the course",
+  "121-edge-cases": "When things go wrong",
+  "01-setup-and-first-run": "Install it and run it once",
+  "81-surviving-long-runs": "Keeping a long training run alive",
 };
+
+/** Titles lessons set themselves (`title` in lesson.ts), by slug: see `lessonTitles()` in src/lessons. */
+export type TitleOverrides = ReadonlyMap<string, string>;
+const NO_OVERRIDES: TitleOverrides = new Map();
 
 /** What the reader will understand after each lesson, in one line. */
 const BLURBS: Record<string, string> = {
@@ -213,19 +263,24 @@ function sentenceCase(title: string): string {
 }
 const KEEP = new Set(["I", "Python", "Hugging", "Face"]);
 
-export function courseTitle(chapter: Pick<ChapterMeta, "slug" | "title">): string {
-  return TITLES[chapter.slug] ?? sentenceCase(chapter.title.replace(/^Case Study:\s*/i, ""));
+export function courseTitle(chapter: Pick<ChapterMeta, "slug" | "title">, titles: TitleOverrides = NO_OVERRIDES): string {
+  return titles.get(chapter.slug) ?? TITLES[chapter.slug] ?? sentenceCase(chapter.title.replace(/^Case Study:\s*/i, ""));
 }
 
 export function courseBlurb(chapter: Pick<ChapterMeta, "slug" | "summary">): string {
   return BLURBS[chapter.slug] ?? "";
 }
 
-let memo: CourseOutline | undefined;
+const memo = new Map<string, CourseOutline>();
 
-/** The course, resolved against the chapters that exist. A slug without a chapter is left out. */
-export function getCourse(): CourseOutline {
-  if (memo && process.env.NODE_ENV === "production") return memo;
+/**
+ * The course, resolved against the chapters that exist. A slug without a chapter is left out.
+ * `titles`: the titles lessons set themselves (`await lessonTitles()` from src/lessons).
+ */
+export function getCourse(titles: TitleOverrides = NO_OVERRIDES): CourseOutline {
+  const key = JSON.stringify([...titles]);
+  const cached = memo.get(key);
+  if (cached && process.env.NODE_ENV === "production") return cached;
   const bySlug = new Map(getAllChapters().map((chapter) => [chapter.slug, chapter]));
   const lessons: CourseLesson[] = [];
   const modules = MODULES.map((module, index) => {
@@ -237,7 +292,7 @@ export function getCourse(): CourseOutline {
       .map((chapter) => {
         const lesson: CourseLesson = {
           slug: chapter.slug,
-          title: courseTitle(chapter),
+          title: courseTitle(chapter, titles),
           blurb: courseBlurb(chapter),
           number: lessons.length + 1,
           module: ref,
@@ -254,11 +309,12 @@ export function getCourse(): CourseOutline {
     chapters: extra.slugs
       .map((slug) => bySlug.get(slug))
       .filter((chapter): chapter is ChapterMeta => chapter !== undefined)
-      .map((chapter) => ({ slug: chapter.slug, title: courseTitle(chapter), blurb: courseBlurb(chapter), chapter })),
+      .map((chapter) => ({ slug: chapter.slug, title: courseTitle(chapter, titles), blurb: courseBlurb(chapter), chapter })),
   }));
 
-  memo = { modules, lessons, extras };
-  return memo;
+  const course = { modules, lessons, extras };
+  memo.set(key, course);
+  return course;
 }
 
 /** The lesson of the course at this slug, or undefined for a chapter outside the main path. */
@@ -272,18 +328,19 @@ export function courseExtra(slug: string): Extra | undefined {
 }
 
 /** Previous and next lesson in course order; for a chapter outside the path, its neighbours in its group. */
-export function courseNeighbours(slug: string): { previous?: NeighbourRef; next?: NeighbourRef } {
-  const course = getCourse();
+export function courseNeighbours(slug: string, titles?: TitleOverrides): { previous?: NeighbourRef; next?: NeighbourRef } {
+  const course = getCourse(titles);
   const index = course.lessons.findIndex((lesson) => lesson.slug === slug);
   if (index >= 0) {
-    const ref = (lesson?: CourseLesson) =>
-      lesson ? { slug: lesson.slug, title: lesson.title, label: `Lesson ${lesson.number}` } : undefined;
+    const ref = (lesson?: CourseLesson): NeighbourRef | undefined =>
+      lesson ? { slug: lesson.slug, title: lesson.title, label: `Lesson ${lesson.number}`, number: lesson.number, blurb: lesson.blurb } : undefined;
     return { previous: ref(course.lessons[index - 1]), next: ref(course.lessons[index + 1]) };
   }
   const extra = course.extras.find((group) => group.slugs.includes(slug));
   if (!extra) return {};
   const at = extra.chapters.findIndex((chapter) => chapter.slug === slug);
-  const ref = (chapter?: { slug: string; title: string }) => (chapter ? { slug: chapter.slug, title: chapter.title, label: "" } : undefined);
+  const ref = (chapter?: { slug: string; title: string; blurb: string }): NeighbourRef | undefined =>
+    chapter ? { slug: chapter.slug, title: chapter.title, label: "", blurb: chapter.blurb } : undefined;
   return { previous: ref(extra.chapters[at - 1]), next: ref(extra.chapters[at + 1]) };
 }
 
@@ -292,16 +349,20 @@ export interface NeighbourRef {
   title: string;
   /** "Lesson 4", or "" outside the course. */
   label: string;
+  /** Its place in the course (1-based); undefined outside the course. */
+  number?: number;
+  /** What the reader will understand after it, in one line ("" when there is none). */
+  blurb?: string;
 }
 
 /** The course as the sidebar shows it: modules with numbered lessons, then the extras. */
-export function courseSidebar(): {
+export function courseSidebar(titles?: TitleOverrides): {
   id: string;
   number?: number;
   name: string;
   chapters: { slug: string; orderLabel: string; title: string }[];
 }[] {
-  const course = getCourse();
+  const course = getCourse(titles);
   return [
     ...course.modules.map((module) => ({
       id: module.id,

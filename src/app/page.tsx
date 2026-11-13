@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Hero } from "@/components/landing/Hero";
 import { getCourse } from "@/lib/course";
-import { lessonIdeas } from "@/lessons";
+import { lessonIdeas, lessonTitles } from "@/lessons";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
 export default async function HomePage() {
-  const course = getCourse();
+  const course = getCourse(await lessonTitles());
   const ideas = await lessonIdeas();
   const first = course.lessons[0];
 

@@ -14,13 +14,16 @@
 
 .ps-root {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   min-width: 0;
 }
 
+/* On the narrowest phones the ledger scrolls inside the figure instead of widening it. */
 .ps-drawing {
   container-type: inline-size;
   min-width: 0;
+  overflow-x: auto;
 }
 
 .ps-track {

@@ -103,6 +103,14 @@
 .lesson-fact-link:hover {
   border-color: var(--accent);
 }
+/* A link among the facts: outlined paper, so it reads as something to press, not a label. */
+.lesson-fact-quiet {
+  color: var(--text);
+  font-weight: 600;
+}
+.lesson-fact-quiet:hover {
+  color: var(--accent);
+}
 @media (pointer: coarse) {
   .lesson-fact-link,
   .lesson-part {
@@ -187,7 +195,7 @@
   }
   .beat-text {
     position: sticky;
-    top: 104px;
+    top: calc(104px + var(--safe-top));
     padding-top: 56px;
   }
   .beat-plain {
@@ -199,7 +207,7 @@
 }
 @media (max-width: 1023px) {
   .beat-text {
-    top: 128px;
+    top: calc(128px + var(--safe-top));
   }
 }
 
@@ -335,6 +343,7 @@
   margin-top: 24px;
 }
 .lesson-try-item {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-stage);
   background-color: var(--surface);

@@ -5,7 +5,7 @@ import { LessonPending } from "@/components/lesson/LessonPending";
 import { LessonView } from "@/components/lesson/LessonView";
 import { getAllChapters, getChapter } from "@/lib/content";
 import { courseBlurb, courseLesson, courseNeighbours, courseSidebar, courseTitle, getCourse } from "@/lib/course";
-import { getLesson, getMath } from "@/lessons";
+import { getLesson, getMath, lessonTitles } from "@/lessons";
 import { site } from "@/lib/site";
 import "katex/dist/katex.min.css";
 
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
   if (!chapter) return {};
   const lesson = await getLesson(slug);
   const inCourse = courseLesson(slug) !== undefined;
-  const title = courseTitle(chapter);
+  const title = courseTitle(chapter, await lessonTitles());
   const description = lesson?.idea ?? (courseBlurb(chapter) || chapter.summary || undefined);
   // A chapter outside the course without a lesson shows its technical page here; that address is canonical.
   const canonical = lesson || inCourse ? `/learn/${chapter.slug}` : `/learn/${chapter.slug}/full`;
@@ -60,21 +60,23 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
   if (!chapter) notFound();
 
   const lesson = await getLesson(slug);
-  const place = courseLesson(slug);
-  const total = getCourse().lessons.length;
-  const parts = courseSidebar();
-  const { previous, next } = courseNeighbours(slug);
+  const titles = await lessonTitles();
+  const course = getCourse(titles);
+  const place = course.lessons.find((entry) => entry.slug === slug);
+  const total = course.lessons.length;
+  const parts = courseSidebar(titles);
+  const { previous, next } = courseNeighbours(slug, titles);
 
   if (!lesson) {
     if (place) return <LessonPending chapter={chapter} place={place} total={total} parts={parts} previous={previous} next={next} />;
-    return <LongChapter chapter={chapter} />;
+    return <LongChapter chapter={chapter} titles={titles} />;
   }
 
   const math = await getMath(slug);
   const related = (lesson.related ?? [])
     .map((relatedSlug) => getChapter(relatedSlug))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
-    .map((entry) => ({ slug: entry.slug, title: courseTitle(entry) }));
+    .map((entry) => ({ slug: entry.slug, title: courseTitle(entry, titles) }));
 
   return (
     <LessonView
@@ -83,7 +85,7 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
       math={math}
       place={place}
       total={total}
-      title={courseTitle(chapter)}
+      title={courseTitle(chapter, titles)}
       parts={parts}
       previous={previous}
       next={next}

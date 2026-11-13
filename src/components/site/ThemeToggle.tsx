@@ -14,9 +14,7 @@ export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribeToTheme, currentTheme, serverTheme);
   const next: Theme = theme === "dark" ? "light" : "dark";
 
-  useLayoutEffect(() => {
-    restoreTheme();
-  }, []);
+  useLayoutEffect(() => restoreTheme(), []);
 
   return (
     <button

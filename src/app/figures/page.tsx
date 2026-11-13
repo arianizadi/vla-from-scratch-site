@@ -13,6 +13,7 @@ import {
 import { FigureMount } from "@/figures/FigureMount";
 import { KitSpecimen, StampMark } from "@/figures/kit";
 import { listFigureUses, type FigureUse } from "@/lib/content";
+import { courseTitle } from "@/lib/course";
 
 export const metadata: Metadata = {
   title: "Interactive figures",
@@ -58,7 +59,7 @@ function FigureSection({ id, uses }: { id: FigureId; uses: FigureUse[] }) {
                   <span className="text-ink-faint tabular-nums">Fig. {use.number}</span>
                   <span>
                     <Link href={use.href} className="text-link">
-                      {use.chapter.title}
+                      {courseTitle(use.chapter)}
                     </Link>
                     {use.caption ? <span className="mt-0.5 block max-w-[680px]">{use.caption}</span> : null}
                   </span>
@@ -167,7 +168,7 @@ export default function FiguresPage() {
                   <li key={use.href}>
                     <code className="rounded-plate bg-surface-2 px-1.5 py-0.5 font-mono text-13">{use.id}</code>{" "}
                     <Link href={use.href} className="text-link">
-                      Fig. {use.number}, {use.chapter.title}
+                      Fig. {use.number}, {courseTitle(use.chapter)}
                     </Link>
                   </li>
                 ))}

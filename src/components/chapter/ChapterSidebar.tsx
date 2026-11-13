@@ -155,7 +155,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
 
   return (
     <>
-      <div className="sticky top-14 z-30 -mx-4 flex h-11 items-center gap-3 border-b border-line bg-page px-4 sm:-mx-6 sm:px-6 lg:hidden">
+      <div className="sticky top-[var(--header-offset)] z-30 -mx-4 flex h-11 items-center gap-3 border-b border-line bg-page px-4 sm:-mx-6 sm:px-6 lg:hidden">
         <button
           type="button"
           aria-haspopup="dialog"
@@ -185,7 +185,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
         }}
         className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-[min(340px,88vw)] max-w-none border-r border-line-strong bg-page p-0 lg:hidden"
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col pt-[var(--safe-top)]">
           <div className="flex h-14 shrink-0 items-center justify-between border-b border-line pr-2 pl-4">
             <p className="text-14 font-semibold">Course</p>
             <button
@@ -211,7 +211,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
 
       <aside
         ref={column}
-        className="sticky top-14 hidden h-[calc(100dvh-56px)] self-start overflow-y-auto overscroll-contain py-8 pr-2 lg:block"
+        className="sticky top-[var(--header-offset)] hidden h-[calc(100dvh-var(--header-offset))] self-start overflow-y-auto overscroll-contain py-8 pr-2 lg:block"
       >
         <nav aria-label="Course">
           <NavTree parts={parts} currentSlug={currentSlug} sections={sections} activeSection={activeSection} />

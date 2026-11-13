@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
+      // A lesson read as data (src/lessons/index.ts): its animations become markers, so each page
+      // ships only the animations it shows (scripts/lesson-data-loader.cjs).
+      "*.ts": {
+        condition: { query: "?lesson-data" },
+        loaders: ["./scripts/lesson-data-loader.cjs"],
+        as: "*.ts",
+      },
     },
   },
 };

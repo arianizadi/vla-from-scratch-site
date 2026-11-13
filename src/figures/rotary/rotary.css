@@ -191,6 +191,7 @@ text.rot-turn {
   display: grid;
   gap: 12px;
   min-width: 0;
+  overflow-x: auto;
 }
 .rot-table {
   width: 100%;

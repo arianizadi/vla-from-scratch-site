@@ -253,6 +253,10 @@
   stroke-width: 1.5;
 }
 
+/* A bracket label near the edge never reaches past the figure on a phone. */
+.plate:has(.sl-svg) {
+  overflow-x: clip;
+}
 .sl-svg {
   display: block;
   width: 100%;

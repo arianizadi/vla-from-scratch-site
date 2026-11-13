@@ -51,7 +51,7 @@ function GitHubMark() {
 
 export function Header() {
   return (
-    <header className="site-header sticky top-0 z-40 h-14">
+    <header className="site-header sticky top-0 z-40">
       <div className="page-frame flex h-full items-center justify-between gap-3">
         <Wordmark />
         <nav aria-label="Site">
