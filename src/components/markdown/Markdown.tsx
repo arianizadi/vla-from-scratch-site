@@ -2,6 +2,7 @@ import type { Root } from "hast";
 import { toJsxRuntime, type Components } from "hast-util-to-jsx-runtime";
 import Link from "next/link";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
+import { Reveal } from "@/components/ui/Reveal";
 import { ScrollBox } from "@/components/ui/ScrollBox";
 import { Figure } from "@/figures/Figure";
 import { CodeBlock } from "./CodeBlock";
@@ -25,12 +26,24 @@ function MarkdownLink({ href = "", children, ...rest }: React.ComponentProps<"a"
   );
 }
 
-/** A table in its own scrolling box; the pipeline names it (rehypeTables) from the lead or heading above it. */
-function MarkdownTable({ children, "data-label": label, ...rest }: React.ComponentProps<"table"> & { "data-label"?: string }) {
+/**
+ * A table in its own scrolling box, folded behind "Show table (N rows)"; the
+ * pipeline names it (rehypeTables) from the lead or heading above it.
+ */
+function MarkdownTable({
+  children,
+  "data-label": label,
+  "data-rows": rows,
+  ...rest
+}: React.ComponentProps<"table"> & { "data-label"?: string; "data-rows"?: number | string }) {
+  const count = Number(rows);
+  const size = Number.isFinite(count) && count > 0 ? ` (${count} ${count === 1 ? "row" : "rows"})` : "";
   return (
-    <ScrollBox label={label ?? "Table"}>
-      <table {...rest}>{children}</table>
-    </ScrollBox>
+    <Reveal label={`Show table${size}`} openLabel="Hide table" kind="table" detail={label && label !== "Table" ? label : undefined}>
+      <ScrollBox label={label ?? "Table"}>
+        <table {...rest}>{children}</table>
+      </ScrollBox>
+    </Reveal>
   );
 }
 

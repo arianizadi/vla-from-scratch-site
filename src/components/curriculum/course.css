@@ -1,0 +1,794 @@
+/* ==========================================================================
+   The course: the outline at /learn, a lesson still being written, the
+   pager, the quiet "want more?" links, folded reference material, the
+   technical pages' "In one minute", and the maths section of a lesson.
+   Imported into the components layer by src/app/globals.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   /learn header
+   -------------------------------------------------------------------------- */
+
+.learn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 32px 0 0;
+}
+.learn-actions-note {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   The outline: modules, each a path of numbered lessons.
+   -------------------------------------------------------------------------- */
+
+.course {
+  display: grid;
+  gap: 72px;
+}
+.course-module {
+  scroll-margin-top: 88px;
+}
+.course-module-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 18px;
+  align-items: start;
+}
+.course-module-number {
+  min-width: 1ch;
+  color: transparent;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 7vw, 5rem);
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 0.82;
+  -webkit-text-stroke: 1.5px var(--border-strong);
+  font-variant-numeric: tabular-nums;
+}
+.course-module-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-weight: 760;
+  font-stretch: 86%;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+.course-module-about {
+  max-width: 46ch;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+.course-module-facts {
+  margin: 8px 0 0;
+  color: var(--text-faint);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.course-path {
+  position: relative;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.course-step {
+  position: relative;
+  padding-left: 36px;
+}
+/* The path: one hairline through the nodes, ending at the last lesson. */
+.course-step::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 11px;
+  width: 2px;
+  background-color: var(--border);
+  content: "";
+}
+.course-step:first-child::before {
+  top: 30px;
+}
+.course-step:last-child::before {
+  bottom: calc(100% - 30px);
+}
+.course-step:only-child::before {
+  display: none;
+}
+.course-step-node {
+  position: absolute;
+  top: 24px;
+  left: 5px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background-color: var(--bg);
+}
+.course-step[data-ready] .course-step-node {
+  border-color: var(--text);
+  background-color: var(--text);
+}
+.course-step[data-first] .course-step-node {
+  top: 21px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--text);
+  background-color: var(--mark);
+}
+.course-step-link {
+  display: grid;
+  grid-template-columns: 2.4ch minmax(0, 1fr);
+  grid-template-areas:
+    "number main"
+    ". meta";
+  gap: 4px 12px;
+  padding: 16px 14px 16px 10px;
+  border-radius: var(--radius-card);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color var(--duration-micro) var(--ease-standard);
+}
+@media (min-width: 640px) {
+  .course-step-link {
+    grid-template-columns: 2.4ch minmax(0, 1fr) auto;
+    grid-template-areas: "number main meta";
+    gap: 16px;
+    align-items: baseline;
+  }
+}
+.course-step-link:hover {
+  background-color: var(--surface);
+}
+.course-step-number {
+  grid-area: number;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.course-step-main {
+  display: grid;
+  grid-area: main;
+  gap: 4px;
+  min-width: 0;
+}
+.course-step-title {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.course-step-link:hover .course-step-title {
+  color: var(--accent);
+}
+.course-step-blurb {
+  max-width: 56ch;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.course-step-meta {
+  grid-area: meta;
+  color: var(--text-faint);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.course-soon {
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+}
+.course-start {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-left: 10px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background-color: var(--mark);
+  color: var(--on-mark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+/* Beyond the course */
+.course-extras {
+  margin-top: 112px;
+  scroll-margin-top: 88px;
+}
+.course-extras-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-weight: 760;
+  font-stretch: 86%;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+.course-extras-lead {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+}
+.course-extras-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+@media (min-width: 720px) {
+  .course-extras-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.extra-card {
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.extra-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.extra-card-link {
+  color: var(--text);
+  text-decoration: none;
+}
+.extra-card-link:hover {
+  color: var(--accent);
+}
+.extra-card-about {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.extra-card-list {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   A lesson still being written
+   -------------------------------------------------------------------------- */
+
+.pending-card {
+  display: grid;
+  gap: 20px;
+  max-width: 760px;
+  margin-top: 48px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+  background-image: radial-gradient(circle, var(--grid) 1.1px, transparent 1.4px);
+  background-size: 18px 18px;
+}
+@media (min-width: 640px) {
+  .pending-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 28px;
+    padding: 36px;
+  }
+}
+.pending-drawing {
+  color: var(--text);
+}
+.pending-line {
+  stroke: var(--accent);
+  stroke-dasharray: 120;
+  stroke-dashoffset: 0;
+}
+.pending-pencil-body {
+  fill: var(--mark);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.pending-pencil-tip {
+  fill: var(--text);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pending-line {
+    animation: pending-draw 3.2s var(--ease-standard) infinite;
+  }
+}
+@keyframes pending-draw {
+  0% {
+    stroke-dashoffset: 120;
+  }
+  60%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+.pending-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 750;
+  font-stretch: 90%;
+  line-height: 1.1;
+}
+.pending-text {
+  max-width: 44ch;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+.pending-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 24px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Next lesson, the quiet "want more?" links, the pager
+   -------------------------------------------------------------------------- */
+
+.lesson-next {
+  margin: 88px 0 0;
+}
+.lesson-next .button {
+  height: auto;
+  min-height: 52px;
+  padding: 12px 24px;
+  font-size: 1.0625rem;
+  text-align: left;
+}
+.lesson-deeper {
+  margin-top: 72px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.lesson-deeper-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.deeper-links {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+@container (min-width: 760px) {
+  .deeper-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.deeper-link {
+  display: grid;
+  gap: 4px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+.deeper-link:hover {
+  border-color: var(--accent);
+}
+.deeper-link-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.deeper-link:hover .deeper-link-title {
+  color: var(--accent);
+}
+.deeper-link-text {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.deeper-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 16px 0 0;
+  font-size: 0.9375rem;
+}
+.deeper-related-label {
+  color: var(--text-muted);
+}
+
+.pager {
+  max-width: 680px;
+  margin-top: 64px;
+}
+.pager-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+}
+.pager-row:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.pager-direction {
+  display: flex;
+  gap: 8px;
+  color: var(--text-faint);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.pager-number {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.pager-title {
+  grid-column: 1;
+  color: var(--text);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.pager-arrow {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--text-faint);
+}
+.pager-row:hover .pager-title,
+.pager-row:hover .pager-arrow {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Technical pages: the kicker, "In one minute", lighter long text
+   -------------------------------------------------------------------------- */
+
+.technical-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.one-minute {
+  max-width: 680px;
+  margin-top: 32px;
+  padding: 22px 24px;
+  border-radius: var(--radius-stage);
+  background-color: var(--accent-soft);
+}
+.one-minute-title {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.one-minute-idea {
+  margin: 8px 0 0;
+  font-size: clamp(1.125rem, 2vw, 1.3125rem);
+  line-height: 1.45;
+}
+.one-minute-takeaway {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.one-minute-label {
+  color: var(--text);
+  font-weight: 700;
+}
+.one-minute code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background-color: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+/* Long technical text: a narrower measure, more air between paragraphs, headings that stand out. */
+.prose-technical {
+  --measure: 620px;
+}
+.prose-technical > * + * {
+  margin-top: 24px;
+}
+.prose-technical > p {
+  line-height: 1.8;
+}
+.prose-technical > .section-head,
+.prose-technical > h2 {
+  margin-top: 80px;
+}
+.prose-technical > h3 {
+  margin-top: 48px;
+}
+
+/* --------------------------------------------------------------------------
+   Folded reference material: code, tables, numbers.
+   -------------------------------------------------------------------------- */
+
+.reveal {
+  max-width: var(--wide, 960px);
+}
+.prose > .reveal {
+  margin-block: 24px;
+}
+.reveal-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 6px 16px 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.3;
+  cursor: pointer;
+  list-style: none;
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+.reveal-toggle::-webkit-details-marker {
+  display: none;
+}
+.reveal-toggle:hover {
+  border-color: var(--border-strong);
+}
+@media (pointer: coarse) {
+  .reveal-toggle {
+    min-height: 44px;
+  }
+}
+.reveal-chevron {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform var(--duration-interface) var(--ease-standard);
+}
+.reveal[open] > .reveal-toggle .reveal-chevron {
+  transform: rotate(90deg);
+}
+.reveal-open,
+.reveal[open] > .reveal-toggle .reveal-closed {
+  display: none;
+}
+.reveal[open] > .reveal-toggle .reveal-open {
+  display: inline;
+}
+.reveal-detail {
+  overflow: hidden;
+  max-width: 44ch;
+  color: var(--text-faint);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 479px) {
+  .reveal-detail {
+    max-width: 24ch;
+  }
+}
+.reveal-body {
+  margin-top: 12px;
+}
+.reveal-body > .code-block,
+.reveal-body > .table-frame {
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   The math, step by step
+   -------------------------------------------------------------------------- */
+
+.lesson-math {
+  margin-top: 120px;
+}
+.math-cards {
+  display: grid;
+  gap: 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.math-card {
+  padding: 24px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+@container (min-width: 560px) {
+  .math-card {
+    padding: 32px;
+  }
+}
+.math-card-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  font-size: clamp(1.375rem, 3cqw, 1.75rem);
+  font-weight: 700;
+  font-stretch: 90%;
+  line-height: 1.15;
+}
+.math-card-number {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.math-formula {
+  overflow-x: auto;
+  margin: 24px 0 0;
+  padding: 20px 8px;
+  border-radius: var(--radius-card);
+  background-color: var(--bg);
+  font-size: clamp(1.25rem, 4.6cqw, 1.875rem);
+  text-align: center;
+}
+.math-formula .katex-display {
+  margin: 0;
+}
+.math-symbols {
+  display: grid;
+  gap: 8px 24px;
+  margin: 20px 0 0;
+}
+@container (min-width: 620px) {
+  .math-symbols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.math-symbol {
+  display: grid;
+  grid-template-columns: minmax(3.2em, max-content) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.math-symbol-tex {
+  white-space: nowrap;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+.math-symbol dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.math-visual {
+  margin-top: 24px;
+}
+.math-pair {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+@container (min-width: 720px) {
+  .math-pair {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: 18px;
+  }
+}
+.math-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.math-glyph {
+  color: var(--accent);
+}
+.math-metaphor {
+  padding: 18px 20px;
+  border-radius: var(--radius-card);
+  background-color: var(--accent-soft);
+}
+.math-metaphor-text {
+  margin: 8px 0 0;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.math-example {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.math-steps {
+  display: grid;
+  gap: 0;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: math-step;
+}
+.math-steps > li {
+  position: relative;
+  padding: 10px 0 10px 36px;
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+  line-height: 1.55;
+  counter-increment: math-step;
+}
+.math-steps > li:first-child {
+  border-top: 0;
+}
+.math-steps > li::before {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  content: counter(math-step);
+}
+.math-inline {
+  white-space: nowrap;
+}
+.math-inline .katex {
+  font-size: 1.05em;
+}
+
+/* Symbol colours, shared by the formula and its legend. */
+.msym-accent {
+  color: var(--accent);
+}
+.msym-action {
+  color: var(--action);
+}
+.msym-vision {
+  color: var(--vision);
+}
+.msym-language {
+  color: var(--language);
+}
+.msym-success {
+  color: var(--success);
+}
+.msym-ink {
+  color: var(--text);
+}

@@ -5,29 +5,28 @@ import { ReadingProgress } from "@/components/chapter/ReadingProgress";
 import { FIGURES } from "@/figures/catalog";
 import { FigureMount } from "@/figures/FigureMount";
 import type { ChapterMeta } from "@/lib/content";
-import type { Lesson } from "@/lessons/define";
-import { countWords } from "@/lessons/validate";
+import type { CourseLesson, NeighbourRef } from "@/lib/course";
+import type { Lesson, MathEntry } from "@/lessons/define";
+import { lessonMinutes } from "@/lessons/validate";
 import { Inline } from "./Inline";
+import { MathSection } from "./MathSection";
 
 interface LessonViewProps {
   chapter: ChapterMeta;
   lesson: Lesson;
+  /** The optional "The math, step by step" entries (src/lessons/<slug>/math.ts). */
+  math?: MathEntry[];
+  /** Where the lesson sits in the course; undefined outside the main path. */
+  place?: CourseLesson;
+  /** Total lessons in the course. */
+  total: number;
+  /** The title the course gives the chapter. */
+  title: string;
   parts: SidebarPart[];
-  previous?: ChapterMeta;
-  next?: ChapterMeta;
+  previous?: NeighbourRef;
+  next?: NeighbourRef;
   /** The related chapters, resolved. */
-  related: ChapterMeta[];
-}
-
-/** Reading time of the lesson: its words, plus a few seconds to watch each animation. */
-function lessonMinutes(lesson: Lesson): number {
-  const words =
-    countWords(lesson.idea) +
-    lesson.beats.reduce((total, beat) => total + countWords(beat.text), 0) +
-    [...lesson.edgeCases, ...lesson.tips].reduce((total, item) => total + countWords(item), 0) +
-    countWords(lesson.takeaway);
-  const seconds = (words / 200) * 60 + lesson.beats.filter((beat) => beat.animation).length * 15;
-  return Math.max(1, Math.round(seconds / 60));
+  related: { slug: string; title: string }[];
 }
 
 function EdgeGlyph() {
@@ -48,15 +47,40 @@ function TipGlyph() {
   );
 }
 
+/** The lesson's place in the course: module and lesson number, or "beyond the course". */
+export function LessonKicker({ place, total }: { place?: CourseLesson; total: number }) {
+  return (
+    <p className="lesson-kicker">
+      {place ? (
+        <>
+          <Link href={`/learn#${place.module.id}`} className="lesson-part">
+            Module {place.module.number}: {place.module.title}
+          </Link>
+          <span className="lesson-number">
+            Lesson {place.number} of {total}
+          </span>
+        </>
+      ) : (
+        <Link href="/learn#extras" className="lesson-part">
+          Beyond the course
+        </Link>
+      )}
+    </p>
+  );
+}
+
 /**
- * A chapter's short lesson: the idea, a few beats each with an animation,
- * edge cases and tips, the takeaway, then ways to go deeper.
+ * A lesson: the idea, a few beats each with an animation, the optional maths,
+ * what could go wrong and tips, the takeaway. The technical details sit
+ * below as a quiet link.
  */
-export function LessonView({ chapter, lesson, parts, previous, next, related }: LessonViewProps) {
+export function LessonView({ chapter, lesson, math, place, total, title, parts, previous, next, related }: LessonViewProps) {
   const minutes = lessonMinutes(lesson);
+  const hasMath = math !== undefined && math.length > 0;
   const sections = [
     ...lesson.beats.map((beat, index) => ({ id: `beat-${index + 1}`, text: beat.title, section: String(index + 1) })),
-    { id: "edge-cases", text: "Edge cases and tips", section: "" },
+    ...(hasMath ? [{ id: "math", text: "The math, step by step", section: "" }] : []),
+    { id: "edge-cases", text: "What could go wrong", section: "" },
     { id: "takeaway", text: "Takeaway", section: "" },
   ];
   const fullHref = `/learn/${chapter.slug}/full`;
@@ -65,28 +89,20 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
     <>
       <ReadingProgress targetId="lesson" />
       <div className="page-frame lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[256px_minmax(0,1fr)] xl:gap-x-16">
-        <ChapterSidebar parts={parts} currentSlug={chapter.slug} currentTitle={chapter.title} sections={sections} />
+        <ChapterSidebar parts={parts} currentSlug={chapter.slug} currentTitle={title} sections={sections} />
 
         <main id="main" tabIndex={-1} className="min-w-0 pb-8 outline-none">
           <article id="lesson" className="lesson">
             <header className="lesson-hero">
-              <p className="lesson-kicker">
-                <Link href={`/learn#${chapter.part.id}`} className="lesson-part">
-                  Part {chapter.part.number}, {chapter.part.name}
-                </Link>
-                <span className="lesson-number">Chapter {chapter.orderLabel}</span>
-              </p>
-              <h1 className="lesson-title">{chapter.title}</h1>
+              <LessonKicker place={place} total={total} />
+              <h1 className="lesson-title">{title}</h1>
               <p className="lesson-idea">
                 <Inline text={lesson.idea} />
               </p>
               <ul className="lesson-facts" aria-label="About this lesson">
-                <li>{lesson.beats.length} steps</li>
-                <li>About {minutes} {minutes === 1 ? "minute" : "minutes"}</li>
+                <li>{lesson.beats.length} short steps</li>
                 <li>
-                  <Link href={fullHref} className="lesson-fact-link">
-                    Full chapter, {chapter.readingMinutes} min
-                  </Link>
+                  About {minutes} {minutes === 1 ? "minute" : "minutes"}
                 </li>
               </ul>
             </header>
@@ -118,11 +134,13 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
               })}
             </ol>
 
-            <section id="edge-cases" aria-label="Edge cases and tips" className="lesson-lists">
+            {hasMath ? <MathSection entries={math} /> : null}
+
+            <section id="edge-cases" aria-label="What could go wrong, and tips" className="lesson-lists">
               <div className="lesson-list lesson-list-edges">
                 <h2 className="lesson-list-title">
                   <EdgeGlyph />
-                  Edge cases
+                  What could go wrong
                 </h2>
                 <ul>
                   {lesson.edgeCases.map((item, index) => (
@@ -135,7 +153,7 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
               <div className="lesson-list lesson-list-tips">
                 <h2 className="lesson-list-title">
                   <TipGlyph />
-                  Quick tips
+                  Tips
                 </h2>
                 <ul>
                   {lesson.tips.map((item, index) => (
@@ -163,7 +181,7 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
                 <h2 id="try-title" className="lesson-section-title">
                   Try it yourself
                 </h2>
-                <p className="lesson-section-lead">Interactive figures from the full chapter: open one, change its inputs and watch what moves.</p>
+                <p className="lesson-section-lead">Open one, change what goes in and watch what moves.</p>
                 <div className="lesson-try-figures">
                   {lesson.tryIt.map((id) => (
                     <details key={id} className="lesson-try-item">
@@ -180,50 +198,44 @@ export function LessonView({ chapter, lesson, parts, previous, next, related }: 
               </section>
             ) : null}
 
-            <section aria-labelledby="deeper-title" className="lesson-deeper">
-              <h2 id="deeper-title" className="lesson-section-title">
-                Go deeper
-              </h2>
-              <div className="lesson-deeper-grid">
-                <Link href={fullHref} className="deeper-card deeper-card-main">
-                  <span className="deeper-card-title">Read the full chapter</span>
-                  <span className="deeper-card-text">
-                    The code, the exact numbers, what was measured and how to check it yourself. About{" "}
-                    {chapter.readingMinutes} minutes.
-                  </span>
-                  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" className="deeper-card-arrow">
-                    <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+            {next ? (
+              <p className="lesson-next">
+                <Link href={`/learn/${next.slug}`} className="button button-primary">
+                  Next{next.label ? `, ${next.label.toLowerCase()}` : ""}: {next.title}
                 </Link>
-                {lesson.lab && lesson.lab.length > 0 ? (
-                  <div className="deeper-block">
-                    <h3 className="deeper-block-title">Measured in the lab</h3>
-                    <ul>
-                      {lesson.lab.map((link) => (
-                        <li key={link.href}>
-                          <Link href={link.href} className="text-link">
-                            {link.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {related.length > 0 ? (
-                  <div className="deeper-block">
-                    <h3 className="deeper-block-title">Related chapters</h3>
-                    <ul>
-                      {related.map((item) => (
-                        <li key={item.slug}>
-                          <Link href={`/learn/${item.slug}`} className="text-link">
-                            {item.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
+              </p>
+            ) : null}
+
+            <section aria-labelledby="deeper-title" className="lesson-deeper">
+              <h2 id="deeper-title" className="lesson-deeper-title">
+                Want more?
+              </h2>
+              <ul className="deeper-links">
+                <li>
+                  <Link href={fullHref} className="deeper-link">
+                    <span className="deeper-link-title">Technical details</span>
+                    <span className="deeper-link-text">The code, the exact numbers and how they were measured.</span>
+                  </Link>
+                </li>
+                {(lesson.lab ?? []).map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="deeper-link">
+                      <span className="deeper-link-title">In the experiments</span>
+                      <span className="deeper-link-text">{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {related.length > 0 ? (
+                <p className="deeper-related">
+                  <span className="deeper-related-label">Related lessons:</span>
+                  {related.map((item) => (
+                    <Link key={item.slug} href={`/learn/${item.slug}`} className="text-link">
+                      {item.title}
+                    </Link>
+                  ))}
+                </p>
+              ) : null}
             </section>
           </article>
           <ChapterPager previous={previous} next={next} />

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Markdown } from "@/components/markdown/Markdown";
 import { NotesNav, type NavGroup } from "@/components/notes/NotesNav";
+import { Reveal } from "@/components/ui/Reveal";
 import {
   Entry,
-  EntryIndex,
   SectionHead,
   StillRunning,
   SummaryLedger,
@@ -17,15 +17,13 @@ import { repoUrl } from "@/lib/site";
 import "@/components/notes/notes.css";
 
 const DESCRIPTION =
-  "What worked, what did not and what we got wrong while training robot policies from scratch: the record of trial and error behind the tutorial.";
+  "What worked, what did not and what we got wrong while teaching a robot arm to pick things up: each lesson learned in one plain line, the full story one click away.";
 
 export const metadata: Metadata = {
   title: "Field notes",
   description: DESCRIPTION,
   alternates: { canonical: "/notes" },
 };
-
-const INDEX_ID = "entries";
 
 function navGroups(sections: NotesSection[]): NavGroup[] {
   const before: NavGroup["items"] = [];
@@ -38,7 +36,6 @@ function navGroups(sections: NotesSection[]): NavGroup[] {
       (entries.length === 0 ? before : after).push({ id: section.id, text: section.text });
     }
   }
-  if (entries.length > 0) before.push({ id: INDEX_ID, text: "The entries" });
   return [
     { label: "Overview", items: before },
     { label: "Entries", items: entries },
@@ -87,12 +84,10 @@ export default function NotesPage() {
   const entries = notes.sections.filter((section): section is EntrySection => section.type === "entry");
   const byNumber = new Map(entries.map((entry) => [entry.number, entry]));
   const context: RenderContext = { entries: new Set(byNumber.keys()) };
-  const firstEntry = notes.sections.findIndex((section) => section.type === "entry");
   const hasQuestions = notes.sections.some((section) => section.type === "questions");
 
-  const rendered = notes.sections.map((section, index) => {
+  const rendered = notes.sections.map((section) => {
     const key = section.id;
-    const indexBefore = index === firstEntry ? <EntryIndex key={INDEX_ID} id={INDEX_ID} entries={entries} context={context} /> : null;
     let block: React.ReactNode;
     if (section.type === "summary") block = <SummaryLedger key={key} section={section} context={context} entries={byNumber} />;
     else if (section.type === "entry") block = <Entry key={key} entry={section} context={context} />;
@@ -102,7 +97,7 @@ export default function NotesPage() {
           {section.type === "questions" ? <StillRunning /> : null}
         </TextBlock>
       );
-    return indexBefore ? [indexBefore, block] : [block];
+    return [block];
   });
 
   return (
@@ -115,14 +110,14 @@ export default function NotesPage() {
               {notes.title || "Field notes"}
             </h1>
             <p className="page-lead">
-              What worked, what did not and what we got wrong while training robot policies from scratch. Read the
-              three summaries and the short version first; each line links to the entry with the measurements behind it.
+              What worked, what did not and what we got wrong while teaching a robot arm to pick things up. Each note
+              in one plain line; open it for the full story and the measurements.
             </p>
             <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-14 text-ink-muted">
-              <li>Updated as runs finish</li>
+              <li>Part of the experiments behind the lessons</li>
               <li>
                 <Link href="/lab" className="text-link">
-                  Lab notebook
+                  Experiments
                 </Link>
               </li>
               <li>
@@ -133,18 +128,16 @@ export default function NotesPage() {
             </ul>
           </header>
 
-          {notes.intro.trim() ? (
-            <aside aria-label="How to read these notes" className="notes-intro">
-              <div className="prose notes-intro-text">
-                <Markdown tree={renderBlock(notes.intro, context)} />
-              </div>
+          <aside aria-label="How to read these notes" className="notes-intro notes-intro-folded">
+            <Reveal label="How to read these notes" openLabel="Hide how to read these notes" kind="text">
+              {notes.intro.trim() ? (
+                <div className="prose notes-intro-text">
+                  <Markdown tree={renderBlock(notes.intro, context)} />
+                </div>
+              ) : null}
               <Key />
-            </aside>
-          ) : (
-            <aside aria-label="Key to the stamps" className="notes-intro">
-              <Key />
-            </aside>
-          )}
+            </Reveal>
+          </aside>
 
           <div className="notes-sections">{rendered.flat()}</div>
 
@@ -155,15 +148,15 @@ export default function NotesPage() {
             <ul className="notes-further-links">
               <li>
                 <Link href="/lab" className="text-link">
-                  The lab notebook
+                  The experiments
                 </Link>
-                <span className="text-ink-muted">: every measurement behind these notes, with its conditions.</span>
+                <span className="text-ink-muted">: every finding behind these notes, in plain words, with its numbers.</span>
               </li>
               <li>
                 <Link href="/learn" className="text-link">
-                  The chapters
+                  The course
                 </Link>
-                <span className="text-ink-muted">: each idea explained from the ground up, with the measurements in place.</span>
+                <span className="text-ink-muted">: each idea explained in a short lesson with an animation.</span>
               </li>
             </ul>
             {!hasQuestions ? <StillRunning /> : null}

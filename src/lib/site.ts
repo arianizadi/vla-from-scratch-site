@@ -13,9 +13,9 @@ function siteUrl(): string {
 
 export const site = {
   name: "VLA from scratch",
-  tagline: "The models behind robot manipulation, built and measured from the ground up.",
+  tagline: "A short, animated course on how robots learn to follow instructions.",
   description:
-    "A hands-on guide to the models behind robot manipulation: a language model, a vision-language model and a vision-language-action policy, each explained from the ground up and backed by measured experiments.",
+    "Learn how a robot reads an instruction, looks at a scene and chooses how to move, one idea at a time, each with a small animation. The code and the experiments are there when you want them.",
   url: siteUrl(),
   tutorialRepo: TUTORIAL_REPO,
   siteRepo: SITE_REPO,

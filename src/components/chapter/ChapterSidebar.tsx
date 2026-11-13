@@ -13,7 +13,8 @@ export interface SidebarChapter {
 
 export interface SidebarPart {
   id: string;
-  number: number;
+  /** Module number; the extras (run it yourself, reference) have none. */
+  number?: number;
   name: string;
   chapters: SidebarChapter[];
 }
@@ -72,7 +73,7 @@ function NavTree({ parts, currentSlug, sections, activeSection, onNavigate }: Na
                 name="chevron"
                 className={`shrink-0 text-ink-faint transition-transform duration-[160ms] ease-standard ${isOpen ? "rotate-90" : ""}`}
               />
-              <span className="w-4 shrink-0 text-ink-faint tabular-nums">{part.number}</span>
+              {part.number !== undefined ? <span className="w-4 shrink-0 text-ink-faint tabular-nums">{part.number}</span> : null}
               <span>{part.name}</span>
             </button>
 
@@ -90,14 +91,14 @@ function NavTree({ parts, currentSlug, sections, activeSection, onNavigate }: Na
                         isCurrent ? "font-semibold text-ink" : "text-ink-muted hover:text-ink"
                       }`}
                     >
-                      <span className="w-5 shrink-0 font-normal text-ink-faint tabular-nums">
-                        {chapter.orderLabel}
-                      </span>
+                      {chapter.orderLabel ? (
+                        <span className="w-5 shrink-0 font-normal text-ink-faint tabular-nums">{chapter.orderLabel}</span>
+                      ) : null}
                       <span>{chapter.title}</span>
                     </Link>
 
                     {isCurrent && sections.length > 0 ? (
-                      <ol className="mt-0.5 mb-2 ml-7 grid" aria-label="Sections of this chapter">
+                      <ol className="mt-0.5 mb-2 ml-7 grid" aria-label="On this page">
                         {sections.map((section) => {
                           const isActive = section.id === activeSection;
                           return (
@@ -162,7 +163,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
           className="-ml-2 inline-flex h-11 shrink-0 items-center gap-2 rounded-control px-2 text-14 font-semibold text-ink"
         >
           <Glyph name="menu" size={14} />
-          Chapters
+          Course
         </button>
         <span className="min-w-0 flex-1 truncate text-14 text-ink-muted" aria-live="off">
           {reading ? (
@@ -178,7 +179,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
 
       <dialog
         ref={dialog}
-        aria-label="Chapters"
+        aria-label="Course"
         onClick={(event) => {
           if (event.target === event.currentTarget) close();
         }}
@@ -186,17 +187,17 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
       >
         <div className="flex h-full flex-col">
           <div className="flex h-14 shrink-0 items-center justify-between border-b border-line pr-2 pl-4">
-            <p className="text-14 font-semibold">Chapters</p>
+            <p className="text-14 font-semibold">Course</p>
             <button
               type="button"
               onClick={close}
               className="inline-flex size-11 items-center justify-center rounded-control text-ink-muted hover:text-ink"
             >
               <Glyph name="close" size={14} />
-              <span className="sr-only">Close chapter list</span>
+              <span className="sr-only">Close the course list</span>
             </button>
           </div>
-          <nav aria-label="Chapters" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+          <nav aria-label="Course" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
             <NavTree
               parts={parts}
               currentSlug={currentSlug}
@@ -212,7 +213,7 @@ export function ChapterSidebar({ parts, currentSlug, currentTitle, sections }: C
         ref={column}
         className="sticky top-14 hidden h-[calc(100dvh-56px)] self-start overflow-y-auto overscroll-contain py-8 pr-2 lg:block"
       >
-        <nav aria-label="Chapters">
+        <nav aria-label="Course">
           <NavTree parts={parts} currentSlug={currentSlug} sections={sections} activeSection={activeSection} />
         </nav>
       </aside>

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Markdown } from "@/components/markdown/Markdown";
 import { Glyph, type GlyphName } from "@/components/ui/Glyph";
+import { Reveal } from "@/components/ui/Reveal";
 import { RUN_FAMILIES } from "@/data/labels";
 import { awaitedRuns, exportedAt, unfinishedRuns } from "@/data/runs";
 import type { EntrySection, StatusKind, SummarySection, SummaryTone, TextSection } from "./notes";
+import { PLAIN_NOTES } from "./plain";
 import { renderBlock, renderInline, type RenderContext } from "./render";
 import { STATUS, STATUS_ORDER, StatusGlyph, StatusStamp } from "./StatusStamp";
 
@@ -125,43 +127,45 @@ export function SummaryLedger({
         <Markdown tree={renderInline(section.title, context)} />
       </SectionHead>
 
-      <div className="notes-ledger" style={{ "--columns": otherColumns.length } as React.CSSProperties}>
-        <div className="notes-ledger-head" aria-hidden="true">
-          {section.columns.map((column) => (
-            <span key={column}>{column}</span>
-          ))}
-          <span className="notes-ledger-refs">Entry</span>
-        </div>
-        <ul className="notes-ledger-rows">
-          {section.items.map((item, index) => (
-            <li key={index} className="notes-ledger-row">
-              <p className="notes-ledger-what">
-                <span className="sr-only">{whatColumn}: </span>
-                <Markdown tree={renderInline(item.cells[0] ?? "", context)} />
-              </p>
-              {otherColumns.map((column, columnIndex) => (
-                <p key={column} className="notes-ledger-text">
-                  <span className="sr-only">{column}: </span>
-                  {item.heldBack && !item.cells[columnIndex + 1] ? (
-                    <span className="inline-flex items-start gap-1.5 text-ink-muted">
-                      <span className="mt-[3px] text-warning">
-                        <StatusGlyph kind="progress" />
-                      </span>
-                      <span>{item.heldBack}</span>
-                    </span>
-                  ) : (
-                    <Markdown tree={renderInline(item.cells[columnIndex + 1] ?? "", context)} />
-                  )}
+      <Reveal label={`Show the list (${section.items.length})`} openLabel="Hide the list" kind="table" className="notes-more">
+        <div className="notes-ledger" style={{ "--columns": otherColumns.length } as React.CSSProperties}>
+          <div className="notes-ledger-head" aria-hidden="true">
+            {section.columns.map((column) => (
+              <span key={column}>{column}</span>
+            ))}
+            <span className="notes-ledger-refs">Entry</span>
+          </div>
+          <ul className="notes-ledger-rows">
+            {section.items.map((item, index) => (
+              <li key={index} className="notes-ledger-row">
+                <p className="notes-ledger-what">
+                  <span className="sr-only">{whatColumn}: </span>
+                  <Markdown tree={renderInline(item.cells[0] ?? "", context)} />
                 </p>
-              ))}
-              <p className="notes-ledger-refs">
-                <span className="notes-ledger-refs-label">{item.entries.length > 1 ? "Entries" : "Entry"} </span>
-                <EntryRefs numbers={item.entries} fallback={item.entryText} entries={entries} />
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
+                {otherColumns.map((column, columnIndex) => (
+                  <p key={column} className="notes-ledger-text">
+                    <span className="sr-only">{column}: </span>
+                    {item.heldBack && !item.cells[columnIndex + 1] ? (
+                      <span className="inline-flex items-start gap-1.5 text-ink-muted">
+                        <span className="mt-[3px] text-warning">
+                          <StatusGlyph kind="progress" />
+                        </span>
+                        <span>{item.heldBack}</span>
+                      </span>
+                    ) : (
+                      <Markdown tree={renderInline(item.cells[columnIndex + 1] ?? "", context)} />
+                    )}
+                  </p>
+                ))}
+                <p className="notes-ledger-refs">
+                  <span className="notes-ledger-refs-label">{item.entries.length > 1 ? "Entries" : "Entry"} </span>
+                  <EntryRefs numbers={item.entries} fallback={item.entryText} entries={entries} />
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -252,10 +256,13 @@ export function Entry({ entry, context }: { entry: EntrySection; context: Render
       >
         <Markdown tree={renderInline(entry.title, context)} />
       </SectionHead>
+      {PLAIN_NOTES[entry.number] ? <p className="notes-plain">{PLAIN_NOTES[entry.number]}</p> : null}
       {entry.body.trim() ? (
-        <div className="prose notes-body">
-          <Markdown tree={renderBlock(entry.body, { ...context, idPrefix: entry.id })} />
-        </div>
+        <Reveal label="Read the full note" openLabel="Close the note" kind="text" className="notes-more">
+          <div className="prose notes-body">
+            <Markdown tree={renderBlock(entry.body, { ...context, idPrefix: entry.id })} />
+          </div>
+        </Reveal>
       ) : null}
     </section>
   );
@@ -276,9 +283,11 @@ export function TextBlock({
         <Markdown tree={renderInline(section.title, context)} />
       </SectionHead>
       {section.body.trim() ? (
-        <div className="prose notes-body">
-          <Markdown tree={renderBlock(section.body, { ...context, idPrefix: section.id })} />
-        </div>
+        <Reveal label="Read it" openLabel="Close" kind="text" className="notes-more">
+          <div className="prose notes-body">
+            <Markdown tree={renderBlock(section.body, { ...context, idPrefix: section.id })} />
+          </div>
+        </Reveal>
       ) : null}
       {children}
     </section>

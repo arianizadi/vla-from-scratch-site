@@ -4,10 +4,11 @@ import { site } from "@/lib/site";
 import { NavLink, NavLinkFallback } from "./NavLink";
 import { ThemeToggle } from "./ThemeToggle";
 
-const LINKS = [
-  { href: "/learn", label: "Learn" },
-  { href: "/lab", label: "Lab" },
-  { href: "/notes", label: "Notes" },
+/** Course first; the experiments and running the code are optional extras. */
+const LINKS: { href: string; label: string; short?: string; also?: string[] }[] = [
+  { href: "/learn", label: "Course", also: ["/figures"] },
+  { href: "/lab", label: "Experiments", also: ["/notes"] },
+  { href: "/run-it-yourself", label: "Run it yourself", short: "Run it" },
 ];
 
 /** The mark: a gripper about to close on a token. */
@@ -29,8 +30,8 @@ function Wordmark() {
       className="site-wordmark touch-target inline-flex shrink-0 items-center gap-2.5 rounded-control whitespace-nowrap no-underline"
     >
       <Mark />
-      {/* On a phone the mark stands alone, so the four links and the theme button fit one line. */}
-      <span className="hidden min-[520px]:inline" aria-hidden="true">
+      {/* On a phone the mark stands alone, so the links and the theme button fit one line. */}
+      <span className="hidden min-[760px]:inline" aria-hidden="true">
         {site.name}
       </span>
     </Link>
@@ -57,17 +58,17 @@ export function Header() {
           <ul className="flex items-center gap-0.5 sm:gap-1">
             {LINKS.map((link) => (
               <li key={link.href}>
-                <Suspense fallback={<NavLinkFallback href={link.href}>{link.label}</NavLinkFallback>}>
-                  <NavLink href={link.href}>{link.label}</NavLink>
+                <Suspense fallback={<NavLinkFallback href={link.href} label={link.label} short={link.short} />}>
+                  <NavLink href={link.href} label={link.label} short={link.short} also={link.also} />
                 </Suspense>
               </li>
             ))}
             <li className="flex">
               <a
                 href={site.tutorialRepo}
-                aria-label="Source on GitHub"
-                title="Source on GitHub"
-                className="inline-flex size-11 items-center justify-center rounded-full text-ink-muted transition-colors duration-100 ease-standard hover:text-ink sm:size-9 pointer-coarse:size-11"
+                aria-label="GitHub"
+                title="GitHub"
+                className="hidden size-11 min-[400px]:inline-flex items-center justify-center rounded-full text-ink-muted transition-colors duration-100 ease-standard hover:text-ink sm:size-9 pointer-coarse:size-11"
               >
                 <GitHubMark />
               </a>
