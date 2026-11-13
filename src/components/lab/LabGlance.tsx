@@ -22,7 +22,8 @@ function span(counts: Count[]): { value: string; of: number } {
 export function LabGlance() {
   const one = span(pruning.one.pruned);
   const turn = span(pruning.turn.pruned);
-  const full = pruning.full.film.result.split("/");
+  const full = span(pruning.full.pruned);
+  const filmed = pruning.full.film.result.split("/");
 
   const results = [
     {
@@ -38,10 +39,10 @@ export function LabGlance() {
       text: "The shoot can point any way. The robot holds a button only when the shoot faces away, and lets go once it faces the arm.",
     },
     {
-      value: full[0] ?? pruning.full.film.result,
-      of: Number(full[1] ?? 100),
+      value: full.value,
+      of: full.of,
       title: "It prunes the whole plant.",
-      text: "Two or three shoots: turn, cut, turn, cut. This needed a longer training run; more runs are still training.",
+      text: "Two or three shoots: turn, cut, turn, cut. This needed a longer training run. Two of three runs land near 80; the third learned late. Most misses run out of time.",
     },
   ];
 
@@ -56,7 +57,7 @@ export function LabGlance() {
       name: pruning.full.film.name,
       size: [1280, 720],
       title: "Prune the whole plant",
-      caption: `The learned policy at ${full[0]} of ${full[1]}. Quiet stretches play at double speed.`,
+      caption: `The learned policy partway through training, when it pruned ${filmed[0]} of ${filmed[1]}. Quiet stretches play at double speed.`,
     },
   ];
 

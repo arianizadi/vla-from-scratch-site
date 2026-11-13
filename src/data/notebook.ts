@@ -479,9 +479,9 @@ const prune = data.flower.prune;
 
 /**
  * Steps 6-8, pruning a potted plant (new physics): the lab page's headline
- * results. `pruned` holds one count per training seed (averaged weights). The
- * full task's film reports a result the notebook does not have yet; it stays
- * text (`result`) with its source, so no check treats it as a notebook number.
+ * results. `pruned` holds one count per training seed (averaged weights, final
+ * checkpoint). The full task's film shows a mid-run checkpoint; its result stays
+ * text (`result`) with its source.
  */
 export const pruning = {
   one: { section: prune.one.section, pruned: countsOf(prune.one.pruned), expert: countOf(prune.one.expert) },
@@ -501,6 +501,9 @@ export const pruning = {
     section: prune.full.section,
     expert: countOf(prune.full.expert),
     budgetM: prune.full.budgetM,
+    /** Final checkpoints, averaged weights: from 2000 demonstrations (seeds 42-44) and from 4000 (seeds 42-43). */
+    pruned: countsOf(prune.full.pruned),
+    pruned4k: countsOf(prune.full.pruned4k),
     film: { name: prune.full.film.name, result: prune.full.film.pruned, source: prune.full.film.source },
   },
 };

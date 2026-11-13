@@ -13,7 +13,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { MISSING, formatCount } from "@/data/format";
 import { MACHINES } from "@/data/labels";
-import { flowerTrimming, type FlowerCondition, type FlowerPartial, type FlowerRow } from "@/data/notebook";
+import { flowerTrimming, pruning, type FlowerCondition, type FlowerPartial, type FlowerRow } from "@/data/notebook";
 import type { Count } from "@/data/types";
 import { repoUrl } from "@/lib/site";
 import type { ChapterFor } from "./BeforeFix";
@@ -55,16 +55,27 @@ const PRUNING_STEPS = [
     task: "prune_turn",
     title: "Turning the plant",
     what: "one shoot at any angle; press a button to turn it into reach, then cut",
-    expert: "99%",
+    expert: "100%",
   },
   {
     step: 8,
     task: "prune",
     title: "Pruning",
-    what: "1-3 shoots at any angles, turn and cut each, the flower untouched",
-    expert: "100% (about 500 control steps)",
+    what: "2-3 shoots at any angles, turn and cut each, the flower untouched",
+    expert: "100% (about 515 control steps)",
   },
 ] as const;
+
+/** Each pruning step's policies: final checkpoint, averaged weights, one count per training seed. */
+const PRUNING_RESULTS: Record<(typeof PRUNING_STEPS)[number]["task"], { pruned: Count[]; recipe: string; more?: string }> = {
+  prune_one: { pruned: pruning.one.pruned, recipe: "4000 demonstrations, 5M samples" },
+  prune_turn: { pruned: pruning.turn.pruned, recipe: "4000 demonstrations, 10M samples" },
+  prune: {
+    pruned: pruning.full.pruned,
+    recipe: `2000 demonstrations, ${pruning.full.budgetM}M samples`,
+    more: `from 4000 demonstrations: ${pruning.full.pruned4k.map(count).join(", ")}`,
+  },
+};
 
 const STEPS = {
   drift: flowerTrimming.drift.section,
@@ -818,12 +829,13 @@ function PhysicsChange() {
 function Pruning() {
   return (
     <>
-      <SubHead id="flower-runs-in-progress">Pruning: the runs in progress</SubHead>
+      <SubHead id="flower-runs-in-progress">Pruning: the three tasks</SubHead>
       <p className={styles.prose}>
-        Steps 6-8 of the roadmap are the pruning tasks themselves, each with one policy training on the new physics. No
-        result yet.
+        Steps 6-8 of the roadmap are the pruning tasks themselves, on the new physics. All three can be learned. The full
+        task needed a longer training budget: two of three seeds prune about 80 plants in 100, the third learned late and
+        reached 56. Twice the demonstrations did not help. Most failures run out of time rather than touch the flower.
       </p>
-      <TableBox label="The pruning tasks and their runs in progress">
+      <TableBox label="The pruning tasks, their policies and the runs in progress">
         <thead>
           <tr>
             <th scope="col">Step</th>
@@ -831,13 +843,14 @@ function Pruning() {
             <th scope="col" className="num">
               Expert
             </th>
-            <th scope="col">Run</th>
-            <th scope="col">Status</th>
+            <th scope="col">Policies, one per seed</th>
+            <th scope="col">Still training</th>
           </tr>
         </thead>
         <tbody>
           {PRUNING_STEPS.map((entry) => {
             const running = flowerTrimming.inProgress.filter((item) => item.task === entry.task);
+            const result = PRUNING_RESULTS[entry.task];
             return (
               <tr key={entry.task} id={`flower-prune-${entry.step}`}>
                 <th scope="row" className={styles.wrap}>
@@ -849,23 +862,30 @@ function Pruning() {
                 <td className={styles.wrap}>{capital(entry.what)}</td>
                 <td className="num">{entry.expert}</td>
                 <td className={styles.wrap}>
+                  {result.pruned.map(count).join(", ")}
+                  <span className={styles.cellDetail}>
+                    {result.recipe}
+                    {result.more ? `; ${result.more}` : ""}
+                  </span>
+                </td>
+                <td className={styles.wrap}>
                   {running.length > 0
                     ? running.map((item) => (
-                        <code key={item.run} className={`${styles.inlineCode} block`}>
-                          {item.run}
-                        </code>
+                        <span key={item.run} className="block">
+                          <code className={styles.inlineCode}>{item.run}</code> <InProgressBadge />
+                        </span>
                       ))
                     : MISSING}
                 </td>
-                <td>{running.length > 0 ? <InProgressBadge /> : MISSING}</td>
               </tr>
             );
           })}
         </tbody>
       </TableBox>
       <TableNote>
-        The steps and the expert&rsquo;s rates are the roadmap&rsquo;s; the runs are the notebook&rsquo;s, which shortens
-        some names with &ldquo;...&rdquo;; they are shown as it writes them.
+        The steps and the expert&rsquo;s rates are the roadmap&rsquo;s; the policies&rsquo; counts are the notebook&rsquo;s
+        (final checkpoint, averaged weights, 100 plants each). The notebook shortens some run names with &ldquo;...&rdquo;;
+        they are shown as it writes them.
       </TableNote>
     </>
   );
@@ -878,7 +898,7 @@ export function FlowerSection({ chapter }: { chapter: ChapterFor }) {
   return (
     <LabSection
       {...SECTIONS.flower}
-      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, and so can cutting a single flower's stem; choosing the named stem among three flowers to cut it needs twice the training budget and then works on two seeds of three; grasping and holding the named stem does not yet. The pruning tasks are still training."
+      read="Each step adds one property of the final task: read each table from the scripted expert down, for whether the step can be done, whether an earlier policy copes without new demonstrations, and what a policy trained on the step's own demonstrations reaches; the first three steps can be learned, and so can cutting a single flower's stem; choosing the named stem among three flowers to cut it needs twice the training budget and then works on two seeds of three; grasping and holding the named stem does not yet. The three pruning tasks can be learned; the full one prunes about 80 plants in 100 on two seeds of three."
       chapters={[chapter("110-toward-real-tasks"), chapter("103-case-self-correction")]}
       notes={[7, 11]}
     >
@@ -893,7 +913,7 @@ export function FlowerSection({ chapter }: { chapter: ChapterFor }) {
             ladder in the roadmap
           </a>{" "}
           gets there one property at a time: its first five steps, below, use simpler scenes; steps 6-8 are the pruning
-          tasks themselves, still training. All of it runs on {MACHINES.B.name}.
+          tasks themselves. All of it runs on {MACHINES.B.name}.
         </p>
         <p>
           Unless a table says otherwise: the policy without history, with language (<code>{recipe.policy}</code>),{" "}
