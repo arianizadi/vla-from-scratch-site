@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
+import { chapterHref } from "./lesson-files";
 import { renderMarkdown } from "./markdown/pipeline";
 
 const CHAPTER_DIR = path.join(process.cwd(), "content", "chapters");
@@ -408,7 +409,7 @@ export function listFigureUses(): FigureUse[] {
           id: figure.id,
           number,
           caption: figure.caption,
-          href: `/learn/${chapter.slug}#fig-${number.replace(".", "-")}`,
+          href: chapterHref(chapter.slug, `#fig-${number.replace(".", "-")}`),
           chapter: toMeta(chapter),
         };
       }),

@@ -316,7 +316,7 @@
   max-width: 160px;
   height: 10px;
   border: 1px solid var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
 }
 .pvt-meter-fill {
   position: absolute;
@@ -353,7 +353,7 @@
   min-height: 44px;
   padding: 4px 8px;
   border: 1.5px solid var(--action);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--surface);
   text-align: center;
   place-content: center;
@@ -376,7 +376,7 @@
 .pvt-measured {
   margin-top: 20px;
   border: 1px solid var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--surface);
 }
 .pvt-measured-head {

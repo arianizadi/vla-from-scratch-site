@@ -1,0 +1,460 @@
+/* ==========================================================================
+   The short lesson (src/components/lesson). Imported into the components
+   layer by src/app/globals.css. The layout follows the lesson's own width
+   (a container), so it is the same inside or beside the sidebar.
+   ========================================================================== */
+
+.lesson {
+  container-type: inline-size;
+}
+
+/* --------------------------------------------------------------------------
+   Opening: where the chapter sits, its title, the idea in one sentence.
+   -------------------------------------------------------------------------- */
+
+.lesson-hero {
+  padding-top: 28px;
+}
+@media (min-width: 1024px) {
+  .lesson-hero {
+    padding-top: 64px;
+  }
+}
+.lesson-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+.lesson-part {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--duration-micro) var(--ease-standard);
+}
+.lesson-part:hover {
+  border-color: var(--border-strong);
+}
+.lesson-number {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.lesson-title {
+  max-width: 17ch;
+  margin: 20px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7cqw, 4.75rem);
+  font-weight: 750;
+  font-stretch: 86%;
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+}
+.lesson-idea {
+  max-width: 34ch;
+  margin: 22px 0 0;
+  color: var(--text-muted);
+  font-size: clamp(1.25rem, 2.6cqw, 1.625rem);
+  line-height: 1.38;
+}
+.lesson-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lesson-facts > li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background-color: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lesson-facts > li:has(.lesson-fact-link) {
+  padding: 0;
+  background: none;
+}
+.lesson-fact-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.lesson-fact-link:hover {
+  border-color: var(--accent);
+}
+@media (pointer: coarse) {
+  .lesson-fact-link,
+  .lesson-part {
+    min-height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Beats: the explanation in a few steps, each beside its animation.
+   -------------------------------------------------------------------------- */
+
+.lesson-beats {
+  display: grid;
+  gap: 72px;
+  margin: 64px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.beat {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+.beat-text {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: baseline;
+}
+.beat-number {
+  grid-row: span 2;
+  min-width: 1ch;
+  color: transparent;
+  font-family: var(--font-display);
+  font-size: 3.25rem;
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 0.9;
+  -webkit-text-stroke: 1.5px var(--border-strong);
+  font-variant-numeric: tabular-nums;
+}
+.beat-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4cqw, 2rem);
+  font-weight: 700;
+  font-stretch: 90%;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.beat-body {
+  grid-column: 2;
+  max-width: 44ch;
+  margin: 12px 0 0;
+  color: var(--text);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+.beat-body code,
+.lesson-list code,
+.lesson-takeaway-text code,
+.lesson-idea code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background-color: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+.beat-body strong {
+  font-weight: 700;
+}
+.beat-visual {
+  min-width: 0;
+}
+
+@container (min-width: 760px) {
+  .lesson-beats {
+    gap: 120px;
+  }
+  .beat {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+  }
+  .beat-text {
+    position: sticky;
+    top: 104px;
+    padding-top: 56px;
+  }
+  .beat-plain {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .beat-body {
+    font-size: 1.125rem;
+  }
+}
+@media (max-width: 1023px) {
+  .beat-text {
+    top: 128px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Edge cases and tips, side by side.
+   -------------------------------------------------------------------------- */
+
+.lesson-lists {
+  display: grid;
+  gap: 16px;
+  margin-top: 104px;
+}
+@container (min-width: 760px) {
+  .lesson-lists {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 144px;
+  }
+}
+.lesson-list {
+  padding: 24px 24px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.lesson-list-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.lesson-list-glyph {
+  flex: none;
+  color: var(--accent);
+}
+.lesson-list ul {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lesson-list li {
+  position: relative;
+  padding: 12px 0 12px 22px;
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.lesson-list li::before {
+  position: absolute;
+  top: 1.35em;
+  left: 2px;
+  width: 9px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--text-faint);
+  content: "";
+}
+
+/* --------------------------------------------------------------------------
+   The takeaway: the one line to keep, in display type under a highlighter.
+   -------------------------------------------------------------------------- */
+
+.lesson-takeaway {
+  margin-top: 104px;
+}
+.lesson-takeaway-label {
+  margin: 0;
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.lesson-takeaway-text {
+  max-width: 30ch;
+  margin: 12px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.4cqw, 2.75rem);
+  font-weight: 700;
+  font-stretch: 90%;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+.lesson-takeaway-text {
+  background-image: linear-gradient(transparent 58%, var(--mark-soft) 58%, var(--mark-soft) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  display: inline;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lesson-takeaway-text {
+      animation: lesson-highlight linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 45%;
+    }
+  }
+}
+@keyframes lesson-highlight {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Try it, and going deeper.
+   -------------------------------------------------------------------------- */
+
+.lesson-section-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3cqw, 2rem);
+  font-weight: 700;
+  font-stretch: 92%;
+  line-height: 1.15;
+}
+.lesson-section-lead {
+  max-width: 52ch;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+}
+.lesson-try {
+  margin-top: 104px;
+}
+.lesson-try-figures {
+  display: grid;
+  gap: 32px;
+  margin-top: 24px;
+}
+.lesson-deeper {
+  margin-top: 104px;
+}
+.lesson-deeper-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+@container (min-width: 760px) {
+  .lesson-deeper-grid {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  }
+  .deeper-card-main {
+    grid-row: span 2;
+  }
+}
+.deeper-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 200px;
+  padding: 28px;
+  border-radius: var(--radius-stage);
+  background-color: var(--text);
+  color: var(--bg);
+  text-decoration: none;
+  transition: background-color var(--duration-interface) var(--ease-standard);
+}
+.deeper-card:hover {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
+.deeper-card-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-stretch: 90%;
+  line-height: 1.1;
+}
+.deeper-card-text {
+  max-width: 38ch;
+  opacity: 0.82;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.deeper-card-arrow {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  transition: transform var(--duration-interface) var(--ease-standard);
+}
+.deeper-card:hover .deeper-card-arrow {
+  transform: translateX(4px);
+}
+.deeper-block {
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+}
+.deeper-block-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.deeper-block ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   The full chapter's link back to its lesson.
+   -------------------------------------------------------------------------- */
+
+.full-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 28px 0 0;
+  padding: 10px 10px 10px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+@media (min-width: 1024px) {
+  .full-banner {
+    margin-top: 48px;
+  }
+}
+.full-banner-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background-color: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  text-decoration: none;
+}
+.full-banner-link:hover {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
+@media (max-width: 639px) {
+  .full-banner {
+    border-radius: var(--radius-card);
+  }
+}

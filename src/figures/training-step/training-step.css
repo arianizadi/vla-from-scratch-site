@@ -34,7 +34,7 @@
   min-height: 44px;
   padding: 6px 10px 7px;
   border: 1px solid var(--border-strong);
-  border-radius: 3px;
+  border-radius: 8px;
   background-color: var(--surface);
   color: var(--text);
   font: inherit;
@@ -55,7 +55,7 @@
   justify-self: start;
   padding: 0 4px;
   margin-left: -4px;
-  border-radius: 2px;
+  border-radius: 6px;
   font-weight: 600;
   font-stretch: 95%;
 }

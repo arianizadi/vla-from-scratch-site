@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
+import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next, Bricolage_Grotesque } from "next/font/google";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { site } from "@/lib/site";
@@ -9,26 +9,26 @@ import "./globals.css";
 // Every route is prerendered; a change that adds request-time rendering fails the build.
 export const ensureStatic = "navigation";
 
-const archivo = Archivo({
+/** Display: headings, big numbers, the wordmark. Its optical-size and width axes do the shaping. */
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  axes: ["opsz", "wdth"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
+/** Reading and interface: drawn for legibility, which suits a site that teaches. */
+const body = Atkinson_Hyperlegible_Next({
   subsets: ["latin"],
-  axes: ["opsz"],
   style: ["normal", "italic"],
-  variable: "--font-source-serif",
+  variable: "--font-body",
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
+/** Tokens, ids and code: the same family, monospaced. */
+const code = Atkinson_Hyperlegible_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-plex-mono",
+  variable: "--font-code",
   display: "swap",
   preload: false,
 });
@@ -58,18 +58,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1726" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f4f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#10131a" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${archivo.variable} ${sourceSerif.variable} ${plexMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={`${display.variable} ${body.variable} ${code.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

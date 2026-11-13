@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ChapterHeader } from "@/components/chapter/ChapterHeader";
-import { ChapterPager } from "@/components/chapter/ChapterPager";
-import { ChapterSidebar } from "@/components/chapter/ChapterSidebar";
-import { ReadingProgress } from "@/components/chapter/ReadingProgress";
-import { Markdown } from "@/components/markdown/Markdown";
-import { getAllChapters, getChapter, getNeighbours, getSidebarParts } from "@/lib/content";
-import { renderMarkdown } from "@/lib/markdown/pipeline";
-import { repoUrl, site } from "@/lib/site";
+import { LongChapter } from "@/components/chapter/LongChapter";
+import { LessonView } from "@/components/lesson/LessonView";
+import { getAllChapters, getChapter, getNeighbours, getSidebarParts, type ChapterMeta } from "@/lib/content";
+import { getLesson } from "@/lessons";
+import { site } from "@/lib/site";
 import "katex/dist/katex.min.css";
 
 interface ChapterPageProps {
@@ -22,16 +19,18 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
   const { slug } = await params;
   const chapter = getChapter(slug);
   if (!chapter) return {};
+  const lesson = await getLesson(slug);
+  const description = lesson?.idea ?? (chapter.summary || undefined);
   return {
     title: chapter.title,
-    description: chapter.summary || undefined,
+    description,
     alternates: { canonical: `/learn/${chapter.slug}` },
     robots: chapter.isSample ? { index: false } : undefined,
     openGraph: {
       type: "article",
       siteName: site.name,
       title: chapter.title,
-      description: chapter.summary || undefined,
+      description,
       url: `/learn/${chapter.slug}`,
     },
   };
@@ -50,54 +49,32 @@ export async function generateMetadata({ params }: ChapterPageProps): Promise<Me
  */
 export const instant = false;
 
+/**
+ * A chapter with a lesson (src/lessons/<slug>) shows the lesson; the full chapter is one click
+ * away at /learn/<slug>/full. A chapter without one shows the full chapter here.
+ */
 export default async function ChapterPage({ params }: ChapterPageProps) {
   const { slug } = await params;
   const chapter = getChapter(slug);
   if (!chapter) notFound();
 
-  const { tree, headings } = renderMarkdown(chapter.body, {
-    chapterNumber: String(chapter.order),
-    chapterTitle: (target) => getChapter(target)?.title,
-  });
-  const { previous, next } = getNeighbours(chapter.slug);
+  const lesson = await getLesson(slug);
+  if (!lesson) return <LongChapter chapter={chapter} />;
 
+  const { previous, next } = getNeighbours(chapter.slug);
   const parts = getSidebarParts(chapter.slug).map((part) => ({
     id: part.id,
     number: part.number,
     name: part.name,
-    chapters: part.chapters.map(({ slug: chapterSlug, orderLabel, title }) => ({
-      slug: chapterSlug,
-      orderLabel,
-      title,
-    })),
+    chapters: part.chapters.map(({ slug: chapterSlug, orderLabel, title }) => ({ slug: chapterSlug, orderLabel, title })),
   }));
-  const sections = headings
-    .filter((heading) => heading.depth === 2)
-    .map(({ id, text, section }) => ({ id, text, section }));
+  const related = (lesson.related ?? [])
+    .map((relatedSlug) => getChapter(relatedSlug))
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
+    .map(({ body: _body, ...meta }): ChapterMeta => {
+      void _body;
+      return meta;
+    });
 
-  // The pipeline samples exist only in this repository, so they have no source link.
-  const editUrl = chapter.isSample ? undefined : repoUrl(`${site.chapterDir}/${chapter.slug}.md`, "edit");
-
-  return (
-    <>
-      <ReadingProgress targetId="chapter" />
-      <div className="page-frame lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-x-12 xl:grid-cols-[272px_minmax(0,960px)]">
-        <ChapterSidebar
-          parts={parts}
-          currentSlug={chapter.slug}
-          currentTitle={chapter.title}
-          sections={sections}
-        />
-        <main id="main" tabIndex={-1} className="min-w-0 pb-8 outline-none">
-          <article id="chapter">
-            <ChapterHeader chapter={chapter} editUrl={editUrl} />
-            <div className="prose mt-10">
-              <Markdown tree={tree} />
-            </div>
-          </article>
-          <ChapterPager previous={previous} next={next} />
-        </main>
-      </div>
-    </>
-  );
+  return <LessonView chapter={chapter} lesson={lesson} parts={parts} previous={previous} next={next} related={related} />;
 }

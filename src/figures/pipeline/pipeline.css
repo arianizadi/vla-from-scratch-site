@@ -56,7 +56,7 @@
   display: inline-block;
   padding: 0 6px;
   border: 1px solid var(--text);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--mark);
   color: var(--on-mark);
   font-stretch: 80%;
@@ -105,7 +105,7 @@
   min-height: 44px;
   padding: 6px 12px 6px 10px;
   border: 0;
-  border-radius: 2px;
+  border-radius: 6px;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -121,7 +121,7 @@
   position: absolute;
   inset: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--surface);
   transition: background-color var(--duration-micro) var(--ease-standard);
 }
@@ -198,7 +198,7 @@
   display: inline-block;
   padding: 1px 7px;
   border: 1px solid var(--text);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--mark);
   color: var(--on-mark);
   font-size: 0.8125rem;
@@ -548,7 +548,7 @@
   margin-top: 8px;
   padding: 0 8px 0 4px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 8px;
   background: transparent;
   color: var(--accent);
   font: inherit;
@@ -751,7 +751,7 @@
   gap: 6px;
   padding: 1px 8px;
   border: 1px solid var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   color: var(--text);
   font-size: 0.8125rem;
   font-weight: 500;

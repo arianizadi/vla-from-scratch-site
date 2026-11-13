@@ -154,7 +154,7 @@
   width: calc(100% - 2px);
   max-width: 34px;
   height: 20px;
-  border-radius: 2px;
+  border-radius: 6px;
   place-items: center;
 }
 .ps-cursor {
@@ -187,7 +187,7 @@
   margin-inline: 1px;
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   background-color: var(--surface);
   color: var(--text);
   font-size: clamp(12px, 4cqw, 13px);
@@ -282,7 +282,7 @@
   display: grid;
   width: calc(var(--cell) * (var(--ghost-columns) - var(--skip)) - 2px);
   border: 1px dashed var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   color: var(--text-faint);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -382,7 +382,7 @@
   height: 22px;
   padding: 0 6px;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 6px;
   font-weight: 600;
   place-items: center;
 }

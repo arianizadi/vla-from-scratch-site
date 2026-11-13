@@ -1,0 +1,400 @@
+/* ==========================================================================
+   Explanation animations (src/animations). Imported into the components
+   layer by src/app/globals.css. Colours come from tokens only.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The frame
+   -------------------------------------------------------------------------- */
+
+.anim {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-stage);
+  background-color: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.anim-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 12px 0 20px;
+}
+.anim-title {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+.anim-buttons {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+}
+.anim-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard),
+    transform var(--duration-interface) var(--ease-standard);
+}
+.anim-button:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.anim-button:active {
+  transform: scale(0.92);
+}
+@media (pointer: coarse) {
+  .anim-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.anim-stage {
+  padding: 4px 12px;
+  background-image: radial-gradient(circle, var(--grid) 1.1px, transparent 1.4px);
+  background-size: 16px 16px;
+  background-position: center;
+}
+@media (min-width: 640px) {
+  .anim-stage {
+    padding: 8px 20px;
+  }
+}
+.anim-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transition: opacity 260ms var(--ease-standard);
+}
+.anim[data-fading] .anim-svg {
+  opacity: 0;
+}
+
+.anim-foot {
+  display: grid;
+  gap: 10px;
+  padding: 6px 20px 18px;
+}
+.anim-pips {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.anim-pips > li {
+  flex: 1 1 0;
+  max-width: 64px;
+}
+.anim-pip {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.anim-pip::before {
+  content: none;
+}
+.anim-pip > .anim-pip-fill {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background-color: var(--surface-2);
+}
+.anim-pip > .anim-pip-fill::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--text);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  content: "";
+}
+.anim-pip:hover > .anim-pip-fill {
+  background-color: var(--border);
+}
+.anim-pip > .anim-pip-fill[data-done]::after,
+.anim-pip[aria-current="step"] > .anim-pip-fill::after {
+  transform: scaleX(1);
+}
+.anim[data-playing="true"] .anim-pip[aria-current="step"] > .anim-pip-fill[data-run]::after {
+  animation: anim-pip linear both;
+  animation-duration: inherit;
+}
+@keyframes anim-pip {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (pointer: coarse) {
+  .anim-pip {
+    height: 44px;
+  }
+}
+
+.anim-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 2.5rem;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+.anim-count {
+  flex: none;
+  min-width: 1.5em;
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.anim-caption-text {
+  animation: anim-caption 320ms var(--ease-standard) both;
+}
+@keyframes anim-caption {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Motion. Every primitive moves with the same transition; data-instant (set
+   while resting before the first play and when a loop restarts) jumps.
+   -------------------------------------------------------------------------- */
+
+.anim .a-t {
+  transition-property: transform, opacity, fill, stroke, fill-opacity;
+  transition-duration: var(--duration-move);
+  transition-timing-function: var(--ease-standard);
+}
+.anim .a-draw {
+  transition:
+    stroke-dashoffset var(--duration-draw) var(--ease-draw),
+    opacity var(--duration-move) var(--ease-standard);
+}
+.anim[data-instant] .a-t,
+.anim[data-instant] .a-draw,
+.anim[data-instant] .anim-caption-text {
+  transition: none !important;
+  animation: none !important;
+}
+.anim .a-flow {
+  animation: a-flow 1.4s linear infinite;
+}
+.anim[data-playing="false"] .a-flow {
+  animation-play-state: paused;
+}
+@keyframes a-flow {
+  to {
+    stroke-dashoffset: -0.07;
+  }
+}
+/* A shape that a step creates fades in when it mounts (opacity only: its
+   position lives in `transform`). */
+.anim .a-enter {
+  animation: a-enter var(--duration-move) var(--ease-standard) backwards;
+}
+@keyframes a-enter {
+  from {
+    opacity: 0;
+  }
+}
+.anim .a-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: a-pulse 1.6s var(--ease-standard) infinite;
+}
+.anim[data-playing="false"] .a-pulse {
+  animation-play-state: paused;
+}
+@keyframes a-pulse {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tones: what a shape stands for. --tone is the line and fill colour,
+   --tone-soft its tint, --tone-ink the text on the tint.
+   -------------------------------------------------------------------------- */
+
+.t-ink {
+  --tone: var(--text);
+  --tone-soft: var(--surface-2);
+}
+.t-muted {
+  --tone: var(--text-muted);
+  --tone-soft: var(--surface-2);
+}
+.t-faint {
+  --tone: var(--border-strong);
+  --tone-soft: var(--surface-2);
+}
+.t-language {
+  --tone: var(--language);
+  --tone-soft: var(--language-soft);
+}
+.t-vision {
+  --tone: var(--vision);
+  --tone-soft: var(--vision-soft);
+}
+.t-action {
+  --tone: var(--action);
+  --tone-soft: var(--action-soft);
+}
+.t-accent {
+  --tone: var(--accent);
+  --tone-soft: var(--accent-soft);
+}
+.t-mark {
+  --tone: color-mix(in srgb, var(--mark) 70%, var(--text));
+  --tone-soft: var(--mark);
+  --tone-ink: var(--on-mark);
+}
+.t-success {
+  --tone: var(--success);
+  --tone-soft: color-mix(in srgb, var(--success) 14%, var(--surface));
+}
+.t-failure {
+  --tone: var(--failure);
+  --tone-soft: color-mix(in srgb, var(--failure) 14%, var(--surface));
+}
+
+.a-fill {
+  fill: var(--tone, var(--text));
+}
+.a-stroke {
+  stroke: var(--tone, var(--text));
+}
+.a-fill-soft {
+  fill: var(--tone-soft, var(--surface-2));
+}
+.a-fill-surface {
+  fill: var(--surface);
+}
+.a-label {
+  fill: var(--tone, var(--text-muted));
+  font-family: var(--font-sans);
+}
+.a-label-strong {
+  fill: var(--text);
+}
+.a-mono {
+  font-family: var(--font-mono);
+}
+
+/* Chips */
+.chip-body {
+  stroke-width: 1.5;
+}
+.chip-soft .chip-body {
+  fill: var(--tone-soft);
+  stroke: var(--tone);
+}
+.chip-soft .chip-text {
+  fill: var(--tone-ink, var(--text));
+}
+.chip-solid .chip-body {
+  fill: var(--tone);
+  stroke: var(--tone);
+}
+.chip-solid .chip-text {
+  fill: var(--surface);
+}
+.chip-outline .chip-body {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+}
+.chip-outline .chip-text {
+  fill: var(--text);
+}
+.chip-ring {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 3;
+}
+.chip-sub {
+  fill: var(--text-faint);
+}
+
+/* Boxes */
+.box-body {
+  fill: var(--surface);
+  stroke: var(--tone);
+  stroke-width: 1.5;
+}
+.box-filled .box-body {
+  fill: var(--tone-soft);
+}
+.box-active .box-body {
+  fill: var(--mark-soft);
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.box-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+}
+.box-sub {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.cell-outline {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.bar-grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.bar-grow-x {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+}
+
+/* The robot */
+.arm .arm-link {
+  stroke: var(--tone);
+  opacity: 0.92;
+}
+.thing-ring {
+  fill: var(--mark);
+  opacity: 0.85;
+}

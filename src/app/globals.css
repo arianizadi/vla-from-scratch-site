@@ -3,41 +3,49 @@
 /* The figure frame, the figure controls and the placeholder sketches (src/figures). */
 @import "../figures/kit/kit.css" layer(components);
 @import "../figures/placeholder/placeholder.css" layer(components);
+/* The explanation animations (src/animations) and the short lesson layout. */
+@import "../animations/animations.css" layer(components);
+@import "../components/lesson/lesson.css" layer(components);
 
 /* ==========================================================================
-   Design tokens (DESIGN.md, section 2).
+   Design tokens (DESIGN.md, section 2): "ink and signal".
+   Cool paper and ink for everything structural; colour only as signal:
+   language blue, vision teal, action orange, a highlighter for "now", and a
+   violet for whatever the reader can press.
+
    Light values on :root. The dark values appear twice on purpose: once for an
    explicit choice (data-theme="dark", set by the theme toggle) and once for
    the system preference when no choice is stored. Keep the two blocks equal.
+   Every value is a plain hex: client code reads them with readToken().
    ========================================================================== */
 
 :root {
   color-scheme: light;
 
-  --bg: #f4f6f8;
+  --bg: #f3f4f7;
   --surface: #ffffff;
-  --surface-2: #e9edf2;
-  --text: #141d2b;
-  --text-muted: #48566a;
-  --text-faint: #5a687b;
-  --border: #cdd5df;
-  --border-strong: #728197;
-  --grid: #e3e8ee;
-  --accent: #2a43a6;
-  --accent-hover: #1c2f7d;
-  --accent-soft: #e4e9f8;
+  --surface-2: #e9ebf1;
+  --text: #15171e;
+  --text-muted: #4e5563;
+  --text-faint: #5f6676;
+  --border: #dadde5;
+  --border-strong: #868d9c;
+  --grid: #e4e7ee;
+  --accent: #4f2fe0;
+  --accent-hover: #3a1db8;
+  --accent-soft: #ece8fd;
   --on-accent: #ffffff;
-  --mark: #ffd84d;
-  --on-mark: #141d2b;
+  --mark: #ffd43b;
+  --on-mark: #15171e;
 
-  /* Modalities: schematic figures only, always with a label. */
-  --vision: #00929b;
-  --language: #2b62d9;
-  --action: #c2500e;
+  /* Modalities: what a thing is made of. Always with a label. */
+  --vision: #0a8f80;
+  --language: #2d5be3;
+  --action: #dc5317;
 
   /* States: always with a glyph and a word. */
-  --success: #177245;
-  --failure: #b83227;
+  --success: #12805a;
+  --failure: #c2362b;
   --warning: #8f5a00;
 
   /* Data series, fixed order, never cycled. Data charts only. */
@@ -65,25 +73,25 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #0c1726;
-  --surface: #132237;
-  --surface-2: #1b2e48;
-  --text: #e3ebf4;
-  --text-muted: #a5b5c9;
-  --text-faint: #8a9cb3;
-  --border: #27405e;
-  --border-strong: #6583a6;
-  --grid: #18293f;
-  --accent: #93b7ff;
-  --accent-hover: #bcd3ff;
-  --accent-soft: #1a2f52;
-  --on-accent: #0c1726;
-  --mark: #ffd84d;
-  --on-mark: #0c1726;
+  --bg: #10131a;
+  --surface: #181c25;
+  --surface-2: #232835;
+  --text: #eceef3;
+  --text-muted: #aab1c0;
+  --text-faint: #8f97a8;
+  --border: #2a303d;
+  --border-strong: #5f6879;
+  --grid: #1f2430;
+  --accent: #b3a3ff;
+  --accent-hover: #d0c6ff;
+  --accent-soft: #2a2450;
+  --on-accent: #10131a;
+  --mark: #ffd43b;
+  --on-mark: #10131a;
 
-  --vision: #1fa7a0;
-  --language: #5b8def;
-  --action: #d9742c;
+  --vision: #2cc2ae;
+  --language: #7096ff;
+  --action: #ff8b4d;
 
   --success: #4fc48d;
   --failure: #ff8375;
@@ -96,7 +104,7 @@
   --series-5: #9c7cf0;
   --series-6: #d6609c;
 
-  --seq-1: #132237;
+  --seq-1: #181c25;
   --seq-2: #1f3a66;
   --seq-3: #2c5299;
   --seq-4: #4a77d4;
@@ -112,25 +120,25 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --bg: #0c1726;
-    --surface: #132237;
-    --surface-2: #1b2e48;
-    --text: #e3ebf4;
-    --text-muted: #a5b5c9;
-    --text-faint: #8a9cb3;
-    --border: #27405e;
-    --border-strong: #6583a6;
-    --grid: #18293f;
-    --accent: #93b7ff;
-    --accent-hover: #bcd3ff;
-    --accent-soft: #1a2f52;
-    --on-accent: #0c1726;
-    --mark: #ffd84d;
-    --on-mark: #0c1726;
+    --bg: #10131a;
+    --surface: #181c25;
+    --surface-2: #232835;
+    --text: #eceef3;
+    --text-muted: #aab1c0;
+    --text-faint: #8f97a8;
+    --border: #2a303d;
+    --border-strong: #5f6879;
+    --grid: #1f2430;
+    --accent: #b3a3ff;
+    --accent-hover: #d0c6ff;
+    --accent-soft: #2a2450;
+    --on-accent: #10131a;
+    --mark: #ffd43b;
+    --on-mark: #10131a;
 
-    --vision: #1fa7a0;
-    --language: #5b8def;
-    --action: #d9742c;
+    --vision: #2cc2ae;
+    --language: #7096ff;
+    --action: #ff8b4d;
 
     --success: #4fc48d;
     --failure: #ff8375;
@@ -143,7 +151,7 @@
     --series-5: #9c7cf0;
     --series-6: #d6609c;
 
-    --seq-1: #132237;
+    --seq-1: #181c25;
     --seq-2: #1f3a66;
     --seq-3: #2c5299;
     --seq-4: #4a77d4;
@@ -157,6 +165,12 @@
 }
 
 :root {
+  /* Soft tints of the signal colours, for chip fills and highlights. */
+  --language-soft: color-mix(in srgb, var(--language) 14%, var(--surface));
+  --vision-soft: color-mix(in srgb, var(--vision) 14%, var(--surface));
+  --action-soft: color-mix(in srgb, var(--action) 14%, var(--surface));
+  --mark-soft: color-mix(in srgb, var(--mark) 45%, var(--surface));
+
   /* Shiki's CSS-variable theme, mapped to the syntax colours above. */
   --shiki-foreground: var(--text);
   --shiki-background: transparent;
@@ -170,12 +184,22 @@
   --shiki-token-comment: var(--text-faint);
   --shiki-token-link: var(--accent);
 
-  /* Motion (DESIGN.md, section 6). */
+  /* Motion (DESIGN.md, section 6). One language for the interface and the
+     explanation animations (src/animations/motion.ts mirrors these). */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --ease-draw: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --duration-micro: 100ms;
   --duration-interface: 180ms;
+  --duration-move: 600ms;
+  --duration-draw: 800ms;
+
+  /* Shape. Radius follows hierarchy: stage > plate > control > chip. */
+  --radius-stage: 20px;
+  --radius-card: 14px;
+  --radius-ctl: 10px;
+  --radius-chip: 6px;
 
   /* Layout. */
   --header-height: 56px;
@@ -211,9 +235,13 @@
   --color-failure: var(--failure);
   --color-warning: var(--warning);
 
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Atkinson Hyperlegible Next for reading and the interface (the old serif
+     role maps to it too), Bricolage Grotesque for display, Atkinson
+     Hyperlegible Mono for tokens and code. */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Type scale in px; each step carries its line height. */
   --text-*: initial;
@@ -237,16 +265,24 @@
   --text-36--line-height: 2.5rem;
   --text-44: 2.75rem;
   --text-44--line-height: 3rem;
+  --text-56: 3.5rem;
+  --text-56--line-height: 3.5rem;
+  --text-72: 4.5rem;
+  --text-72--line-height: 4.375rem;
 
   --radius-*: initial;
-  --radius-plate: 2px;
-  --radius-control: 3px;
+  --radius-plate: 12px;
+  --radius-control: 8px;
+  --radius-stage: 20px;
+  --radius-card: 14px;
+  --radius-chip: 6px;
+  --radius-pill: 999px;
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Archivo's width axis, set with font-stretch (never narrower than 80%). */
+/* Bricolage Grotesque's width axis, set with font-stretch on display type (75% to 100%). The body face has no width axis and ignores it. */
 @utility stretch-80 {
   font-stretch: 80%;
 }
@@ -260,14 +296,24 @@
   font-stretch: 95%;
 }
 
-/* Labels, badges, axis text: Archivo 500, 80% wide, 13/17, tabular lining figures. */
+/* Labels, badges, axis text: body face 600, 13/17, tabular lining figures, sentence case. */
 @utility label {
   font-family: var(--font-sans);
-  font-weight: 500;
-  font-stretch: 80%;
+  font-weight: 600;
   font-size: 0.8125rem;
   line-height: 1.0625rem;
+  letter-spacing: 0.005em;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Display type: Bricolage at its large optical size, slightly condensed and tight. */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-optical-sizing: auto;
+  font-stretch: 88%;
+  letter-spacing: -0.025em;
+  line-height: 0.98;
 }
 
 /* The page gutters: 16px, 24px from 640px, 32px from 1024px; page max 1360px. */
@@ -309,9 +355,9 @@
      air. Below 1024px a chapter page also has its 44px section bar. Elements
      carry no scroll-margin of their own; the two would add up. */
   html {
-    scroll-padding-top: 116px;
+    scroll-padding-top: 120px;
     @media (min-width: 1024px) {
-      scroll-padding-top: 80px;
+      scroll-padding-top: 88px;
     }
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -322,8 +368,10 @@
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 1rem;
-    line-height: 1.375rem;
+    line-height: 1.5rem;
     font-synthesis: none;
+    font-variant-numeric: lining-nums;
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -331,6 +379,21 @@
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Headings use the display face; utilities set the size. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
 
   ::selection {
@@ -342,8 +405,8 @@
   mark {
     background-color: var(--mark);
     color: var(--on-mark);
-    outline: 1px solid var(--text);
-    padding-inline: 2px;
+    border-radius: 3px;
+    padding-inline: 3px;
   }
 
   dialog {
@@ -371,53 +434,58 @@
    ========================================================================== */
 
 @layer components {
-  /* Text links outside prose: accent, 1px underline, 3px offset. */
+  /* Text links outside prose: accent, a soft underline that firms up on hover. */
   .text-link {
     color: var(--accent);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
     text-underline-offset: 3px;
+    transition: text-decoration-color var(--duration-micro) var(--ease-standard);
   }
   .text-link:hover {
     color: var(--accent-hover);
+    text-decoration-color: currentColor;
   }
 
-  /* Buttons: 3px radius, no shadow, no lift. */
+  /* Buttons: pills. Primary is ink on paper; it turns violet under the pointer. */
   .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-height: 44px;
-    padding: 0 20px;
+    padding: 0 22px;
     border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    background-color: transparent;
+    border-radius: 999px;
+    background-color: var(--surface);
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 1rem;
     font-weight: 600;
-    font-stretch: 95%;
     line-height: 1.375rem;
     text-decoration: none;
     cursor: pointer;
     transition:
       background-color var(--duration-micro) var(--ease-standard),
       border-color var(--duration-micro) var(--ease-standard),
-      color var(--duration-micro) var(--ease-standard);
+      color var(--duration-micro) var(--ease-standard),
+      transform var(--duration-interface) var(--ease-standard);
   }
   .button:hover {
     border-color: var(--text);
-    background-color: var(--surface);
+  }
+  .button:active {
+    transform: scale(0.97);
   }
   .button-primary {
-    border-color: var(--accent);
-    background-color: var(--accent);
-    color: var(--on-accent);
+    border-color: var(--text);
+    background-color: var(--text);
+    color: var(--bg);
   }
   .button-primary:hover {
-    border-color: var(--accent-hover);
-    background-color: var(--accent-hover);
+    border-color: var(--accent);
+    background-color: var(--accent);
     color: var(--on-accent);
   }
   .button-small {
@@ -636,10 +704,9 @@
      ------------------------------------------------------------------------ */
 
   .prose {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
     font-size: 1.0625rem;
     line-height: 1.75rem;
-    font-optical-sizing: auto;
     color: var(--text);
     overflow-wrap: break-word;
   }
@@ -672,14 +739,16 @@
     color: var(--accent);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
     text-underline-offset: 3px;
   }
   .prose a:hover {
     color: var(--accent-hover);
+    text-decoration-color: currentColor;
   }
 
   .prose strong {
-    font-weight: 650;
+    font-weight: 700;
   }
 
   /* Headings: Archivo. An h2 sits in a .section-head that opens a numbered
@@ -689,8 +758,8 @@
   .prose h4 {
     position: relative;
     margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 650;
     color: var(--text);
   }
   .prose .section-head {
@@ -703,9 +772,10 @@
     margin-top: 0;
   }
   .prose h2 {
-    font-size: 1.75rem;
-    line-height: 2.125rem;
-    font-stretch: 95%;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-stretch: 90%;
+    letter-spacing: -0.02em;
   }
   .prose h3 {
     margin-top: 40px;
@@ -872,7 +942,7 @@
   /* Inline code and tensor shapes: Plex Mono on surface-2. */
   .prose :not(pre) > code {
     padding: 1px 5px;
-    border-radius: 2px;
+    border-radius: 5px;
     background-color: var(--surface-2);
     font-family: var(--font-mono);
     font-size: 0.88em;
@@ -896,8 +966,9 @@
      ------------------------------------------------------------------------ */
 
   .code-block {
+    overflow: hidden;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-card);
     background-color: var(--surface);
   }
   .code-block-strip {
@@ -957,7 +1028,7 @@
   .table-scroll {
     overflow-x: auto;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-card);
     background-color: var(--surface);
   }
   .table-scroll:focus-visible {
@@ -1069,8 +1140,9 @@
      ------------------------------------------------------------------------ */
 
   .image-figure {
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
     background-color: var(--surface);
     font-family: var(--font-sans);
   }

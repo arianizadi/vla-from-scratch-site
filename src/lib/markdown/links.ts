@@ -13,6 +13,7 @@
  */
 
 import path from "node:path";
+import { chapterHref } from "@/lib/lesson-files";
 import { repoUrl, site } from "@/lib/site";
 
 export type LinkKind = "chapter" | "page" | "asset" | "repo" | "external" | "anchor";
@@ -50,7 +51,7 @@ export function resolveLink(url: string): ResolvedLink {
   if (repoPath.startsWith("..")) return { kind: "external", href: url };
 
   const chapter = CHAPTER_PATH.exec(repoPath);
-  if (chapter) return { kind: "chapter", href: `/learn/${chapter[1]}${hash}`, slug: chapter[1] };
+  if (chapter) return { kind: "chapter", href: chapterHref(chapter[1], hash), slug: chapter[1] };
   if (repoPath === LAB_NOTEBOOK) return { kind: "page", href: `/lab${hash}` };
   if (repoPath.startsWith(IMAGE_DIR)) {
     return { kind: "asset", href: `/tutorial/img/${repoPath.slice(IMAGE_DIR.length)}` };
