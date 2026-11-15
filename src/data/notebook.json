@@ -1637,7 +1637,31 @@
           "pruned": "84/100",
           "source": "Checkpoint 6 of 11 of a 20M-sample run from 4000 demonstrations, averaged weights.",
           "quotes": ["prunes 84/100 at checkpoint 6 (12 out of time, the flower damaged in 4; successful episodes take about 660"]
+        },
+        "memory": {
+          "pruned": [[70, 100], [89, 100]],
+          "without": [[79, 100], [56, 100]],
+          "quotes": [
+            "| Frames t-20 and t (1 s back), no previous action (`dp_vit_lang_frames_1s`), seed 42 | `dp_vit_lang_frames_1s_prune2k_rs_tail10_20m` | 77/100 / 70/100 | 2 | about 700 | 81/100 / 79/100 |",
+            "| The same, seed 43 | `..._seed43` | 86/100 / 89/100 | 4 | about 680 | 44/100 / 56/100 |"
+          ],
+          "film": {
+            "name": "flower-step8-prune-memory",
+            "pruned": "89/100",
+            "source": "Final checkpoint of a 20M-sample run whose policy also sees the frame from one second earlier (seed 43), averaged weights."
+          }
         }
+      },
+      "named": {
+        "section": "Step 9: named shoots (`prune_named`)",
+        "trained": [[53, 100], [62, 100], [67, 100]],
+        "heldout": [[28, 100], [36, 100], [41, 100]],
+        "quotes": [
+          "Final checkpoint, averaged weights, 100 layouts each",
+          "| `dp_vit_lang_reactive` (49M), seed 42 | 20M | 53 (9 / 20 / 18) | 28 (12 / 30 / 30) | 11 / 14 / 3 |",
+          "| the same, seed 43 | 20M | 62 (7 / 5 / 26) | 36 (28 / 6 / 30) | 7 / 21 / 8 |",
+          "| the same, seed 44 | 20M | 67 (2 / 14 / 17) | 41 (22 / 14 / 23) | 9 / 24 / 8 |"
+        ]
       }
     }
   }

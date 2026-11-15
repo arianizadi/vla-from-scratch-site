@@ -505,6 +505,18 @@ export const pruning = {
     pruned: countsOf(prune.full.pruned),
     pruned4k: countsOf(prune.full.pruned4k),
     film: { name: prune.full.film.name, result: prune.full.film.pruned, source: prune.full.film.source },
+    /** A frame from one second earlier as memory: seeds 42 and 43, final averaged weights, and the same seeds without it. */
+    memory: {
+      pruned: countsOf(prune.full.memory.pruned),
+      without: countsOf(prune.full.memory.without),
+      film: { name: prune.full.memory.film.name, result: prune.full.memory.film.pruned, source: prune.full.memory.film.source },
+    },
+  },
+  /** Step 9: the instruction names the shoot. Small policy, 20M samples, seeds 42-44, final averaged weights. */
+  named: {
+    section: prune.named.section,
+    trained: countsOf(prune.named.trained),
+    heldout: countsOf(prune.named.heldout),
   },
 };
 

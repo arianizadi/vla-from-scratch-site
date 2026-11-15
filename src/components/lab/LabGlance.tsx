@@ -23,7 +23,11 @@ export function LabGlance() {
   const one = span(pruning.one.pruned);
   const turn = span(pruning.turn.pruned);
   const full = span(pruning.full.pruned);
-  const filmed = pruning.full.film.result.split("/");
+  const memory = span(pruning.full.memory.pruned);
+  const without = pruning.full.memory.without.map((count) => count.successes);
+  const named = span(pruning.named.trained);
+  const heldout = span(pruning.named.heldout);
+  const filmed = pruning.full.memory.film.result.split("/");
 
   const results = [
     {
@@ -44,6 +48,18 @@ export function LabGlance() {
       title: "It prunes the whole plant.",
       text: "Two or three shoots: turn, cut, turn, cut. This needed a longer training run. Two of three runs land near 80; the third learned late. Most misses run out of time.",
     },
+    {
+      value: memory.value,
+      of: memory.of,
+      title: "A one-second memory helps the slow learner.",
+      text: `The robot also sees the picture from one second ago. On the training run that learned late it prunes ${pruning.full.memory.pruned[1].successes} plants instead of ${without[1]}; on the other it gets ${pruning.full.memory.pruned[0].successes} instead of ${without[0]}. A third run is queued.`,
+    },
+    {
+      value: named.value,
+      of: named.of,
+      title: "It cuts the shoot you name.",
+      text: `"Cut the lowest shoot": it picks the right one far more often than chance. With wordings it never saw it manages ${heldout.value}, because new words like "bottom" are not in its vocabulary.`,
+    },
   ];
 
   const films = [
@@ -54,10 +70,10 @@ export function LabGlance() {
       caption: `The learned policy partway through training, when it pruned ${pruning.turn.film.pruned.successes} of ${pruning.turn.film.pruned.episodes}.`,
     },
     {
-      name: pruning.full.film.name,
+      name: pruning.full.memory.film.name,
       size: [1280, 720],
-      title: "Prune the whole plant",
-      caption: `The learned policy partway through training, when it pruned ${filmed[0]} of ${filmed[1]}. Quiet stretches play at double speed.`,
+      title: "Prune the whole plant, with a one-second memory",
+      caption: `The best policy so far, which pruned ${filmed[0]} of ${filmed[1]} plants. Quiet stretches play at double speed.`,
     },
   ];
 
