@@ -28,6 +28,8 @@ export function LabGlance() {
   const named = span(pruning.named.trained);
   const heldout = span(pruning.named.heldout);
   const filmed = pruning.full.memory.film.result.split("/");
+  const reason = pruning.reasoning;
+  const percent = (count: { successes: number; episodes: number }) => Math.round((100 * count.successes) / count.episodes);
 
   const results = [
     {
@@ -55,6 +57,12 @@ export function LabGlance() {
       text: `The robot also sees the picture from one second ago. On the training run that learned late it prunes ${pruning.full.memory.pruned[1].successes} plants instead of ${without[1]}; on the other it gets ${pruning.full.memory.pruned[0].successes} instead of ${without[0]}. A third run is queued.`,
     },
     {
+      value: `${percent(reason.twoLevel)}`,
+      of: 100,
+      title: "It reasons in words, then acts.",
+      text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". A large vision-language model writes a short note (what it sees, which shoot is meant), and the small policy acts on it: ${reason.twoLevel.successes} of ${reason.twoLevel.episodes} tries, against ${percent(reason.baseline)} in 100 without the note. Swap in a wrong note and it cuts the wrong shoot, so the note really steers it. New wordings are still hard (${reason.twoLevelHeldout.successes} of ${reason.twoLevelHeldout.episodes}).`,
+    },
+    {
       value: named.value,
       of: named.of,
       title: "It cuts the shoot you name.",
@@ -63,6 +71,12 @@ export function LabGlance() {
   ];
 
   const films = [
+    {
+      name: reason.film.name,
+      size: [1280, 720],
+      title: "Reason, then act",
+      caption: `The robot's note is shown as it writes it. The last episode turns the plant to read a hidden label, remembers it, and cuts. With reasoning it solved ${reason.twoLevel.successes} of ${reason.twoLevel.episodes}; without, ${reason.baseline.successes} of ${reason.baseline.episodes}.`,
+    },
     {
       name: pruning.turn.film.name,
       size: [1920, 1080],
@@ -128,7 +142,7 @@ export function LabGlance() {
         ))}
       </div>
       <p className="prune-note">
-        In both films a script opens the jaws and pulls the arm back after the last cut, so you can see the plant.{" "}
+        In every film a script opens the jaws and pulls the arm back after the last cut, so you can see the plant.{" "}
         <Link href={`#${SECTIONS.flower.id}`} className="text-link">
           Every step toward pruning, with its numbers
         </Link>

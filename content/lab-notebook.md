@@ -1071,7 +1071,36 @@ Averaged weights per checkpoint, 1 s memory: seed 42: 8, 32, 36, 56, 63, 65, 73,
 seed that learned well without memory (70-77 against 79-81) and lifts the seed that learned late from 56 to 89, the
 best final score of any pruning run so far, holding 79-90 over its last six checkpoints. It does not make the policy
 faster (about 680-700 steps per success, as without memory, against the expert's 515): it fails less often, not
-quicker. Two seeds are not enough to call it; a third seed (44) is queued.
+quicker. Two seeds are not enough to call it; a third seed (44) is training.
+
+**Test situations and robustness.** `tutorial/test-situations.md` adds situations on top of any plant task
+(`--scenario`): changed lighting, a knocked camera, another bench, distractor objects, wind, a bumped plate, a sticky
+button. A "/test" half of each visual one is never used for training (grow lights, a camera moved 3-4 cm, the
+greenhouse, other distractors). A bug found on the way: every leaf was drawn about 29 mm from its collision box and
+turned on its side (`leaf_fix`, off by default so earlier results stay comparable). Final averaged weights, 100
+layouts per situation (successes):
+
+| Policy | plain | lighting (/test) | camera (/test) | bench (/test) | distractors (/test) | wind | bump | sticky |
+|---|---|---|---|---|---|---|---|---|
+| Step-8 baseline, old leaves (`dp_vit_lang_reactive_prune2k_rs_tail10_20m`) | 79 (74 with the leaves fixed) | 17 (0) | 4 (0) | 13 (0) | 71 (69) | 75 | 74 | 49 |
+| Same recipe, demonstrations with the leaves fixed (`..._prune2k_leaffix_20m`) | 76 | 13 (0) | 3 (0) | 19 (0) | 56 (74) | 74 | 73 | 52 |
+| Same, with a third of the demonstrations under varied lighting, camera, bench and distractors (`..._prune2k_leaffix_vis_20m`) | 5 | 2 (0) | 2 (1) | 6 (2) | 7 (11) | 4 | 7 | 4 |
+
+The policies cope with physical disturbances (wind, a bump, distractors cost 1-20) and fail when what the camera
+sees changes (lighting, camera, bench: 0-19). With the leaves drawn where they are, the policy learns sooner (60/100
+at checkpoint 2 against 2-32 for the earlier runs) but ends at the same level (76). Mixing visual variation into a
+third of the demonstrations at this budget stops the policy from learning the task at all (0-10 over all eleven
+checkpoints), so it is not a way to robustness here; gentler variation or a longer budget would be the next try. The
+sticky button costs about 25 points: the policies do not notice a press that did nothing.
+
+**Aim drills.** Seven motor drills on the bare table (`tutorial/aim-range.md`: touch, touch along a pin, stop on,
+follow, flick between, press, pinch; the expert solves each at 499-500/500), as practice for the arm. Co-trained with
+pruning (75% pruning, 25% drills, `dp_vit_lang_reactive_prune2k_aim8k_co27m`): 22/100 on pruning (66 on the drills),
+against 79 without drills. Pretrained on drills, then fine-tuned 20M on pruning
+(`dp_vit_lang_reactive_prune2k_from_aim8k_20m`): 74/100, ahead early (23 at its first pruning checkpoint, where the
+earlier runs were at 0) and level at the end. Under the situations: wind 69, bump 64, sticky 32, lighting 17, camera
+3, against 75, 74, 49, 17, 4 without drills. The drills do not help pruning; avoidance drills (reaching into boxes,
+through gaps, around a hot zone) are built and collected but not trained.
 
 ### Step 9: named shoots (`prune_named`)
 
@@ -1110,6 +1139,51 @@ in a day (2.5M samples, about 60 samples/s against 1100), the two are level (21-
 14-18 against 20 held out), and both are still learning the motion (damage and time-outs dominate), so this budget
 cannot show whether the pretrained language model generalises better. Answering that needs Qwen at a budget where the
 small policy already reads the instruction (it was at 30-40% with training phrasings by 4-6M samples).
+
+## Reasoning in words (Phase 7, stage 1)
+
+Design and code: `tutorial/reasoning-vla.md`. Four task kinds on the step-9 plant, each needing a short chain of
+inference that a lookup from instruction words to a shoot cannot do (the best such lookup is right 42-65% of the time):
+ordinal ("cut the second shoot from the top"), conditional ("if the flower is red, cut the lowest shoot, otherwise the
+highest one"), exclusion ("cut every side shoot except the highest one") and hidden ("read the label in the pot and cut
+the shoot it names"; the label often faces away, so the plant must be turned to read it and the answer remembered).
+Held-out instructions have new sentence wordings, new combinations of trained words, or both. The scripted expert
+solves every kind 99/100 and writes a five-field note at its decision points (see / ask / so / aim / next), whose
+sub-goal names the next shoot. 8000 demonstrations with random starts and a tail of 10 (`reason_mix_8k_rs_tail10`).
+
+Two forms, against an end-to-end baseline (100 or 200 layouts, final checkpoints):
+
+| Policy | Training instructions | Held out | Wrong shoot (training / held out) |
+|---|---|---|---|
+| Baseline: `dp_vit_lang_reactive`, instruction only, 20M (`dp_vit_lang_reactive_reason8k_20m`) | 21/100 | 13/100 | 17% / 31% |
+| Plain Qwen VLA, instruction only, 2.5M (`vla_qwen_tokens_reactive_reason8k_2500k`, checkpoint 6) | 23/100 | 23/100 | 36% / 31% |
+| Two-level: Qwen3-VL-2B reasoner (`qwen_reasoner_mix8k_600k`, 600k samples) writes the note, the small policy reads its sub-goal (`dp_vit_lang_reactive_subgoal_reason8k_20m_seed43`, 20M) | **133/200** | 66/200 | 7% / 36% |
+| The same with the seed-42 fast level | 74/200 | 39/200 | 9% / 30% |
+| One model: Qwen writes the note, then its action head reads it (`vla_qwen_reason_reason8k_2500k`, 2.5M) | 14/100 | 13/100 | 4% / 19% |
+| The one model acting on the expert's notes | 56/100 | - | 0% |
+| The one model acting on the reasoner's notes (hybrid) | 17/100 | 10/100 | 7% / 25% |
+
+Per kind, training instructions (baseline per-kind runs 100 each; two-level from its 200-episode mix):
+
+| Kind | Baseline | Two-level (seed-43 fast level) | Two-level held out |
+|---|---|---|---|
+| ordinal | 22 | 32/49 | 6/49 |
+| conditional | 17 | 47/57 | 35/57 |
+| exclusion | 13 | 19/49 | 9/49 |
+| hidden | 14 | 35/45 | 16/45 |
+
+On hidden-label plants where the card is out of view when the robot cuts, the two-level policy solves 26/33 and the
+baseline 1/11: the note carries what the camera no longer shows. **The text drives the action:** with the sub-goal
+swapped for another shoot's, the fast level (seed 42) solves 5/200 and cuts the shoot the wrong note names in 50%; the
+one model with swapped notes solves 0/100 and cuts the wrong shoot in 77%. The fast level alone, given the expert's
+sub-goals, solves 75/100 (seed 43) and 86/200 (seed 42), so the reasoner costs about 9 points on training
+instructions; the fast level's seed decides most of the gap between the two two-level rows. Weak points: held-out
+instructions (the reasoner restates a new sentence wording correctly only 32-36% of the time, and on new
+combinations restates correctly but works out the wrong shoot), and exclusion, where its sub-goal is right only 28% of
+the time because it loses track of which shoots are cut. The one model acts well on good notes but writes poor ones,
+and the reasoner's notes do not suit its head (its "aim" field is right 18% of the time, the sub-goal 54%). Running: the
+reasoner continued for 900k samples with paraphrased training instructions, and the same without paraphrases as the
+control.
 
 ## Throughput
 

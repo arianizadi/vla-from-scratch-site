@@ -518,6 +518,16 @@ export const pruning = {
     trained: countsOf(prune.named.trained),
     heldout: countsOf(prune.named.heldout),
   },
+  /** Phase 7 stage 1: a two-level reasoning policy against the same small policy reading the instruction alone. */
+  reasoning: {
+    section: prune.reasoning.section,
+    twoLevel: countOf(prune.reasoning.twoLevel),
+    twoLevelHeldout: countOf(prune.reasoning.twoLevelHeldout),
+    baseline: countOf(prune.reasoning.baseline),
+    hiddenOutOfView: countOf(prune.reasoning.hiddenOutOfView),
+    hiddenOutOfViewBaseline: countOf(prune.reasoning.hiddenOutOfViewBaseline),
+    film: { name: prune.reasoning.film.name },
+  },
 };
 
 /** The flower steps in the notebook's order, for the headings and their anchors. */

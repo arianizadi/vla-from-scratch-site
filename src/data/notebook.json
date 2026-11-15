@@ -1662,6 +1662,21 @@
           "| the same, seed 43 | 20M | 62 (7 / 5 / 26) | 36 (28 / 6 / 30) | 7 / 21 / 8 |",
           "| the same, seed 44 | 20M | 67 (2 / 14 / 17) | 41 (22 / 14 / 23) | 9 / 24 / 8 |"
         ]
+      },
+      "reasoning": {
+        "section": "Reasoning in words (Phase 7, stage 1)",
+        "twoLevel": [133, 200],
+        "twoLevelHeldout": [66, 200],
+        "baseline": [21, 100],
+        "hiddenOutOfView": [26, 33],
+        "hiddenOutOfViewBaseline": [1, 11],
+        "quotes": [
+          "| Baseline: `dp_vit_lang_reactive`, instruction only, 20M (`dp_vit_lang_reactive_reason8k_20m`) | 21/100 | 13/100 | 17% / 31% |",
+          "the small policy reads its sub-goal (`dp_vit_lang_reactive_subgoal_reason8k_20m_seed43`, 20M) | **133/200** | 66/200 | 7% / 36% |",
+          "the two-level policy solves 26/33 and the",
+          "baseline 1/11: the note carries what the camera no longer shows"
+        ],
+        "film": { "name": "reasoning-two-level" }
       }
     }
   }
