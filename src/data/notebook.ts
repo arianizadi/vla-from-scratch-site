@@ -531,6 +531,9 @@ export const pruning = {
     v2: {
       trained: countOf(prune.reasoning.v2.trained),
       heldout: countOf(prune.reasoning.v2.heldout),
+      /** The configuration in the film (no reset): its own numbers. */
+      filmed: countOf(prune.reasoning.v2.filmed),
+      filmedHeldout: countOf(prune.reasoning.v2.filmedHeldout),
       stage1: countOf(prune.reasoning.v2.stage1),
       stage1Heldout: countOf(prune.reasoning.v2.stage1Heldout),
       film: { name: prune.reasoning.v2.film.name },

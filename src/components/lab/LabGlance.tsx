@@ -60,7 +60,7 @@ export function LabGlance() {
       value: `${percent(reason.v2.trained)}`,
       of: 100,
       title: "It reasons, then acts.",
-      text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". Small trained eyes list the plant's parts and a memory keeps them (even a label that has turned out of view); a language model rewrites the instruction as a tiny program; code picks the shoot, and the small policy cuts it. ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} tries, and ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with wordings it never saw. Without reasoning: ${percent(reason.baseline)} in 100.`,
+      text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". Small trained eyes list the plant's parts and a memory keeps them (even a label that has turned out of view); a language model rewrites the instruction as a tiny program; code picks the shoot, and the small policy cuts it (sent back to start if it heads for a shoot it cannot reach). ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} tries, and ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with wordings it never saw. Without reasoning: ${percent(reason.baseline)} in 100.`,
     },
     {
       value: named.value,
@@ -75,7 +75,7 @@ export function LabGlance() {
       name: reason.v2.film.name,
       size: [1280, 720],
       title: "Eyes, memory and a written program",
-      caption: `The program it writes and what it remembers are shown as it works, including a wording it never saw and a label it reads, turns away from, and still remembers. ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} with trained wordings, ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with new ones.`,
+      caption: `The program it writes and what it remembers are shown as it works, including a wording it never saw and a label it reads, turns away from, and still remembers. This version, before the reset was added, solved ${reason.v2.filmed.successes} of ${reason.v2.filmed.episodes} with trained wordings and ${reason.v2.filmedHeldout.successes} of ${reason.v2.filmedHeldout.episodes} with new ones.`,
     },
     {
       name: reason.film.name,
