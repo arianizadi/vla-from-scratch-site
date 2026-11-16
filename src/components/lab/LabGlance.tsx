@@ -57,10 +57,10 @@ export function LabGlance() {
       text: `The robot also sees the picture from one second ago. Over three training runs it prunes ${pruning.full.memory.pruned.map((c) => c.successes).join(", ")} plants out of 100, against ${without.join(", ")} without that memory: the best pruning scores so far.`,
     },
     {
-      value: `${percent(reason.twoLevel)}`,
+      value: `${percent(reason.v2.trained)}`,
       of: 100,
-      title: "It reasons in words, then acts.",
-      text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". A large vision-language model writes a short note (what it sees, which shoot is meant), and the small policy acts on it: ${reason.twoLevel.successes} of ${reason.twoLevel.episodes} tries, against ${percent(reason.baseline)} in 100 without the note. Swap in a wrong note and it cuts the wrong shoot, so the note really steers it. New wordings are still hard (${reason.twoLevelHeldout.successes} of ${reason.twoLevelHeldout.episodes}).`,
+      title: "It reasons, then acts.",
+      text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". Small trained eyes list the plant's parts and a memory keeps them (even a label that has turned out of view); a language model rewrites the instruction as a tiny program; code picks the shoot, and the small policy cuts it. ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} tries, and ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with wordings it never saw. Without reasoning: ${percent(reason.baseline)} in 100.`,
     },
     {
       value: named.value,
@@ -72,9 +72,15 @@ export function LabGlance() {
 
   const films = [
     {
+      name: reason.v2.film.name,
+      size: [1280, 720],
+      title: "Eyes, memory and a written program",
+      caption: `The program it writes and what it remembers are shown as it works, including a wording it never saw and a label it reads, turns away from, and still remembers. ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} with trained wordings, ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with new ones.`,
+    },
+    {
       name: reason.film.name,
       size: [1280, 720],
-      title: "Reason, then act",
+      title: "First version: notes in words",
       caption: `The robot's note is shown as it writes it. The last episode turns the plant to read a hidden label, remembers it, and cuts. With reasoning it solved ${reason.twoLevel.successes} of ${reason.twoLevel.episodes}; without, ${reason.baseline.successes} of ${reason.baseline.episodes}.`,
     },
     {

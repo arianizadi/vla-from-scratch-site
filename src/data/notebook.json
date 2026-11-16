@@ -1677,7 +1677,19 @@
           "the two-level policy solves 26/33 and the",
           "baseline 1/11: the note carries what the camera no longer shows"
         ],
-        "film": { "name": "reasoning-two-level" }
+        "film": { "name": "reasoning-two-level" },
+        "v2": {
+          "section": "Architecture v2: eyes, a written program, and memory (Phase 7, stage 2)",
+          "trained": [169, 200],
+          "heldout": [148, 200],
+          "stage1": [133, 200],
+          "stage1Heldout": [66, 200],
+          "quotes": [
+            "| **v2, the eyes' scene, written program, memory options on** (`--slow_unseen --slow_revoke 3 --slow_give_up 80`) | **169/200** | **148/200** |",
+            "| Stage 1: Qwen reasoner writes notes from pixels | 133/200 | 66/200 |"
+          ],
+          "film": { "name": "reasoning-v2" }
+        }
       }
     }
   }

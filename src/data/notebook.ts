@@ -527,6 +527,14 @@ export const pruning = {
     hiddenOutOfView: countOf(prune.reasoning.hiddenOutOfView),
     hiddenOutOfViewBaseline: countOf(prune.reasoning.hiddenOutOfViewBaseline),
     film: { name: prune.reasoning.film.name },
+    /** Stage 2: eyes, scene memory and a written program, on the same fast level. */
+    v2: {
+      trained: countOf(prune.reasoning.v2.trained),
+      heldout: countOf(prune.reasoning.v2.heldout),
+      stage1: countOf(prune.reasoning.v2.stage1),
+      stage1Heldout: countOf(prune.reasoning.v2.stage1Heldout),
+      film: { name: prune.reasoning.v2.film.name },
+    },
   },
 };
 
