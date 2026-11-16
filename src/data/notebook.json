@@ -1639,11 +1639,12 @@
           "quotes": ["prunes 84/100 at checkpoint 6 (12 out of time, the flower damaged in 4; successful episodes take about 660"]
         },
         "memory": {
-          "pruned": [[70, 100], [89, 100]],
-          "without": [[79, 100], [56, 100]],
+          "pruned": [[70, 100], [89, 100], [90, 100]],
+          "without": [[79, 100], [56, 100], [78, 100]],
           "quotes": [
             "| Frames t-20 and t (1 s back), no previous action (`dp_vit_lang_frames_1s`), seed 42 | `dp_vit_lang_frames_1s_prune2k_rs_tail10_20m` | 77/100 / 70/100 | 2 | about 700 | 81/100 / 79/100 |",
-            "| The same, seed 43 | `..._seed43` | 86/100 / 89/100 | 4 | about 680 | 44/100 / 56/100 |"
+            "| The same, seed 43 | `..._seed43` | 86/100 / 89/100 | 4 | about 680 | 44/100 / 56/100 |",
+            "| The same, seed 44 | `..._seed44` | 93/100 / 90/100 | 1 | about 670 | 80/100 / 78/100 |"
           ],
           "film": {
             "name": "flower-step8-prune-memory",

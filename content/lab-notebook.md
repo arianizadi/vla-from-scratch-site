@@ -1064,14 +1064,16 @@ demonstrations, 20M samples), final checkpoint, trained / averaged weights, succ
 | Frames t-1 and t, no previous action (`dp_vit_lang_frames`) | `dp_vit_lang_frames_prune2k_rs_tail10_20m` | 53/100 / 35/100 | 1 | about 810 | 81/100 / 79/100 |
 | Frames t-20 and t (1 s back), no previous action (`dp_vit_lang_frames_1s`), seed 42 | `dp_vit_lang_frames_1s_prune2k_rs_tail10_20m` | 77/100 / 70/100 | 2 | about 700 | 81/100 / 79/100 |
 | The same, seed 43 | `..._seed43` | 86/100 / 89/100 | 4 | about 680 | 44/100 / 56/100 |
+| The same, seed 44 | `..._seed44` | 93/100 / 90/100 | 1 | about 670 | 80/100 / 78/100 |
 
 Averaged weights per checkpoint, 1 s memory: seed 42: 8, 32, 36, 56, 63, 65, 73, 73, 69, 76, 70; seed 43: 13, 50, 78,
-77, 77, 84, 87, 79, 90, 80, 89. The previous action breaks the policy again (it repeats its last action, as with
+77, 77, 84, 87, 79, 90, 80, 89; seed 44: 1, 37, 49, 74, 85, 87, 91, 91, 91, 93, 90. The previous action breaks the policy again (it repeats its last action, as with
 `pick_target`), and the previous frame alone does worse than no memory. A frame from a second ago does not hurt the
-seed that learned well without memory (70-77 against 79-81) and lifts the seed that learned late from 56 to 89, the
-best final score of any pruning run so far, holding 79-90 over its last six checkpoints. It does not make the policy
+seed that learned well without memory (70-77 against 79-81), lifts the seed that learned late from 56 to 89, and
+lifts seed 44 from 78 to 90 (93 trained, 1 flower touched): over three seeds 70/89/90 against 79/56/78 without memory,
+the best final scores of any pruning runs so far. It does not make the policy
 faster (about 680-700 steps per success, as without memory, against the expert's 515): it fails less often, not
-quicker. Two seeds are not enough to call it; a third seed (44) is training.
+quicker. Over three seeds the memory helps on average (83 against 71) and on two of the three.
 
 **Test situations and robustness.** `tutorial/test-situations.md` adds situations on top of any plant task
 (`--scenario`): changed lighting, a knocked camera, another bench, distractor objects, wind, a bumped plate, a sticky
@@ -1181,9 +1183,19 @@ instructions; the fast level's seed decides most of the gap between the two two-
 instructions (the reasoner restates a new sentence wording correctly only 32-36% of the time, and on new
 combinations restates correctly but works out the wrong shoot), and exclusion, where its sub-goal is right only 28% of
 the time because it loses track of which shoots are cut. The one model acts well on good notes but writes poor ones,
-and the reasoner's notes do not suit its head (its "aim" field is right 18% of the time, the sub-goal 54%). Running: the
-reasoner continued for 900k samples with paraphrased training instructions, and the same without paraphrases as the
-control.
+and the reasoner's notes do not suit its head (its "aim" field is right 18% of the time, the sub-goal 54%). Continuing the reasoner for 900k more samples (from its 600k weights), with and without paraphrased
+training instructions (half the samples get one of 6-8 hand-written paraphrases that use no held-out word), and the
+seed-43 fast level, 200 layouts each:
+
+| Reasoner | Training instructions | Held out | Wrong shoot (training / held out) |
+|---|---|---|---|
+| 600k (above) | 133/200 | 66/200 | 7% / 36% |
+| + 900k without paraphrases (`qwen_reasoner_mix8k_600k_cont900k`) | **153/200** | 78/200 | 7% / 36% |
+| + 900k with paraphrases (`qwen_reasoner_mix8k_600k_para900k`) | 129/200 | 87/200 | 10% / 38% |
+
+More training alone raises both (153/200 is the best two-level result so far). Paraphrases buy 9 more held-out
+successes and cost 24 on the training instructions; held-out instructions stay well below training ones either way,
+and wrong cuts on them stay at 36-38%.
 
 ## Throughput
 

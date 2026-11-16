@@ -53,8 +53,8 @@ export function LabGlance() {
     {
       value: memory.value,
       of: memory.of,
-      title: "A one-second memory helps the slow learner.",
-      text: `The robot also sees the picture from one second ago. On the training run that learned late it prunes ${pruning.full.memory.pruned[1].successes} plants instead of ${without[1]}; on the other it gets ${pruning.full.memory.pruned[0].successes} instead of ${without[0]}. A third run is queued.`,
+      title: "A one-second memory makes it more reliable.",
+      text: `The robot also sees the picture from one second ago. Over three training runs it prunes ${pruning.full.memory.pruned.map((c) => c.successes).join(", ")} plants out of 100, against ${without.join(", ")} without that memory: the best pruning scores so far.`,
     },
     {
       value: `${percent(reason.twoLevel)}`,
