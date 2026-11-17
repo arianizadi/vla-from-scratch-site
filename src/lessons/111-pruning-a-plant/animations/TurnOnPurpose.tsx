@@ -82,7 +82,7 @@ export function TurnOnPurpose() {
 
             {/* The hand */}
             <Gripper x={CX} y={reaching ? 206 : 300} angle={180} open={reaching ? 0 : 1} tone="ink" size={0.8} />
-            <Label x={CX + 30} y={292} tone="muted" size={14} anchor="start">
+            <Label x={CX + 30} y={292} tone="muted" size={14} anchor="start" opacity={reaching ? 0 : 1}>
               arm
             </Label>
 

@@ -8,7 +8,7 @@ import { WanderWithFilm } from "./animations/WithFilm";
 
 export default defineLesson({
   slug: "111-pruning-a-plant",
-  idea: "A robot learned to prune a potted plant one small step at a time, helped by a longer training plan and hurt by examples that disagreed.",
+  idea: "A robot learned to prune a potted plant one small step at a time, helped by a longer training plan and a short memory, hurt by examples that disagreed.",
   beats: [
     {
       title: "The job: every shoot, never the flower",
@@ -17,7 +17,7 @@ export default defineLesson({
     },
     {
       title: "A ladder of small steps",
-      text: "Nobody learns to drive on the motorway. The task became three rungs. First, one shoot already facing the robot. Then one shoot facing anywhere, so the plant must turn first. Last, the whole plant: two or three shoots. Each rung adds one difficulty, and each was learned before the next.",
+      text: "Nobody learns to drive on the motorway. The task became four rungs: one shoot already facing the robot; one facing anywhere, so the plant turns first; the whole plant, two or three shoots; then only the shoot the instruction names, such as the lowest. Each rung adds one difficulty.",
       animation: PruneLadder,
     },
     {
@@ -31,8 +31,8 @@ export default defineLesson({
       animation: LongerPlan,
     },
     {
-      title: "Slow and wandering, rarely harmful",
-      text: "The robot gets there, but slowly. Between shoots it often drifts, near no shoot and no button. Most failures are a shoot still on when time runs out. It rarely hurts the flower. The honest score: about 80 plants in 100, on two of three training runs.",
+      title: "Slow and wandering; a memory helps",
+      text: "The robot gets there, but slowly. Between shoots it often drifts, near no shoot and no button, until time runs out. It rarely hurts the flower. A **memory**, an extra picture taken one second earlier, makes it fail less often, not faster: 83 plants in 100 on average, against 71.",
       animation: WanderWithFilm,
     },
     {
@@ -46,14 +46,14 @@ export default defineLesson({
     "More time is no cure for wandering. Doubling the clock pruned more plants, but the flower got touched more often too.",
     "Two training runs that differ only in their random start can end far apart: about 80 against 56. One run proves little.",
     "Picking the best saved copy of many flatters the result. Scores jump by up to 13 between neighbours, so judge the last one.",
-    "Two sets of examples that answer the same picture differently leave the robot no single move to copy. Adding them can make it worse.",
+    "A robot that follows the instructions it trained on can stumble on new words. Calling the lowest shoot the bottom one cost far more than a new sentence around a known word.",
   ],
   tips: [
     "Split a hard job into rungs that each add one difficulty, and check that the expert can climb every rung.",
     "To test whether a behaviour is on purpose, record it on new scenes and check it happens only when it should.",
     "When you change how long training is planned, compare runs after the same number of examples, not at the same save point.",
     "Before mixing in new examples, find similar moments in both sets and check that they show the same move.",
-    "Sort failures by kind before the next experiment: out of time and flower touched point to different fixes.",
+    "A memory must reach back far enough. A picture from the instant before did worse than none; one from a second earlier helped.",
   ],
   takeaway: "Climb a hard task in small rungs, give training a long enough plan, and make sure every example shows the same move in the same situation.",
   related: ["110-toward-real-tasks", "43-imitation-learning", "80-the-training-loop", "92-measuring-failure"],

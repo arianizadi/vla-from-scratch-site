@@ -100,7 +100,7 @@ export function Takeover() {
               back out
             </Label>
             <Label x={306} y={160} tone="success" size={15} anchor="start" weight={700} opacity={step >= 4 ? 1 : 0}>
-              left out ✓
+              close in too ✓
             </Label>
 
             {/* The faults, then the fixes */}

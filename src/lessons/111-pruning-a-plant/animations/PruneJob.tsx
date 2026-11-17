@@ -11,7 +11,7 @@ const FLOWER_Y = STEM_TOP - 12;
 /** Two side shoots: where each leaves the main stem, its tip, where the jaws cut it, and where it lies once cut. */
 const SHOOTS = [
   { base: [STEM_X, 206], tip: [186, 182], cut: [216, 195], rest: [150, TABLE - 3] },
-  { base: [STEM_X, 160], tip: [296, 138], cut: [265, 150], rest: [330, TABLE - 3] },
+  { base: [STEM_X, 160], tip: [296, 138], cut: [274, 147], rest: [312, TABLE - 3] },
 ] as const;
 
 /** Rotation that lays a shoot flat on the table, pointing the way it pointed. */
@@ -29,14 +29,9 @@ const PETALS = Array.from({ length: 8 }, (_, i) => {
   return [Math.round(Math.cos(a) * 11 * 10) / 10, Math.round(Math.sin(a) * 11 * 10) / 10];
 });
 
-/** The hand: resting top right, or with its fingertips on the upper shoot's cut point. */
-const HAND = [
-  { x: 404, y: 46, open: 1 },
-  { x: 404, y: 46, open: 1 },
-  { x: SHOOTS[1].cut[0], y: SHOOTS[1].cut[1] - 40, open: 0 },
-  { x: 404, y: 46, open: 1 },
-  { x: 404, y: 46, open: 1 },
-];
+/** The hand: resting top right, clear of the flower's label, or with its fingertips on the upper shoot's cut point. */
+const REST = { x: 436, y: 46, open: 1 };
+const HAND = [REST, REST, { x: SHOOTS[1].cut[0], y: SHOOTS[1].cut[1] - 40, open: 0 }, REST, REST];
 
 export function PruneJob() {
   return (
@@ -66,9 +61,9 @@ export function PruneJob() {
             <Label x={STEM_X} y={TABLE + 40} tone="accent" size={14} weight={700} opacity={step === 1 ? 1 : 0}>
               turns while a button is held
             </Label>
-            <Chip x={392} y={TABLE - 13} text="↺" mono={false} tone="muted" size={15} />
-            <Chip x={428} y={TABLE - 13} text="↻" mono={false} tone={step === 1 ? "accent" : "muted"} variant={step === 1 ? "solid" : "soft"} size={15} />
-            <Label x={410} y={TABLE + 22} tone="muted" size={14}>
+            <Chip x={404} y={TABLE - 13} text="↺" mono={false} tone="muted" size={15} />
+            <Chip x={440} y={TABLE - 13} text="↻" mono={false} tone={step === 1 ? "accent" : "muted"} variant={step === 1 ? "solid" : "soft"} size={15} />
+            <Label x={422} y={TABLE + 22} tone="muted" size={14}>
               buttons
             </Label>
 
