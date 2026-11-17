@@ -518,6 +518,19 @@ export const pruning = {
     trained: countsOf(prune.named.trained),
     heldout: countsOf(prune.named.heldout),
   },
+  /**
+   * Robustness of the 1 s memory policy (seeds 42 and 43, final averaged weights) when what the camera sees changes,
+   * and the paired re-rendering runs (the same demonstrations drawn again in new looks), stopped at checkpoint 9.
+   */
+  robustness: {
+    section: prune.robustness.section,
+    plain: countsOf(prune.robustness.plain),
+    lighting: countsOf(prune.robustness.lighting),
+    camera: countsOf(prune.robustness.camera),
+    bench: countsOf(prune.robustness.bench),
+    wind: countsOf(prune.robustness.wind),
+    paired: countsOf(prune.robustness.paired),
+  },
   /** Phase 7 stage 1: a two-level reasoning policy against the same small policy reading the instruction alone. */
   reasoning: {
     section: prune.reasoning.section,

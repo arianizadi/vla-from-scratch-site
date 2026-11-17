@@ -1664,6 +1664,21 @@
           "| the same, seed 44 | 20M | 67 (2 / 14 / 17) | 41 (22 / 14 / 23) | 9 / 24 / 8 |"
         ]
       },
+      "robustness": {
+        "section": "Step 8: the full task (`prune`)",
+        "plain": [[87, 100], [80, 100]],
+        "lighting": [[3, 100], [2, 100]],
+        "camera": [[2, 100], [4, 100]],
+        "bench": [[2, 100], [0, 100]],
+        "wind": [[82, 100], [78, 100]],
+        "paired": [[2, 100], [16, 100]],
+        "quotes": [
+          "100 layouts per situation (successes)",
+          "| Plain demonstrations, seed 42 (`dp_vit_lang_frames_1s_prune2k_leaffix_20m`) | 87 | 3 (0) | 2 (2) | 2 (0) | 72 (85) | 82 | 79 | 38 |",
+          "| Plain demonstrations, seed 43 (`..._seed43`) | 80 | 2 (0) | 4 (2) | 0 (0) | 60 (79) | 78 | 76 | 38 |",
+          "| Paired, seeds 42 and 43 (`..._leaffix_paired_20m`, `..._seed43`), stopped at checkpoint 9 of 11 | 2, 16 | - | - | - | - | - | - | - |"
+        ]
+      },
       "reasoning": {
         "section": "Reasoning in words (Phase 7, stage 1)",
         "twoLevel": [133, 200],
