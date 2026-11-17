@@ -52,13 +52,13 @@ export function ResidualStream() {
               running notes
             </Label>
 
-            <Bracket x1={86} x2={404} y={34} label="one block, repeated many times" tone="muted" below opacity={step >= 4 ? 1 : 0} />
+            <Bracket x1={74} x2={406} y={34} label="one block, repeated many times" tone="muted" below opacity={step >= 4 ? 1 : 0} />
 
-            <Box x={ATTN_X} y={BOX_Y} w={136} h={56} label="attention" sub="between words" active={step === 1} tone="ink" />
+            <Box x={ATTN_X} y={BOX_Y} w={152} h={56} label="attention" sub="between words" active={step === 1} tone="ink" />
             <Arrow from={[96, STREAM_Y - 8]} to={[112, BOX_Y + 34]} bend={-8} tone={step === 1 ? "accent" : "faint"} width={1.5} />
             <Arrow from={[190, BOX_Y + 34]} to={[PLUS_1 - 4, STREAM_Y - 14]} bend={-8} tone={step === 2 ? "accent" : "faint"} width={1.5} />
 
-            <Box x={FFN_X} y={BOX_Y} w={136} h={56} label="feed-forward" sub="each word alone" active={step === 3} tone="ink" />
+            <Box x={FFN_X} y={BOX_Y} w={152} h={56} label="feed-forward" sub="each word alone" active={step === 3} tone="ink" />
             <Arrow from={[276, STREAM_Y - 8]} to={[292, BOX_Y + 34]} bend={-8} tone={step === 3 ? "accent" : "faint"} width={1.5} />
             <Arrow from={[370, BOX_Y + 34]} to={[PLUS_2 - 4, STREAM_Y - 14]} bend={-8} tone={step === 3 ? "accent" : "faint"} width={1.5} />
 
