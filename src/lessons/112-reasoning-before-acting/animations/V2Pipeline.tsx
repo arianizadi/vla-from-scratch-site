@@ -21,7 +21,7 @@ export function V2Pipeline() {
       steps={[
         "Trained eyes turn the camera images into one record per part.",
         "A scene memory keeps the records, for parts out of view too.",
-        "A language model, never fine-tuned, writes the instruction once as a tiny program.",
+        "A language model, never retrained, writes the instruction once as a tiny program.",
         "Code runs the program on the memory: second from the top is the middle shoot.",
         "The same fast policy reads the sub-goal and cuts. The memory marks it cut.",
       ]}

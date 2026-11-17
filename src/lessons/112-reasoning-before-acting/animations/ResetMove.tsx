@@ -46,7 +46,7 @@ export function ResetMove() {
         "With the reset: 180 of 200, and 165 of 200 with new wordings.",
       ]}
       size={[480, 330]}
-      hold={[2600, 2800, 2400, 3000, 4200]}
+      hold={[2600, 2800, 2400, 3600, 4200]}
     >
       {(step) => {
         const [wx, wy] = WRIST[step];

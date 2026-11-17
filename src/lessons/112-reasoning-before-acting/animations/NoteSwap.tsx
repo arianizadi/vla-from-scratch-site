@@ -35,13 +35,13 @@ export function NoteSwap() {
   return (
     <AnimationFrame
       title="The note decides the cut"
-      description="A reasoner that reads pictures and words looks at a plant with three shoots and the instruction 'cut the second shoot from the top'. It writes a five-line note: see 3 shoots, ask the second from the top, so the middle, aim the middle, next cut the middle shoot. A small fast policy reads only the next line and cuts the middle shoot. In the swap test the next line is replaced by another shoot's, and the arm goes to that shoot: with swapped notes it solved 5 of 200 and cut the shoot the note named in half the tries."
+      description="A reasoner that reads pictures and words looks at a plant with three shoots and the instruction 'cut the second shoot from the top'. It writes a five-line note: see 3 shoots, ask the second from the top, so the middle, aim the middle, next cut the middle shoot. A small fast policy reads only the next line and cuts the middle shoot. In the swap test the next line is replaced by another shoot's, and the arm goes to that shoot: tested on another fast policy, with swapped notes it solved 5 of 200 and cut the shoot the note named in half the tries."
       steps={[
         "A reasoner reads the camera picture and the instruction.",
         "It writes a short note: what it sees, the question, the answer, the aim, the next step.",
         "A small fast policy reads only the last line, and cuts that shoot.",
         "Swap test: the last line now names another shoot. The arm follows the note.",
-        "With swapped notes: 5 of 200 solved, and the note's shoot cut in half the tries.",
+        "Swapped notes, tested on another fast policy: 5 of 200 solved, the note's shoot cut in half the tries.",
       ]}
       size={[480, 352]}
       hold={[2200, 3200, 2800, 3000, 4200]}
@@ -69,7 +69,8 @@ export function NoteSwap() {
               height={22}
               rx={5}
               className={`${swapped ? "t-failure" : "t-mark"} a-fill-soft a-t`}
-              style={{ opacity: step >= 2 ? 1 : 0 }}
+              // the highlighter's softer fill, as on an active box: the full one hides light text in dark mode
+              style={{ opacity: step >= 2 ? 1 : 0, fill: swapped ? undefined : "var(--mark-soft)" }}
             />
             <Label x={222} y={108} tone="muted" size={13} anchor="start" opacity={step >= 1 ? 1 : 0}>
               note (an example)

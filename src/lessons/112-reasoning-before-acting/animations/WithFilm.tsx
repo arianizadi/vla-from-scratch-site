@@ -44,7 +44,7 @@ export function NoteSwapWithFilm() {
       <Film name="reasoning-two-level" title="Watch it write its note, then cut" size={[1280, 720]}>
         The first version in the simulator, its note shown as it writes it. The last try turns the plant to read a
         hidden label, remembers it and cuts. This version solved 133 of 200 tries with trained wordings and 66 of 200
-        with new ones; without a note, the same small policy solved 21 of 100. After the last cut a script opens the
+        with new ones; without a note, a small policy of the same design reading the instruction itself solved 21 of 100. After the last cut a script opens the
         jaws and pulls the arm back.
       </Film>
     </div>

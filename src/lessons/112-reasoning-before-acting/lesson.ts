@@ -22,7 +22,7 @@ export default defineLesson({
     },
     {
       title: "A note remembers",
-      text: "A card in the pot names the shoot, but often faces away. The robot turns the plant to read it, then turns the named shoot into reach, which hides the card again. The camera has lost it; the note has not. Without a note, the robot can only guess.",
+      text: "A card in the pot names the shoot, but often faces away. The robot turns the plant to read it, then turns the named shoot into reach, which often hides the card again. The camera has lost it; the note has not. Without a note, the robot can only guess.",
       animation: HiddenLabel,
     },
     {
@@ -44,7 +44,7 @@ export default defineLesson({
   edgeCases: [
     "A note can be narration. Unless swapping its words changes what the arm does, a fine note proves nothing about the action.",
     "Right in almost every picture is not right in every try. The eyes, trained on the expert's tries, sometimes saw a cut that never happened.",
-    "Change the lighting, the camera or the bench, and the newest pruning policies fall to 0–4 tries in 100. The same examples redrawn in new looks did not fix it.",
+    "Not yet tested on this robot: change the lighting, the camera or the bench, and the newest pruning policies fall to 0–4 tries in 100. Redrawing the examples in new looks did not fix it.",
     "A grammar makes every program well formed, not correct. Eight new wordings in 100 became programs that meant something else.",
     "More memory is not always better. A fast policy that also saw a picture from one second earlier did no better than one without.",
   ],
