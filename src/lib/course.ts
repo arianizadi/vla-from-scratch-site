@@ -98,6 +98,7 @@ const MODULES: Omit<CourseModule, "number">[] = [
       "95-what-a-policy-looks-at",
       "110-toward-real-tasks",
       "111-pruning-a-plant",
+      "112-reasoning-before-acting",
     ],
   },
 ];
@@ -167,6 +168,7 @@ const TITLES: Record<string, string> = {
   "95-what-a-policy-looks-at": "What a working robot pays attention to",
   "110-toward-real-tasks": "From picking cubes to pruning plants",
   "111-pruning-a-plant": "How the robot learned to prune a plant",
+  "112-reasoning-before-acting": "Teaching the robot to think before it cuts",
   "100-case-pick-cube": "Picking up one cube",
   "101-case-pick-target": "Picking the object you asked for",
   "102-case-pretrained-backbones": "Borrowed eyes or fresh ones",
@@ -219,6 +221,7 @@ const BLURBS: Record<string, string> = {
   "95-what-a-policy-looks-at": "How to find out what a working robot is actually paying attention to.",
   "110-toward-real-tasks": "What still stands between these lessons and real jobs, like trimming a plant.",
   "111-pruning-a-plant": "How a robot learned to cut every side shoot off a plant, and why one fix made it worse.",
+  "112-reasoning-before-acting": "How a robot works out which shoot to cut when the answer must be seen, counted or remembered.",
   "100-case-pick-cube": "How the single-cube task went from a first try to a robot that rarely misses.",
   "101-case-pick-target": "How a robot that grabbed at random learned to pick the object it was asked for.",
   "102-case-pretrained-backbones": "Whether starting from a pretrained model helps, measured fairly.",
