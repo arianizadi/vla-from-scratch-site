@@ -43,8 +43,8 @@ export function NoteSwapWithFilm() {
       <NoteSwap />
       <Film name="reasoning-two-level" title="Watch it write its note, then cut" size={[1280, 720]}>
         The first version in the simulator, its note shown as it writes it. The last try turns the plant to read a
-        hidden label, remembers it and cuts. This version solved 133 of 200 tries with trained wordings and 66 of 200
-        with new ones; without a note, a small policy of the same design reading the instruction itself solved 21 of 100. After the last cut a script opens the
+        hidden label, remembers it and cuts. This version solved 133 of 200 tries with training instructions and 66 of
+        200 with new instructions, never seen in training; without a note, a small policy of the same design reading the instruction itself solved 21 of 100. After the last cut a script opens the
         jaws and pulls the arm back.
       </Film>
     </div>
@@ -57,9 +57,9 @@ export function V2PipelineWithFilm() {
     <div className="flex flex-col gap-4">
       <V2Pipeline />
       <Film name="reasoning-v2" title="Watch version two work it out" size={[1280, 720]}>
-        The program it wrote and what its memory holds are shown as it works, including a wording it never saw and a
-        label it reads, turns away from and still remembers. This is the version before the reset was added: 169 of
-        200 tries with trained wordings, 148 of 200 with new ones. After the last cut a script opens the jaws and pulls
+        The program it wrote and what its memory holds are shown as it works, including an instruction it never saw in
+        training and a label it reads, turns away from and still remembers. This is the version before the reset was
+        added: 169 of 200 tries with training instructions, 148 of 200 with new instructions. After the last cut a script opens the jaws and pulls
         the arm back.
       </Film>
     </div>

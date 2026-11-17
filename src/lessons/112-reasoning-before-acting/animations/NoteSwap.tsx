@@ -12,7 +12,7 @@ const SHOOTS: SideShoot[] = [
 const MIDDLE = shootTip(PX, SHOOTS[1]);
 const LOWEST = shootTip(PX, SHOOTS[2]);
 
-/** The note, one field per line (an example in the expert's format). */
+/** The note, one field per line: the expert's note for this plant, the kind of note the reasoner was trained to write. */
 const NOTE = [
   ["see", "3 shoots"],
   ["ask", "2nd from the top"],
@@ -35,10 +35,10 @@ export function NoteSwap() {
   return (
     <AnimationFrame
       title="The note decides the cut"
-      description="A reasoner that reads pictures and words looks at a plant with three shoots and the instruction 'cut the second shoot from the top'. It writes a five-line note: see 3 shoots, ask the second from the top, so the middle, aim the middle, next cut the middle shoot. A small fast policy reads only the next line and cuts the middle shoot. In the swap test the next line is replaced by another shoot's, and the arm goes to that shoot: tested on another fast policy, with swapped notes it solved 5 of 200 and cut the shoot the note named in half the tries."
+      description="A reasoner that reads pictures and words looks at a plant with three shoots and the instruction 'cut the second shoot from the top'. It writes a five-line note. Shown is the expert's note for this plant, the kind of note the reasoner was trained to write: see 3 shoots, ask the second from the top, so the middle, aim the middle, next cut the middle shoot. A small fast policy reads only the next line and cuts the middle shoot. In the swap test the next line is replaced by another shoot's, and the arm goes to that shoot: tested on another fast policy, with swapped notes it solved 5 of 200 and cut the shoot the note named in half the tries."
       steps={[
         "A reasoner reads the camera picture and the instruction.",
-        "It writes a short note: what it sees, the question, the answer, the aim, the next step.",
+        "Trained on an expert’s notes, it writes one: what it sees, the question, the answer, the aim, the next step. Shown: the expert’s.",
         "A small fast policy reads only the last line, and cuts that shoot.",
         "Swap test: the last line now names another shoot. The arm follows the note.",
         "Swapped notes, tested on another fast policy: 5 of 200 solved, the note's shoot cut in half the tries.",
@@ -73,7 +73,7 @@ export function NoteSwap() {
               style={{ opacity: step >= 2 ? 1 : 0, fill: swapped ? undefined : "var(--mark-soft)" }}
             />
             <Label x={222} y={108} tone="muted" size={13} anchor="start" opacity={step >= 1 ? 1 : 0}>
-              note (an example)
+              the expert’s note
             </Label>
             <Label x={446} y={108} tone="failure" size={13} anchor="end" weight={700} opacity={swapped ? 1 : 0}>
               swap test

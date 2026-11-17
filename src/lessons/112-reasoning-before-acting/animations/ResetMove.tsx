@@ -37,13 +37,13 @@ export function ResetMove() {
   return (
     <AnimationFrame
       title="Back to the start, then choose again"
-      description="Seen from above, the sub-goal is to cut the highest shoot, which faces away, out of reach. In about one try in ten the arm goes for it without turning the plant, jaws set to cut. The reset sends the arm back to its start pose; choosing again, it turns the plant first and then cuts. Over 200 tries, the reset raised the score from 169 to 180 with trained wordings and from 148 to 165 with new ones."
+      description="Seen from above, the sub-goal is to cut the highest shoot, which faces away, out of reach. In about one try in ten the arm goes for it without turning the plant, jaws set to cut. The reset sends the arm back to its start pose; choosing again, it turns the plant first and then cuts. Over 200 tries, the reset raised the score from 169 to 180 with training instructions and from 148 to 165 with new instructions."
       steps={[
         "Sub-goal: cut the highest shoot. It faces away, out of reach.",
         "About one try in ten, the arm goes for it anyway, without turning the plant.",
         "The reset: the arm goes back to its start pose.",
         "Choosing again, it turns the plant first, then cuts.",
-        "With the reset: 180 of 200, and 165 of 200 with new wordings.",
+        "With the reset: 180 of 200, and 165 of 200 with new instructions.",
       ]}
       size={[480, 330]}
       hold={[2600, 2800, 2400, 3600, 4200]}
@@ -114,7 +114,7 @@ export function ResetMove() {
               </g>
             ))}
             <Label x={346} y={186} tone="muted" size={13} opacity={step === 4 ? 1 : 0} delay={300}>
-              tries solved of 200, by wording
+              tries of 200, by instruction
             </Label>
           </>
         );

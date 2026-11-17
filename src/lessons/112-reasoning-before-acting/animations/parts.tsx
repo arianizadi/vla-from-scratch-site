@@ -9,6 +9,21 @@ import { Move, type Tone } from "@/animations";
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
 
+/** Five petals around a centre: the flower, in plain ink tones (yellow is the highlighter, kept for "this one, now"). */
+const PETALS = [-90, -18, 54, 126, 198];
+
+function Flower({ x, y, size = 1, tone = "muted" }: { x: number; y: number; size?: number; tone?: Tone }) {
+  return (
+    <g>
+      {PETALS.map((deg) => {
+        const [px, py] = polar(deg, 6 * size);
+        return <circle key={deg} cx={round1(x + px)} cy={round1(y + py)} r={round1(4.6 * size)} className={`t-${tone} a-fill-soft a-stroke`} strokeWidth={1.5} />;
+      })}
+      <circle cx={x} cy={y} r={round1(3 * size)} className="t-ink a-fill" />
+    </g>
+  );
+}
+
 export interface SideShoot {
   /** Where the shoot leaves the main stem, as a y coordinate. */
   y: number;
@@ -38,7 +53,7 @@ export function PlantSide({
   base,
   top,
   shoots,
-  flowerTone = "mark",
+  flowerTone = "muted",
   opacity = 1,
 }: {
   x: number;
@@ -74,8 +89,7 @@ export function PlantSide({
           </g>
         );
       })}
-      <circle cx={x} cy={top} r={9} className={`t-${flowerTone} a-fill-soft a-stroke`} strokeWidth={2} />
-      <circle cx={x} cy={top} r={3} className={`t-${flowerTone} a-fill`} />
+      <Flower x={x} y={top} tone={flowerTone} />
     </g>
   );
 }
@@ -150,8 +164,7 @@ export function PlantTop({
           </g>
         ) : null}
       </Move>
-      <circle cx={x} cy={y} r={round1(r * 0.16)} className="t-mark a-fill-soft a-stroke" strokeWidth={2} />
-      <circle cx={x} cy={y} r={round1(r * 0.06)} className="t-mark a-fill" />
+      <Flower x={x} y={y} size={round1(r / 64)} />
     </>
   );
 }

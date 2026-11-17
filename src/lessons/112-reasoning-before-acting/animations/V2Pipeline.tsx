@@ -12,6 +12,8 @@ const SHOOTS: SideShoot[] = [
 const MIDDLE = shootTip(PX, SHOOTS[1]);
 
 const RECORDS = ["highest", "middle", "lowest"];
+/** The centre of the eyes and the scene memory, with room for "a record per part" on a phone. */
+const EX = 110;
 
 export function V2Pipeline() {
   return (
@@ -33,26 +35,26 @@ export function V2Pipeline() {
         return (
           <>
             {/* Inputs */}
-            <Chip x={96} y={24} text="camera images" tone="vision" mono={false} size={14} />
+            <Chip x={EX} y={24} text="camera images" tone="vision" mono={false} size={14} />
             <Chip x={330} y={24} text="cut the second shoot from the top" tone="language" mono={false} size={13} />
 
             {/* 1 eyes */}
-            <Arrow from={[96, 40]} to={[96, 54]} tone="vision" />
-            <Box x={100} y={78} w={176} h={46} label="eyes" sub="a record per part" tone="vision" active={step === 0} />
-            <Arrow from={[96, 102]} to={[96, 122]} tone="vision" />
+            <Arrow from={[EX, 40]} to={[EX, 54]} tone="vision" />
+            <Box x={EX} y={78} w={196} h={46} label="eyes" sub="a record per part" tone="vision" active={step === 0} />
+            <Arrow from={[EX, 102]} to={[EX, 122]} tone="vision" />
 
             {/* 2 scene memory */}
-            <rect x={11} y={124} width={170} height={112} rx={10} className="t-ink a-fill-soft a-stroke a-t" strokeWidth={step === 1 ? 2.5 : 1.5} />
-            <Label x={96} y={142} tone="ink" size={15} weight={700}>
+            <rect x={12} y={124} width={196} height={112} rx={10} className="t-ink a-fill-soft a-stroke a-t" strokeWidth={step === 1 ? 2.5 : 1.5} />
+            <Label x={EX} y={142} tone="ink" size={15} weight={700}>
               scene memory
             </Label>
             {RECORDS.map((part, i) => (
               <g key={part}>
-                <Label x={26} y={168 + i * 22} tone="ink" size={13} anchor="start" delay={stagger(i, 160)}>
+                <Label x={28} y={168 + i * 22} tone="ink" size={13} anchor="start" delay={stagger(i, 160)}>
                   {part}
                 </Label>
                 <Label
-                  x={166}
+                  x={192}
                   y={168 + i * 22}
                   tone={part === "middle" && cut ? "accent" : "muted"}
                   size={13}
@@ -72,7 +74,7 @@ export function V2Pipeline() {
             <Chip x={330} y={134} text="Cut(Rank(2,top))" tone="language" variant="solid" size={14} width={190} opacity={step >= 2 ? 1 : 0} />
 
             {/* 4 plan */}
-            <Arrow from={[120, 238]} to={[176, 252]} tone="ink" drawn={step >= 3} />
+            <Arrow from={[132, 238]} to={[176, 252]} tone="ink" drawn={step >= 3} />
             <Arrow from={[330, 150]} to={[290, 250]} tone="language" drawn={step >= 3} />
             <Box x={240} y={274} w={250} h={46} label="plan" sub="code runs the program" tone="ink" active={step === 3} />
             <Arrow from={[240, 298]} to={[240, 318]} tone="language" drawn={step >= 3} />

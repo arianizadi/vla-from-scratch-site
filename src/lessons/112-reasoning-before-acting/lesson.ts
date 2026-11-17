@@ -17,7 +17,7 @@ export default defineLesson({
     },
     {
       title: "Write a note, then act",
-      text: "A **vision-language model** reads pictures and words. It writes a short **note**: what it sees, the question, the answer, the next step. A small **fast policy** reads only the next step and moves the arm: 133 tries in 200. Swap that line for another shoot's, and the arm follows it.",
+      text: "A **vision-language model** reads pictures and words. Trained on an expert's notes, it writes a short **note** ending in the next step. A small **fast policy** reads only that step and moves the arm: 133 tries in 200. Swap that step for another shoot's, and the arm follows it.",
       animation: NoteSwapWithFilm,
     },
     {
@@ -27,7 +27,7 @@ export default defineLesson({
     },
     {
       title: "Two faults in the note writer",
-      text: "It could not count. Its training graded only the words of its notes, never what it saw, so it wrote “2 shoots” for almost every plant with three. Training cost it language too: as downloaded, the model got the meaning of 92 new wordings in 100; after, 60.",
+      text: "It could not count. Graded on its words alone, never on what it saw, it wrote “2 shoots” for almost every plant with three. Training also cost it language. Of 100 **new instructions**, phrasings or word combinations never seen in training, the downloaded model got 92 right; afterwards, 60.",
       animation: CountMiss,
     },
     {
@@ -37,7 +37,7 @@ export default defineLesson({
     },
     {
       title: "A reset, and the next limit",
-      text: "The arm is now the limit. About one try in ten, it goes for a shoot facing away without turning the plant. A **reset** sends it back to the start to choose again. Told which way to turn, it turned well but lost as many tries by turning too far.",
+      text: "The arm is now the limit. About one try in ten, it goes for a shoot facing away without turning the plant. A **reset** sends it back to start. Told which way to turn, it turned well, but lost as many tries turning too far or closing beside the shoot.",
       animation: ResetMove,
     },
   ],
@@ -45,7 +45,7 @@ export default defineLesson({
     "A note can be narration. Unless swapping its words changes what the arm does, a fine note proves nothing about the action.",
     "Right in almost every picture is not right in every try. The eyes, trained on the expert's tries, sometimes saw a cut that never happened.",
     "Not yet tested on this robot: change the lighting, the camera or the bench, and the newest pruning policies fall to 0–4 tries in 100. Redrawing the examples in new looks did not fix it.",
-    "A grammar makes every program well formed, not correct. Eight new wordings in 100 became programs that meant something else.",
+    "A grammar makes every program well formed, not correct. Eight new instructions in 100 became programs that meant something else.",
     "More memory is not always better. A fast policy that also saw a picture from one second earlier did no better than one without.",
   ],
   tips: [

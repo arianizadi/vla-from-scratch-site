@@ -44,6 +44,8 @@
   --on-accent: #ffffff;
   --mark: #ffd43b;
   --on-mark: #15171e;
+  /* Secondary text on --mark-soft (the sub-label of an active box): 4.5:1 or more on it. */
+  --on-mark-soft-muted: #4e5563;
 
   /* Modalities: what a thing is made of. Always with a label. */
   /* Dark enough to be read as small text on paper (4.5:1 on --bg and --surface). */
@@ -96,6 +98,7 @@
   --on-accent: #10131a;
   --mark: #ffd43b;
   --on-mark: #10131a;
+  --on-mark-soft-muted: #ffffff;
 
   --vision: #2cc2ae;
   --language: #7096ff;
@@ -143,6 +146,7 @@
     --on-accent: #10131a;
     --mark: #ffd43b;
     --on-mark: #10131a;
+    --on-mark-soft-muted: #ffffff;
 
     --vision: #2cc2ae;
     --language: #7096ff;

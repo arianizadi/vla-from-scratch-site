@@ -47,6 +47,7 @@ An inline script sets `data-theme` before paint. Plain hex values (client code r
 | `--success` / `--failure` / `--warning` | #117A56 / #C2362B / #8F5A00 | #4FC48D / #FF8375 / #F2B84B | states, always with a glyph and a word |
 
 `--language-soft`, `--vision-soft`, `--action-soft`, `--mark-soft` are 14–45% tints for fills.
+`--on-mark-soft-muted` (#4E5563 / #FFFFFF) is secondary text on `--mark-soft`, as on an active box.
 Data series (`--series-1..6`), the sequential scale and syntax colours are unchanged from the
 data figures: a run keeps its policy's hue in every chart (section 8).
 

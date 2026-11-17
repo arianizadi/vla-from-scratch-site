@@ -365,6 +365,9 @@
   stroke: var(--text);
   stroke-width: 2;
 }
+.box-active .box-sub {
+  fill: var(--on-mark-soft-muted);
+}
 .box-label {
   fill: var(--text);
   font-family: var(--font-sans);
