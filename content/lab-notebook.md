@@ -1115,6 +1115,29 @@ was never drawn (a parked distractor resting on the floor counted as touching th
 through to lighting; fixed, not re-run. Like the visual-variation run above, variation that the frames learn well
 still breaks the closed loop, so robustness needs another route than more looks in the demonstrations.
 
+**A pretrained image encoder keeps half its success when the look changes.** The named-shoot policies of step 9
+include two with a pretrained vision-language backbone (`vla_qwen_tokens_reactive_named4k_2500k`, seeds 42 and 43:
+Qwen3-VL-2B, trained 2.5M samples). Their report card against the from-scratch ViT policy (`dp_vit_lang_reactive`), final
+averaged weights, 100 layouts per cell, successes on `prune_named`:
+
+| Policy | Samples | plain | lighting (/test) | camera (/test) | bench (/test) | Visual mean, share of plain kept |
+|---|---|---|---|---|---|---|
+| Qwen3-VL backbone, seed 42 | 2.5M | 21 | 14 (9) | 7 (11) | 10 (14) | 10.8, 52% |
+| Qwen3-VL backbone, seed 43 | 2.5M | 22 | 13 (5) | 10 (8) | 14 (16) | 11.0, 50% |
+| From-scratch ViT, seed 42 | 2.5M | 22 | 5 (0) | 4 (6) | 6 (1) | 3.7, 17% |
+| From-scratch ViT, seed 42 (`dp_vit_lang_reactive_named4k_20m`) | 20M | 53 | 11 (1) | 9 (5) | 25 (19) | 11.7, 22% |
+| From-scratch ViT, seed 43 | 20M | 62 | 9 (2) | 9 (5) | 22 (20) | 11.2, 18% |
+| From-scratch ViT, seed 44 | 20M | 67 | 7 (1) | 9 (8) | 8 (8) | 6.8, 10% |
+
+At the same plain score (21-22) the pretrained backbone solves 65-66 of the 600 visual episodes against 22 for the
+from-scratch ViT, and under grow lights never seen in training (lighting/test) 9 and 5 against 0-2 for every
+from-scratch run. The pretrained policies were only trained to 2.5M samples, so they do not yet do the task well: in
+absolute visual successes they match the 20M from-scratch runs. Under test now, with the same demonstrations and
+recipe as `dp_vit_lang_frames_1s_prune2k_leaffix_20m` (20M samples, seed 42): the small policy on a frozen pretrained
+image encoder in place of its own ViT (the Qwen3-VL vision tower's 196 patch features per image, on plain and on
+paired demonstrations; DINOv2-B with registers at 224 and at 448 pixels), and the from-scratch policy with image
+augmentation (shift, brightness, contrast, white balance, colour overlays that keep the colour cues).
+
 **Aim drills.** Seven motor drills on the bare table (`tutorial/aim-range.md`: touch, touch along a pin, stop on,
 follow, flick between, press, pinch; the expert solves each at 499-500/500), as practice for the arm. Co-trained with
 pruning (75% pruning, 25% drills, `dp_vit_lang_reactive_prune2k_aim8k_co27m`): 22/100 on pruning (66 on the drills),
@@ -1286,6 +1309,215 @@ What the pieces show:
 - **The 1 s memory fast level, second seed** (`dp_vit_lang_frames_1s_subgoal_reason8k_20m_seed43`): 135/200 on
   validation layouts and 118 and 105 on evaluation layouts (simulator's scene), 141 with resets, below the seed-43
   sub-goal fast level. A frame from a second earlier does not help a fast level that is strong without it.
+- **The 1 s memory fast level told its aim** (`dp_vit_lang_frames_1s_aim_reason8k_20m`, seed 42, final averaged weights,
+  200 episodes each), told / not told with the same weights: all of v2 on the eyes, written program, 157/200 and
+  158/200 held out against 131 and 118; on the task's own program 171 and 175 against 135 and 125; simulator's scene,
+  evaluation layouts 169 and 167 against 134 and 139, validation layouts 180 against 136; with up to two resets 174
+  (3 resets in 3 episodes) against 141 (103 resets in 85 episodes). Told the aim it hardly needs a reset, but it does
+  not beat the seed-43 sub-goal fast level with resets (180 and 165), so the headline stays.
+- **The film** (`reasoning-v2`) now shows that headline configuration (v2 on the eyes, written program, memory options,
+  seed-43 sub-goal fast level, up to two resets): five episodes, among them a reset followed by a turn and the cut, and
+  a label read, turned away and remembered.
+
+## Architecture v3: the language, the truth with attributes, the plan (steps 1 to 3)
+
+Design: `tutorial/architecture-v3.md`; what was built and where it departs from the design is under "As built" there.
+No GPU. Step 1: v3's language (`CutFrom`, `Then`, `Nothing`, `Take`, `Count`; `tie,any`, `sick,no`, `tag`) beside
+v2's, which stays the default of the writer's constraint; stages, equivalence over the orders of cuts, and each
+situation's own program (`program.from_scenario`, which selects `env.targets`, in order for `order`, on 300 layouts
+of each situation). Step 2: the simulator's truth with a tie, sick leaves and a bud per part, "unreadable" where no
+camera's rays reach the place, `+undrawn` for the paired control, and the census. Step 3: the memory's rules for
+attributes, the plan over the worlds the unknown facts allow (`program.WorldPlan`), and the supervisor's look, home
+move and cut gate, tested with scripted percepts; for v2's programs the decisions are v2's.
+
+**The census (E14)**: the scripted expert on 1000 validation layouts per situation (seeds from 900,000), no images,
+a look every 8 control steps; each shoot counts once per attribute (2490 shoots per situation). Readable means a
+camera's rays reach the tie's place, a leaf, or the tip and the place of a bud. Starting at the home pose, as v3's
+evaluations will start:
+
+| Situation: attribute | Front or wrist, first look | before the first cut | never | Front camera, first look | before the first cut | never |
+|---|---|---|---|---|---|---|
+| ties: tie | 95.2% | 100.0% | 0.0% | 84.7% | 97.0% | 3.0% |
+| sick: sick (sick) | 99.6% | 100.0% | 0.0% | 96.5% | 99.4% | 0.4% |
+| sick: sick (healthy) | 100.0% | 100.0% | 0.0% | 97.2% | 98.6% | 1.4% |
+| buds: bud (a bud) | 100.0% | 100.0% | 0.0% | 94.0% | 95.8% | 4.2% |
+| buds: bud (no bud) | 99.8% | 100.0% | 0.0% | 93.4% | 99.7% | 0.3% |
+| prune: tie | 95.1% | 100.0% | 0.0% | 85.0% | 92.9% | 0.9% |
+| prune: sick | 100.0% | 100.0% | 0.0% | 97.1% | 99.6% | 0.4% |
+| prune: bud | 99.9% | 100.0% | 0.0% | 93.6% | 99.7% | 0.3% |
+
+From the demonstrations' random starts (the expert then solves 721 to 770 of 1000: a start in the plant ends an
+episode early, and with it the looks it would have had):
+
+| Situation: attribute | Front or wrist, first look | before the first cut | never | Front camera, first look | before the first cut | never |
+|---|---|---|---|---|---|---|
+| ties: tie | 87.1% | 96.4% | 3.6% | 81.6% | 91.4% | 8.6% |
+| sick: sick (sick) | 95.3% | 98.0% | 2.0% | 93.0% | 96.8% | 3.1% |
+| sick: sick (healthy) | 95.1% | 98.3% | 1.7% | 93.3% | 96.5% | 3.5% |
+| buds: bud (a bud) | 93.5% | 98.5% | 1.5% | 90.4% | 94.5% | 5.5% |
+| buds: bud (no bud) | 92.7% | 96.4% | 3.6% | 89.5% | 95.3% | 4.7% |
+| prune: tie | 87.5% | 96.3% | 3.7% | 81.9% | 88.5% | 7.1% |
+| prune: sick | 95.3% | 97.6% | 2.4% | 93.3% | 96.6% | 3.4% |
+| prune: bud | 92.9% | 96.8% | 3.2% | 89.8% | 95.9% | 4.1% |
+
+"Never" is never while the shoot was on the plant. What it says: from the home pose, with both cameras, 95% to 100%
+of attributes can be read at the first look and all of them before the first cut, so on the simulator's scene the
+plan's looks will be rare and rungs 3 and 4 will rest on reading, not on looking. The tie is the hardest (95%, its
+place hidden by the stem or the flower). The front camera alone misses 3% to 15% at the first look and up to 4.2% for
+the whole time a shoot is on the plant: the wrist camera, which sees the plant from above at the home pose, closes
+that gap, so the eyes of step 6 need it. From random starts the arm is often in the way: 87% to 95% at the first look
+with both cameras, and 1.5% to 3.7% never. The expert solved 995 to 997 of 1000 layouts of each situation from home.
+
+### Step 4's runner, built and measured on CPU (no fast level yet)
+
+`eval.py --slow_level v3` runs v3's slow level over a served fast level: the situation's own program
+(`--program gold`), the simulator's scene or its whole state (`--scene truth|full`), a look held for or shown
+(`--inspect`), the home move on a verdict, the cut gate at every control step (`--gate`; off, it only records), starts
+clear of the plant (`--clear_start`), and a v3 section in results.json by situation, mode, shoots and cuts meant. Two
+settings were measured with the scripted expert (`calibrate_v3.py`, validation layouts):
+
+**Starts clear of the plant.** From the demonstrations' random starts the expert touches the flower in a quarter of the
+episodes, from poses among the shoots and from poses behind the plant, whose way to the lane in front of it passes the
+flower. A start is kept when the gripper is at least 5 cm in front of the stem's axis (toward the robot) and at least
+the clearance from it, seen from above; otherwise it is drawn again from the same stream. Expert successes per 100
+layouts:
+
+| Clearance | prune | order | nothing_to_do | ties | sick | buds |
+|---|---|---|---|---|---|---|
+| 0.12 m | 98 | 97 | 98 | 98 | 98 | 98 |
+| **0.15 m** (the setting) | 99 | 98 | 100 | 99 | 100 | 100 |
+| 0.17 m | 99 | 98 | 99 | 99 | 100 | 99 |
+| 0.15 m, 300 more layouts | 294 | 298 | 291 | 297 | 297 | 293 |
+
+**The gate's calibration** (600 expert episodes, 821 cuts): open jaws that shut on a shoot are 2.6 to 4.0 cm from the
+stem's axis and 0.3 to 1.8 cm (median 1.0) above where that shoot leaves the stem. With the jaws' height less 1.0 cm
+the nearest shoot is the one cut in all 821, within 0.8 cm (the band is 1.75 cm, half the least spacing). Open jaws
+that shut for anything else (on the way to a button) are at least 15.7 cm from the axis, so "among the shoots" is
+within 8 cm of the stand's axis and below the flower. A closed gripper pressing a button is not shutting jaws.
+
+### E13: v3 over the fast level as it is, on rungs 1 to 4
+
+v3's slow level with each situation's own program (`--program gold`), on the simulator's scene (`--scene truth`: what
+the cameras show) or its whole state (`--scene full`: every part and attribute from the first look), over the sub-goal
+fast level as it is (`dp_vit_lang_reactive_subgoal_reason8k_20m`, final averaged weights, seed 43 and its repetition
+seed 44), every episode from a start clear of the plant, up to two resets, a missing attribute held for
+(`--inspect hold`: nothing turns the plate for it), the gate off unless marked. "Look undrawn" is the same episode
+with the ties, yellow leaves or buds not drawn (the program and the truth's readings unchanged), so it measures what
+seeing them costs the fast level. `sim/pickup/scripts/e13.sh`; 70 runs, 9,450 episodes.
+
+**Validation layouts first** (seed 43; episodes solved of 100 layouts a cell, `order` 50 per mode), to fix the
+setting:
+
+| Situation (rung) | The scene | The whole state | The look undrawn | The scene, gate on |
+|---|---|---|---|---|
+| `prune` | 83 | 89 | | 83 |
+| `order` (1), of 150 | 131 | 129 | | 126 |
+| `nothing_to_do` (2) | 95 | 98 | | |
+| `ties` (3) | **52** | 65 | 85 | |
+| `sick` (4) | 91 | 91 | 88 | |
+| `buds` (4) | 93 | 94 | 89 | |
+
+**The decisions, taken there:**
+
+- **The gate stays off.** Its rule (architecture-v3.md, rule f) was to keep it where the fast level cuts a shoot its
+  sub-goal did not name in more than 2 episodes of 200. Without the gate it did so in none of 250 `prune` and `order`
+  episodes (no wrong shoot, no cut out of order). What the gate would have vetoed was mostly jaws shutting between two
+  parts or at a shoot already cut or cut in its turn later (`prune`: 86 of 95 such commands, in 22 episodes, 15 of
+  them solved), and each veto asks for a reset: with the gate on the resets rise from 18 to 48 in `prune` and episodes
+  solved do not (83 and 83; `order` 131 and 126 of 150).
+- **The memory's rule for attributes stays "row"**: on the simulator's scene a reading is never wrong, so the rules
+  cannot differ here; E17 compares them on the eyes.
+- **Ties need the fast level fine-tuned before rung 3** (P8 refuted for ties): with the same layouts, targets and
+  readings, drawing the ties takes the fast level from 85 to 52 of 100. The yellow leaves (91 against 88) and the buds
+  (93 against 89) cost nothing that 100 episodes can show.
+
+**Evaluation layouts** (episodes solved of 200 a cell; `order` 100 per mode, 300 in all), both fast levels, the
+setting above, the gate run as well where E13 asks for it:
+
+| Situation (rung) | Seed 43: the scene | the whole state | the look undrawn | gate on | Seed 44: the scene | the whole state | the look undrawn | gate on |
+|---|---|---|---|---|---|---|---|---|
+| `prune` | 159 | 167 | | 163 | 169 | 170 | | 157 |
+| `order` (1), of 300 | 247 | 246 | | 244 | 245 | 248 | | 223 |
+| `order`: from the top down, of 100 | 75 | 82 | | 74 | 80 | 79 | | 67 |
+| `order`: from the bottom up, of 100 | 80 | 80 | | 82 | 78 | 77 | | 74 |
+| `order`: a pair, of 100 | 92 | 84 | | 88 | 87 | 92 | | 82 |
+| `nothing_to_do` (2) | 188 | 197 | | | 188 | 197 | | |
+| `ties` (3) | **105** | 124 | 171 | | **60** | 71 | 169 | |
+| `sick` (4) | 172 | 178 | 176 | | 165 | 165 | 177 | |
+| `sick`, no shoot meant, of 62 | 60 | 60 | 60 | | 60 | 60 | 60 | |
+| `sick`, one or more meant, of 138 | 112 | 118 | 116 | | 105 | 105 | 117 | |
+| `buds` (4) | 183 | 182 | 186 | | 180 | 189 | 185 | |
+| `buds`, no shoot meant, of 54 | 53 | 54 | 53 | | 53 | 54 | 53 | |
+| `buds`, one or more meant, of 146 | 130 | 128 | 133 | | 127 | 135 | 132 | |
+
+Why episodes were lost, from the episode records (the scene, both fast levels together):
+
+| Cause | `prune` (400) | `order` (600) | `nothing_to_do` (400) | `ties` (400) | `sick` (400) | `buds` (400) |
+|---|---|---|---|---|---|---|
+| the fast level out of time on a cut | 43 | 72 | | 176 | 34 | 15 |
+| the fast level touched the flower | 19 | 24 | | 9 | 9 | 12 |
+| a shoot not meant cut, or cut out of order | | 6 | | 8 | 2 | 2 |
+| held for a shoot never seen (the inventory never completes) | 10 | 6 | 18 | 10 | 10 | 8 |
+| a look ran out ("cannot see the tie of ..."; where no shoot was meant it is scored solved, below) | | | | 32 | 4 | |
+| the home move touched the flower | | | 6 | | 4 | |
+| solved | 328 | 492 | 376 | 165 | 337 | 363 |
+
+What E13 shows:
+
+- **Rung 1 carries over: order costs no more than pruning.** 247 and 245 of 300 `order` episodes (82%) against 159
+  and 169 of 200 `prune` episodes (80% to 85%), with a slow level that makes no error. P1 holds: `prune` is inside
+  140 to 170, and `order` (165 and 163 per 200) is at the top of 120 to 160; chaining sub-goals is not the limit. From
+  the top down is the hardest mode (75 and 80 of 100): the highest shoot, first, is next to the flower (11 of 200
+  touched it, against 4 from the bottom up), and the fast level cut a lower shoot before the named one in 1 and 3
+  episodes of 100 (with one in a pair, the only cuts out of order: 5 of 600).
+- **Rung 2: nothing to do is said at once, and lost to two scripted things.** v3 says `Complete` before any sub-goal
+  in 191 of 200 `nothing_to_do` episodes (P2's bar on the simulator's scene: 190) and solves 188 (the fast level is
+  never asked, so both seeds give the same episodes); with the whole state it says so in 200 and solves 197. The rest:
+  9 episodes in which a stub is never seen and the plan holds for it to the end (nothing turns the plate while it
+  holds), and 3 in which the home move itself touches the flower (the straight line in joint space from a clear start
+  to the home pose passes it; also 2 of 62 `sick` plants with no sick shoot). The reverse error: no `Complete` at the
+  first look on a `prune` plant (0 of 400); 5 of 200 on `ties` and 1 of 200 on `buds`, all withdrawn when the shoot
+  not yet seen came into view.
+- **Rung 3: the ties break the fast level.** 105 and 60 of 200 against 171 and 169 on the same episodes with the ties
+  undrawn: seeing a tie costs 66 and 109 episodes (P8 refuted for ties: more than 30). The episodes it loses run out of
+  time with the plate turning: in 137 of the 176 of them it turned more than a full turn (2 of 10 with the ties
+  undrawn), past the named shoot and round again. It also cut a shoot it was not told to in 8 of 400 episodes (21 of
+  400 with the whole state; 1 undrawn). So the fast level is fine-tuned on the looks before rung 3 is reported, as P8
+  says.
+- **Rung 4: yellow leaves and buds cost the fast level nothing measurable.** `sick` 172 and 165 against 176 and 177
+  undrawn; `buds` 183 and 180 against 186 and 185 (P8 holds for them). Plants with no shoot meant are solved in 60 of
+  62 (`sick`) and 53 of 54 (`buds`) with both seeds; the cuts are what is lost (`sick` 112 and 105 of 138 plants with a
+  shoot meant).
+- **What looking costs** (the scene against the whole state): 16 of 200 `ties` layouts need a look at a tie the
+  cameras do not show from the clear start, 4 `sick` and 7 `buds`; held for (no fast level can yet show a shoot),
+  every one of those looks runs out and ends as `Failed`, "cannot see", as designed. Where no shoot was meant, the
+  situations' success rule (no cut, the arm home) scores that `Failed` as solved: 7 `buds` and 2 `sick` episodes of
+  200 with each fast level are in the table though v3 gave up on them (without them `buds` 176 and 173, `sick` 170
+  and 163). Elsewhere the two oracles are within noise (`prune` 159 and 167, 169 and 170), and `nothing_to_do` loses
+  the 9 stubs never seen.
+- **The gate, on the evaluation layouts too**, takes away the cuts out of order (4 to 0 from the top down) and costs
+  more than it saves: `order` 244 and 223 against 247 and 245, `prune` 163 and 157 against 159 and 169; it doubles the
+  resets (`prune` 91 and 108 against 45 and 50) and from the top down the flower is touched more often (24 against
+  11). It stays off. On `ties` the fast level's wrong cuts are above the gate's threshold (3 of 100 on validation
+  layouts), but the gate was not run there; it is measured again on `ties` after the fine-tuning.
+- **What the fast level costs per rung**, against the scripted expert from the same starts (98 to 100 of 100 on each
+  situation, above): with the whole state, where the slow level has nothing to find, the fast level solves 84% to 85%
+  of `prune`, 82% to 83% of `order`, 98.5% of `nothing_to_do` (all of the loss the home move), 62% and 36% of `ties`,
+  89% and 83% of `sick`, 91% and 95% of `buds`. Most of what it loses is time, a cut not made before the episode
+  ends, and the rest mostly the flower touched.
+- **v2 from the new starts.** v2's slow level on `reason_mix` (the simulator's scene, the task's program, seed 43,
+  training instructions, up to two resets) from starts clear of the plant: 170 of 200. From the home pose the same
+  fast level solved 169 there without resets, 173 to 179 with them on validation layouts, and 178 with them and the
+  eyes (the task's program; 180 with the written one, v2's headline): within about 8 episodes, so v2's behaviour holds
+  from the new starts. It loses 20 episodes to a cut not made in time, 5 to a shoot never seen, 3 to the flower and 2
+  to a wrong shoot.
+- **A miscount found and fixed.** The v3 summary counted the cuts meant of a `sick` or `buds` plant with no shoot meant
+  as every shoot on it, as for pruning, which put those episodes among the `Complete` said wrongly; the records'
+  scenario fields hold the right number and every count above is from them (`slow_level.SlowLevel.situation` now
+  gives 0 there).
+
+70 runs, 9,450 episodes, on one L40S in 2.25 hours of wall time (4 to 24 runs sharing it; the runs' own wall times add
+to 27.5 hours).
 
 ## Throughput
 
