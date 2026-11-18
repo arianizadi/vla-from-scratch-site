@@ -1697,8 +1697,8 @@
           "section": "Architecture v2: eyes, a written program, and memory (Phase 7, stage 2)",
           "trained": [180, 200],
           "heldout": [165, 200],
-          "filmed": [169, 200],
-          "filmedHeldout": [148, 200],
+          "filmed": [180, 200],
+          "filmedHeldout": [165, 200],
           "stage1": [133, 200],
           "stage1Heldout": [66, 200],
           "quotes": [
