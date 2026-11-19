@@ -530,6 +530,14 @@ export const pruning = {
     bench: countsOf(prune.robustness.bench),
     wind: countsOf(prune.robustness.wind),
     paired: countsOf(prune.robustness.paired),
+    /** The same policy on a frozen pretrained DINOv2 encoder, seeds 42 and 43, final averaged weights. */
+    pretrained: {
+      plain: countsOf(prune.robustness.pretrained.plain),
+      lighting: countsOf(prune.robustness.pretrained.lighting),
+      lightingTest: countsOf(prune.robustness.pretrained.lightingTest),
+      camera: countsOf(prune.robustness.pretrained.camera),
+      bench: countsOf(prune.robustness.pretrained.bench),
+    },
   },
   /** Phase 7 stage 1: a two-level reasoning policy against the same small policy reading the instruction alone. */
   reasoning: {

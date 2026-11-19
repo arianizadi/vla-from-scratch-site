@@ -65,10 +65,10 @@ export function LabGlance() {
       text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". Small trained eyes list the plant's parts and a memory keeps them (even a label that has turned out of view); a language model rewrites the instruction as a tiny program; code picks the shoot, and the small policy cuts it (sent back to start if it heads for a shoot it cannot reach). ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} tries, and ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with instructions it never saw in training. Without reasoning: ${percent(reason.baseline)} in 100.`,
     },
     {
-      value: looks.value,
-      of: looks.of,
-      title: "Still hard: a room that looks different.",
-      text: `The same pruning policy (${robust.plain.map((c) => c.successes).join(" and ")} of 100 in the room it trained in) fails almost every time when the lighting, the camera's position or the bench changes. Wind and bumps it shrugs off (${span(robust.wind).value}). Showing it the same demonstrations again in new looks did not fix this: it then barely learned the task at all (${robust.paired.map((c) => c.successes).join(" and ")} of 100).`,
+      value: span(robust.pretrained.lighting).value,
+      of: 100,
+      title: "Half solved: new lighting. Still hard: a moved camera or another bench.",
+      text: `Our own pruning policy fails almost every time when the room looks different (${looks.value} of 100 under new lighting, a moved camera or another bench). Built on a pretrained image model that stays frozen (DINOv2), it prunes better in its own room (${robust.pretrained.plain.map((c) => c.successes).join(" and ")} of 100 over two training runs) and keeps about half of that under new lighting (${robust.pretrained.lighting.map((c) => c.successes).join(" and ")}; ${robust.pretrained.lightingTest.map((c) => c.successes).join(" and ")} under lights it never saw). A moved camera (${span(robust.pretrained.camera).value}) and another bench (${span(robust.pretrained.bench).value}) still defeat it.`,
     },
     {
       value: named.value,

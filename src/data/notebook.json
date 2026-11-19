@@ -1677,7 +1677,19 @@
           "| Plain demonstrations, seed 42 (`dp_vit_lang_frames_1s_prune2k_leaffix_20m`) | 87 | 3 (0) | 2 (2) | 2 (0) | 72 (85) | 82 | 79 | 38 |",
           "| Plain demonstrations, seed 43 (`..._seed43`) | 80 | 2 (0) | 4 (2) | 0 (0) | 60 (79) | 78 | 76 | 38 |",
           "| Paired, seeds 42 and 43 (`..._leaffix_paired_20m`, `..._seed43`), stopped at checkpoint 9 of 11 | 2, 16 | - | - | - | - | - | - | - |"
-        ]
+        ],
+        "pretrained": {
+          "plain": [[92, 100], [95, 100]],
+          "lighting": [[53, 100], [46, 100]],
+          "lightingTest": [[55, 100], [47, 100]],
+          "camera": [[15, 100], [10, 100]],
+          "bench": [[0, 100], [1, 100]],
+          "quotes": [
+            "11), 100 layouts per cell",
+            "| Frozen DINOv2 at 224 px, seed 42 (`dp_dinov2_lang_frames_1s_prune2k_leaffix_20m`) | 92 | 53 (55) | 15 (5) | 0 (0) | 74 (82) | 89 | 89 | 50 |",
+            "| Frozen DINOv2 at 224 px, seed 43 (`..._seed43`) | 95 | 46 (47) | 10 (4) | 1 (0) | 85 (88) | 89 | 91 | 58 |"
+          ]
+        }
       },
       "reasoning": {
         "section": "Reasoning in words (Phase 7, stage 1)",
