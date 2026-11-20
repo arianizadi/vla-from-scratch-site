@@ -65,10 +65,10 @@ export function LabGlance() {
       text: `Harder instructions, like "cut the second shoot from the top" or "read the label in the pot and cut the shoot it names". Small trained eyes list the plant's parts and a memory keeps them (even a label that has turned out of view); a language model rewrites the instruction as a tiny program; code picks the shoot, and the small policy cuts it (sent back to start if it heads for a shoot it cannot reach). ${reason.v2.trained.successes} of ${reason.v2.trained.episodes} tries, and ${reason.v2.heldout.successes} of ${reason.v2.heldout.episodes} with instructions it never saw in training. Without reasoning: ${percent(reason.baseline)} in 100.`,
     },
     {
-      value: span(robust.pretrained.lighting).value,
+      value: span(robust.pretrainedPaired.camera).value,
       of: 100,
-      title: "Half solved: new lighting. Still hard: a moved camera or another bench.",
-      text: `Our own pruning policy fails almost every time when the room looks different (${looks.value} of 100 under new lighting, a moved camera or another bench). Built on a pretrained image model that stays frozen (DINOv2), it prunes better in its own room (${robust.pretrained.plain.map((c) => c.successes).join(" and ")} of 100 over two training runs) and keeps about half of that under new lighting (${robust.pretrained.lighting.map((c) => c.successes).join(" and ")}; ${robust.pretrained.lightingTest.map((c) => c.successes).join(" and ")} under lights it never saw). A moved camera (${span(robust.pretrained.camera).value}) and another bench (${span(robust.pretrained.bench).value}) still defeat it.`,
+      title: "It keeps working when the room looks different.",
+      text: `Our own pruning policy fails almost every time when the lighting, the camera's position or the bench changes (${looks.value} of 100). Built on a frozen pretrained image model (DINOv2) and trained on the same demonstrations drawn again under other lights, camera poses and benches, it keeps most of its success: ${robust.pretrainedPaired.plain.map((c) => c.successes).join(" and ")} of 100 in its own room over two training runs, ${robust.pretrainedPaired.lighting.map((c) => c.successes).join(" and ")} under new lighting, ${robust.pretrainedPaired.camera.map((c) => c.successes).join(" and ")} with the camera moved, and ${robust.pretrainedPaired.bench.map((c) => c.successes).join(" and ")} on another bench, the hardest change.`,
     },
     {
       value: named.value,

@@ -1689,6 +1689,18 @@
             "| Frozen DINOv2 at 224 px, seed 42 (`dp_dinov2_lang_frames_1s_prune2k_leaffix_20m`) | 92 | 53 (55) | 15 (5) | 0 (0) | 74 (82) | 89 | 89 | 50 |",
             "| Frozen DINOv2 at 224 px, seed 43 (`..._seed43`) | 95 | 46 (47) | 10 (4) | 1 (0) | 85 (88) | 89 | 91 | 58 |"
           ]
+        },
+        "pretrainedPaired": {
+          "plain": [[88, 100], [81, 100]],
+          "lighting": [[80, 100], [81, 100]],
+          "camera": [[71, 100], [62, 100]],
+          "bench": [[44, 100], [46, 100]],
+          "quotes": [
+            "lights never seen), a moved camera to 62-71 (44-58 for the larger held-out moves), another bench to 44-46 (30-33 for",
+            "| Frozen DINOv2, paired demonstrations, seed 42 | 88 | 80 (74) | 71 (58) | 44 (30) | 85 (78) | 84 | 78 | 51 |",
+            "| Frozen DINOv2, paired demonstrations, seed 43 | 81 | 81 (72) | 62 (44) | 46 (33) | 65 (71) | 74 | 71 | 43 |",
+            "100 layouts per cell"
+          ]
         }
       },
       "reasoning": {

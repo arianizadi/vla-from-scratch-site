@@ -538,6 +538,13 @@ export const pruning = {
       camera: countsOf(prune.robustness.pretrained.camera),
       bench: countsOf(prune.robustness.pretrained.bench),
     },
+    /** The same frozen DINOv2 policy trained on the paired demonstrations (plain plus re-rendered looks), seeds 42 and 43. */
+    pretrainedPaired: {
+      plain: countsOf(prune.robustness.pretrainedPaired.plain),
+      lighting: countsOf(prune.robustness.pretrainedPaired.lighting),
+      camera: countsOf(prune.robustness.pretrainedPaired.camera),
+      bench: countsOf(prune.robustness.pretrainedPaired.bench),
+    },
   },
   /** Phase 7 stage 1: a two-level reasoning policy against the same small policy reading the instruction alone. */
   reasoning: {
