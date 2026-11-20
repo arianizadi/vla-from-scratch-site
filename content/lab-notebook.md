@@ -1164,6 +1164,7 @@ demonstrations learn slowly (25 at checkpoint 5); the paired consistency loss ha
 | From-scratch ViT, 1 s memory, seed 42 (reference) | 87 | 3 (0) | 2 (2) | 2 (0) | 72 (85) | 82 | 79 | 38 |
 | Frozen DINOv2 at 224 px, seed 42 (`dp_dinov2_lang_frames_1s_prune2k_leaffix_20m`) | 92 | 53 (55) | 15 (5) | 0 (0) | 74 (82) | 89 | 89 | 50 |
 | Frozen DINOv2 at 224 px, seed 43 (`..._seed43`) | 95 | 46 (47) | 10 (4) | 1 (0) | 85 (88) | 89 | 91 | 58 |
+| Frozen DINOv3-B/16 at 224 px, seed 42 (`dp_dinov3_lang_frames_1s_prune2k_leaffix_20m`) | 91 | 43 (70) | 12 (6) | 0 (0) | 66 (69) | 91 | 89 | 49 |
 | DART-style noisy demonstrations, from-scratch ViT (`dp_vit_lang_frames_1s_prune2k_leaffix_dart01_20m`) | 40 | 2 (0) | 3 (2) | 0 (0) | 16 (32) | 39 | 43 | 22 |
 | Paired consistency loss, from-scratch ViT (`dp_vit_lang_frames_1s_twin_prune2k_leaffix_paired_20m`) | 0 | 0 (0) | 0 (1) | 0 (0) | 0 (0) | 2 | 1 | 0 |
 
@@ -1173,6 +1174,26 @@ than from scratch too (wind 89, bump 89-91, a sticky button 50-58 against 38). A
 (0-1) still defeat it: on the bench it does not engage at all. Noise injected into the expert's joints (0.01 rad) halves
 plain success and buys no robustness; the consistency loss between a frame and its re-rendered twin keeps the
 from-scratch policy from learning at all, as the paired data alone did.
+
+**A frozen encoder on paired demonstrations: the first policy that holds when the camera or the bench changes (interim).**
+The frozen Qwen3-VL vision tower trained on the paired demonstrations (the plain ones plus the same ones drawn again
+under other lighting, camera poses and benches; `dp_tower_lang_frames_1s_prune2k_leaffix_paired_20m`, seed 42), final
+averaged weights, set against the same tower on plain demonstrations (`dp_tower_lang_frames_1s_prune2k_leaffix_20m`,
+complete card), 100 layouts per cell:
+
+| Policy | plain | lighting (/test) | camera (/test) | bench (/test) | distractors (/test) | wind | bump | sticky |
+|---|---|---|---|---|---|---|---|---|
+| Frozen Qwen3-VL tower, plain demonstrations | 92 | 29 (1) | 10 (8) | 18 (14) | 73 (87) | 85 | 86 | 58 |
+| Frozen Qwen3-VL tower, paired demonstrations | 80 | 60 (29) | 51 (53) | 37 (16) | 61 (59) | 84 | 78 | 56 |
+
+On plain demonstrations the tower is as good a pruner as DINOv2 (92) but holds less of it under new lighting (29, and
+1 under lights never seen, against DINOv2's 53 and 55). Trained on the paired demonstrations it gives up 12 in its own
+room and gains everywhere the look changes: lighting 29 to 60, camera 10 to 51 (8 to 53 for the larger held-out moves),
+bench 18 to 37. Distractors fall (73 and 87 to 61 and 59): the one look the paired demonstrations lack, since the
+distractors look was never drawn in them (the placement bug fixed above). Every policy trained on plain demonstrations scored 0-15 under a moved camera and 0-18 on another
+bench, and the from-scratch ViT never learned from the paired data at all: a frozen pretrained encoder is what lets the
+paired looks be learned, and the looks are what carry over to the camera and the bench. Runs of the same with frozen
+DINOv2 (seeds 42, 43, 44) and DINOv3 are under way.
 
 **Aim drills.** Seven motor drills on the bare table (`tutorial/aim-range.md`: touch, touch along a pin, stop on,
 follow, flick between, press, pinch; the expert solves each at 499-500/500), as practice for the arm. Co-trained with
@@ -1324,7 +1345,8 @@ What the pieces show:
   wrong-shoot cuts come from the same error (an arm that went for a shoot it cannot reach closes on one it can). The
   rule sends the arm back to its start pose when the jaws are set to cut a shoot more than 45 degrees out of reach and
   the plate stands, with a grace of four looks after each cut. All of v2 on the eyes, written program: **180/200 and
-  165/200 held out** with the seed-43 fast level (169 and 148 without), 175 and 157 with seed 44 (169 and 145); with
+  165/200 held out** (single runs; 179 and 160 on average over repeats, see "The headline, reproduced") with the
+  seed-43 fast level (169 and 148 without), 175 and 157 with seed 44 (169 and 145); with
   the task's own program 178 and 183, 171 and 174. Wrong-shoot cuts fall from 6-8 per run to 0-1. Single runs of
   200, with the thresholds tuned on seed 43's validation layouts. It does not help the 1 s memory fast level.
 - **Eyes trained on the fast level's own frames** cut false "cut" reports from 0.79% to 0.11% of parts in view but
@@ -1354,6 +1376,23 @@ What the pieces show:
 - **The film** (`reasoning-v2`) now shows that headline configuration (v2 on the eyes, written program, memory options,
   seed-43 sub-goal fast level, up to two resets): five episodes, among them a reset followed by a turn and the cut, and
   a label read, turned away and remembered.
+- **The headline, reproduced** (after architecture v3's step 7: the same configuration in v3's code gave 182 and 153).
+  The run's own record and the code agree on every setting (the fast level's file, its averaged weights, evaluation
+  layouts 1,000,000 to 1,000,199, 8 actions a chunk and 10 flow steps, the eyes' checkpoint, the writer's snapshot,
+  prompt and greedy decoding, the memory's options, `--resets 2`), the written programs are the same on all 400
+  layouts, and nothing changed since in the simulator, the wordings or v2's slow level. Repeated, 200 episodes each:
+
+  | Code | training wordings | held-out wordings |
+  |---|---|---|
+  | the published run's (exported and run again) | 180 (published), 181 | 165 (published), 165, 162 |
+  | v3's | 182, 178, 175 | 153, 161, 156, 161 |
+  | both, every run | **179** on average (175 to 182) | **160** on average (153 to 165) |
+
+  On held-out wordings no layout fails in every run of one code and succeeds in every run of the other, and with the sampler's noise seeded
+  per episode (`--noise episode`) the two codes solve 72 and 74 of the same 100 held-out layouts, with only 28 of 100
+  episodes alike to the step: rollouts are chaotic, and a run of 200 varies by about 6 either way. The published
+  165 is a high draw, not a configuration since lost. **The numbers to quote are 179/200 and 160/200** (the mean of 5
+  and 7 runs); the comparisons above, made against single runs, stand.
 
 ## Architecture v3: the language, the truth with attributes, the plan (steps 1 to 3)
 
@@ -1845,6 +1884,495 @@ Runs: 18 perception datasets (the 14 of `scene_tend` and its validation in 16 mi
 ties, the 4 wide sets of the small-object test in 18 minutes), 17 eyes runs (9 on everything, 8 one-view), 39
 closed-loop runs and 5,400 episodes in `results/pickup/e16/`. Two L40S GPUs for 4.9 hours of wall time each (9.8
 GPU-hours held), shared by the eyes' training, the collections' rendering and up to 9 evaluations at once.
+
+### Step 5: the program writer for v3's language (E15)
+
+Design: architecture-v3.md, "The program language" and "Step 5, as built". The frozen Qwen3-VL-2B of v2's writer
+(not fine-tuned) writes v3 programs (`CutFrom`, `Then`, `Take`, `Count`, `Nothing`, `tie,any`, `sick,no`) under v3's
+grammar constraint, greedily, with a description of the language construct by construct and sixteen worked examples
+in pairs (`program_writer_v3.py`); v2's writer, its prompt and its numbers are unchanged. It is scored alone, without
+images, on 100 tasks per situation and split drawn as the situations draw them (two or three shoots, the ties, sick
+shoots and buds): `prune` and `nothing_to_do` (one instruction, the task's own), `order`, `ties`, `sick`, `buds` in
+their training and held-out sentence frames, and the compositions of rung 5: a first set of 12 (24 instructions) that
+supplies the examples' constructs, and a held-out set of 8 new combinations in frames of their own (16 instructions).
+The task's own program is the one the closed loop runs (`program.from_scenario`'s). Flags as v2's: format (it parses),
+exact (its text is the task's), meaning (equivalent in v3: the same sequences of cuts on every plant), resolved (the
+same sequences of cuts on the plant drawn). Each distinct instruction is written once (the output depends on nothing
+else).
+
+**Two prompts.** The first (16 examples, set A) was run, its errors on training instructions read, and the description
+and examples revised once (the second): "the middle one" had been written `Rank(2,top)`, "the highest first, then the
+next one down" as two cuts, and sick and bud with the wrong value. Nothing was changed on the held-out errors. Meaning
+of 100 (resolved in brackets where it differs):
+
+| Writer | training frames (of 700) | held-out frames (of 400) | held-out compositions | prune, nothing_to_do | order train / held out | ties | sick | buds | compositions, first set |
+|---|---|---|---|---|---|---|---|---|---|
+| first prompt, A, 16, constrained | 560 (585) | 205 (209) | 67 (86) | 100, 100 | 56 (76) / 78 (79) | 100 / 78 (81) | 63 / 0 | 67 / 49 | 74 (79) |
+| **second prompt, A, 16, constrained** | **580 (610)** | **215** | **56 (77)** | 100, 100 | 68 (88) / 88 | 100 / 78 | 66 / 0 | 67 / 49 | 79 (89) |
+| second, A, 16, free | 580 (597) | 215 | 56 (77) | 100, 100 | 68 (75) / 88 | 100 / 78 | 66 / 0 | 67 / 49 | 79 (89) |
+| second, A, 8 (first of each pair), constrained | 391 (441) | 201 (216) | 47 (68) | 0, 0 | 52 (73) / 74 (89) | 100 / 78 | 100 / 0 | 100 / 49 | 39 (68) |
+| second, B, 16, constrained | 407 (436) | 234 (250) | 65 (79) | 0, 0 | 74 (81) / 83 | 100 / 49 (65) | 100 / 53 | 67 / 49 | 66 (88) |
+
+Free writing parses in 1180 of 1200 (20 `order` tasks: a `Then` of three statements written flat, `Then(a,b,c)`, and
+programs run together); constrained always. Asked twice (second prompt, A and B, the slow level acting only when the two
+programs are equivalent), of 1200 tasks: the two agree on 721, of which 151 are both wrong; of the 479 where they
+disagree, 281 had a right first program (blocked) and 198 a wrong one (stopped); the first writer alone runs 349 wrong
+programs. Set B cannot hold the prune instruction (the sets are disjoint and it has one wording), and the writer then
+writes `Cut(Filter(tie,any,All()))` for it, so asking twice blocks every `prune` and `nothing_to_do` episode. It is not
+used. A probe that let the model think first (up to 512 tokens, then the program under the constraint) wrote 3 of the
+first 9 distinct training instructions wrong, as without it, at one to two minutes per instruction on the shared GPU,
+and was stopped.
+
+- **P4 is refuted.** Meaning on 83% of training frames (95% asked), 54% of held-out frames (85% asked) and 56% of
+  held-out compositions (75% asked); P4's refutation (under 70 held out in new frames) says the examples come first,
+  and one revision raised the training frames by 20 and the held-out frames by 10.
+- **What it gets wrong is polarity and order, not form.** "cut the sick shoots, keep the healthy ones" is written
+  `sick,no` (34 of 100 `sick` training tasks), "keep the buds, cut the other shoots" `bud,yes` (33 of 100), though that
+  sentence is one of the sixteen examples with its program; every held-out `sick` frame ("the unhealthy shoots have to
+  go", "snip off the ailing branches and spare the healthy ones") is written `sick,no`; "the highest first, then the
+  next one down" is two cuts. The 2B model copies the program of the example whose words are nearest, and the pairs,
+  meant to teach the difference, put a near sentence with the other program beside each one.
+- **The constraint changes almost nothing** (as in v2): the free writer writes the same programs where both parse.
+  Sixteen examples beat eight by 189 training tasks, most of it the prune instruction, which is the sixteenth example.
+
+**All of v3 with the written program** (the eyes `eyes_v3_fwp_3m`, the fast level fine-tuned on ties, the second
+prompt, set A, 16 examples, constrained, once; evaluation layouts, 200 per cell, `order` 100 per mode; the same setting
+as step 6's "v3 on the eyes", whose task-program column is copied here). Written: episodes whose program means the
+task's (v3 equivalence, computed from the records):
+
+| Situation | the task's program (step 6) | **the written program** | written right | solved with a wrong program |
+|---|---|---|---|---|
+| `prune` | 154 | **160** | 200 | 0 |
+| `order`, of 300 | 239 | **215** | 226 | 33 |
+| `order`: from the top down | 78 | 57 | 43 | 24 |
+| `order`: from the bottom up | 77 | 78 | 100 | 0 |
+| `order`: a pair | 84 | 80 | 83 | 9 |
+| `nothing_to_do` | 199 | **199** | 200 | 0 |
+| `ties` | 170 | **168** | 200 | 0 |
+| `sick` | 162 | **125** | 149 | 1 |
+| `buds` | 166 | **121** | 136 | 5 |
+| held-out frames: `order`, of 300 | (239) | **220** | 283 | 0 |
+| held-out frames: `ties` | (170) | **147** | 146 | 19 |
+| held-out frames: `sick` | (162) | **2** | 0 | 2 |
+| held-out frames: `buds` | (166) | **94** | 98 | 10 |
+
+The task's program does not read the words, so its held-out-frame cells are its training-frame ones (in brackets).
+
+- **P5 holds where the writer is right and fails where it is not.** `prune`, `nothing_to_do` and `ties` are within 6
+  of the task's program (the writer is right on all of them); `order` loses 24 (one sentence frame of "from the top
+  down" in three is written as two cuts; on a two-shoot plant that is the same and 24 of them are solved anyway),
+  `sick` 37 and `buds` 45: the third of their training frames written with the wrong value cuts the healthy shoots or
+  the buds (29 and 35 wrong cuts against 0 and 9). In held-out frames `sick` is lost whole (every program `sick,no`).
+- **Where the program is right, the closed loop is the task program's**: among the episodes with a right program the
+  share solved matches step 6's (`sick` 124 of 149, `buds` 116 of 136). What the writer costs is its own meaning
+  errors, one sentence frame at a time, since an instruction is written the same way in every episode.
+
+### Step 7: retraining on the fast level's own rollouts (the fast level and the eyes), and calibration
+
+Design: architecture-v3.md, "Step 7, as built". Two retrainings from the fast level's own rollouts under v3, one for
+each part whose errors E13b and step 6 measured, each tried on validation layouts first, then the E13 grid on
+evaluation layouts. Every run below: the task's program, starts clear of the plant, up to two resets, `--inspect
+turn`, the gate off.
+
+**The fast level, on takeover demonstrations from its own rollouts.** The fast level fine-tuned on ties (seed 43)
+drives under its sub-goals (the column the situations' demonstrations carry, `notes.SubgoalWriter`), from starts clear
+of the plant, and the scripted expert takes over where it drifts (`collect.py --takeover_subgoals`): when its open jaws
+come within 3.5 cm of the middle of the named shoot's cut zone (with probability 0.5 per shoot; the expert then
+finishes that cut from where the hand is, without backing out, `ScriptedExpert.finish_cut`), when the plate has
+carried the named shoot within 10 degrees of its reach and on past it by 25 degrees while still turning away (the
+expert turns it back), or at a step drawn from 0 to 700, whichever comes first. Only the expert's part is recorded
+(not its back-out), with a tail of 10, only when it succeeds; layouts from seeds 610,000 to 650,000:
+
+| Situation | kept of attempts | frames | handed over at a cut | at an over-turn | at the drawn step | the expert failed after the handover |
+|---|---|---|---|---|---|---|
+| `prune` | 400 of 456 | 155,492 | 155 | 37 | 208 | 27 (16 flower) |
+| `order` | 400 of 447 | 156,944 | 166 | 24 | 210 | 13 |
+| `ties` | 400 of 561 | 48,607 | 138 | 40 | 222 | 15 (115 solved before any handover) |
+| `sick` | 400 of 642 | 108,111 | 126 | 38 | 236 | 170 (165 flower: its way home from a takeover pose) |
+| `buds` | 400 of 655 | 95,611 | 136 | 27 | 237 | 174 (164 flower) |
+| all (`takeover_tend_2k`) | 2000 of 2761 | 564,765 | 721 | 166 | 1113 | |
+
+The fast level was fine-tuned from the ties fine-tune's averaged weights on `reason_mix_8k_rs_tail10`,
+`ties_1500_rs_tail10` and `takeover_tend_2k` (0.6, 0.15, 0.25 of each batch, the old normalisation), 3M samples at a
+peak learning rate of 2e-4, as the ties fine-tune (`dp_vit_lang_reactive_subgoal_reason8k_ties_tk_ft3m_seed43`, final
+averaged weights; one hour). The simulator's scene, the task's program:
+
+| Situation | validation: ties fine-tune | validation: **takeover fine-tune** | evaluation: ties fine-tune (E13b) | evaluation: **takeover fine-tune** |
+|---|---|---|---|---|
+| `prune` | 79 | 85 | 161 | 163 |
+| `order`, of 150 / of 300 | 118 | 124 | 241 | 244 |
+| `nothing_to_do` | 100 | 100 | 200 | 200 |
+| `ties` | 94 | 88 | 177 | 171 |
+| `sick` | 87 | 90 | 176 | 178 |
+| `buds` | 94 | 90 | 182 | 182 |
+| `reason_mix`, v2's slow level | | | 182 | 175 |
+| all situations (validation, of 650) | 572 | 577 | | |
+| cut precision, across the shoot: median (validation) | 8.3 mm | **9.0 mm** | 8.2 mm (`prune`, step 6) | 8.7 mm (`prune`) |
+| wrong shoots cut (validation; evaluation, all situations) | 4 | 3 | 6 | 6 |
+| episodes lost with more than a full turn (validation) | 26 of 78 | 30 of 73 | | |
+
+- **No gain, and the cut is no closer.** On validation layouts the takeover fine-tune solves 577 of 650 against 572,
+  within noise, and on evaluation layouts every cell is within 7 of E13b's (`reason_mix` 175 against 182). The jaws
+  close further from the shoot's axis, not nearer (median 9.0 mm against 8.3 on the same validation episodes; the
+  expert's 5.9), and over-turning is as before (30 lost episodes with more than a full turn against 26). The fast
+  level as it was stays. No control fine-tune on the old data alone was run, so whether the takeover data or a second
+  fine-tune moved the cut out is not separated.
+- **Where the handovers came.** Drift was found in 755 of 2761 attempts at a cut and 167 at an over-turn: an over-turn
+  past 25 degrees happens in about one rollout in sixteen; the cuts handed over show the expert's last 25 to 40
+  frames from the fast level's own approach, a small part of a batch (0.25 of it is takeover data, of which those
+  frames are a fraction).
+
+**The eyes, on the fast level's own rollouts** (the design's step 7). The fast level fine-tuned on ties ran under v3
+on the eyes (`eyes_v3_fwp_3m`, the task's program) on `ties`, `sick` and `buds` from seeds 700,000 to 722,000 (layouts
+used nowhere else) with `eval.py --record_scene`: 1998 episodes (702, 651, 651; 1670 solved), 190,756 frames, every
+fourth control step with the plant crop and the simulator's truth. The eyes were trained again from scratch on every
+frame of step 6 and these (1.38M frames; front, wrist and the plant crop, 3M samples, seed 42, as `eyes_v3_fwp_3m`:
+`eyes_v3_fwp_roll_3m`). On the expert's validation frames they read as before (tie 95.1%, sick 98.5%, bud 97.8% on
+their own situations, against 95.4%, 99.0%, 98.2%; the three-shoot count 99.7%, cut 99.99%, the card 98.8% on
+`scene_val_tend_reason`); in closed loop they misread far less.
+
+**Calibration.** One temperature per attribute, fitted on the validation frames (`eyes_calibrate.py`: least NLL,
+"cannot be read" a class like the others): 1.23 (tie), 1.24 (sick), 1.19 (bud) for `eyes_v3_fwp_3m`, 1.25, 1.22, 1.22
+for the new eyes. It lowers the expected calibration error over all parts (tie 0.009 to 0.003) and the readings the
+memory counts that are wrong only from 0.30% to 0.24% (tie): over all frames the eyes were not far from calibrated,
+and a misreading that lasts is said with confidence.
+
+On validation layouts (the fast level fine-tuned on ties; 100 episodes a cell; "misread": episodes in which the memory
+held a wrong attribute at some look):
+
+| Eyes | `ties` | `sick` | `buds` | of 300 | wrong shoots cut | `Complete` said wrongly | misread |
+|---|---|---|---|---|---|---|---|
+| `eyes_v3_fwp_3m` (step 6) | 85 | 86 | 89 | 260 | 6 | 13 | 26 |
+| the same, with its temperatures | 88 | 87 | 82 | 257 | 8 | 8 | 32 |
+| **`eyes_v3_fwp_roll_3m`** | **92** | **92** | **91** | **275** | **0** | **3** | **10** |
+| the same, with its temperatures | 92 | 85 | 88 | 265 | 1 | 4 | 11 |
+
+The temperatures do not help in closed loop and are not used; the rollout eyes are. On evaluation layouts, with the
+fast level fine-tuned on ties (the same as step 6's "v3 on the eyes" and E13b's):
+
+| Situation | the simulator's scene (E13b) | the eyes of step 6 | **the rollout eyes** | misread: step 6 / rollout | wrong shoots | `Complete` said wrongly |
+|---|---|---|---|---|---|---|
+| `prune` | 161 | 154 | **157** | 3 / 0 | 0 / 0 | 0 / 0 |
+| `order`, of 300 | 241 | 239 | **242** | 6 / 1 | 4 / 1 | 2 / 2 |
+| `nothing_to_do` | 200 | 199 | **198** | 1 / 2 | 0 / 0 | 0 / 0 |
+| `ties` | 177 | 170 | **179** | 23 / 6 | 3 / 3 | 11 / 1 |
+| `sick` | 176 | 162 | **172** | 14 / 7 | 0 / 1 | 13 / 2 |
+| `buds` | 182 | 166 | **180** | 19 / 9 | 9 / 2 | 4 / 1 |
+| `reason_mix`, v2's slow level | 182 | 176 | **177** | | | |
+
+- **Perception now costs at most 4 episodes in 200 on any situation** (`ties` 179, `sick` 172, `buds` 180 against
+  177, 176 and 182 on the simulator's scene; 170, 162 and 166 with step 6's eyes; `prune` 157 against 161): P5
+  holds on every rung with the task's program. The
+  misreads that lasted 13 to 20 looks were states the expert's frames do not show; with 190,000 frames of the fast
+  level's own states they fall by half to three quarters, the wrong cuts on `buds` from 9 to 2 and the false
+  `Complete` on `ties` and `sick` from 24 to 3.
+- **Nothing regressed**: `order`, `nothing_to_do` and v2's `reason_mix` (177 against 176) are as they were.
+- **The wrong cuts on `buds` were the eyes', not the fast level's.** All 9 of step 6's came after the memory held a
+  budding shoot as "no bud" (the record's `attributes_wrong`), and on the simulator's scene the fast level cuts a shoot
+  not meant in at most 2 of 200 `buds` episodes.
+
+Runs: 9 recording runs (1998 episodes), 5 takeover collections (2761 attempts), one fine-tune, one eyes run, two
+temperature fits, 12 validation and 18 evaluation closed-loop runs for step 7 (about 5,800 episodes), 14 for step 5
+(2,600 episodes) and the writer alone (8 configurations), in `results/pickup/step5/`, `results/pickup/e15/` and
+`results/pickup/step7/`. GPUs 6 and 7 of an L40S machine were held for 2.5 and 2.2 hours of wall time (4.7 GPU-hours), shared by up to 16 runs at once.
+
+### After step 7: the writer fine-tuned with LoRA, and the fast level on a frozen DINOv2 encoder
+
+Design: architecture-v3.md, "After step 7, as built". The two parts that step 7 left weakest: the program writer
+(meaning on 83% of training instructions, 54% of held-out frames, 56% of held-out compositions; `sick` 125 and `buds`
+121 with written programs) and the fast level's cut (8.2 mm from the shoot's axis against the expert's 5.9, and 26 to 30
+of 650 validation episodes lost turning the plate on past a full turn).
+
+**The writer: thinking first, and LoRA on program writing.** Scored alone exactly as E15 (100 tasks per situation and
+split, seed 0, the second prompt, examples A, 16, constrained; the base run reproduces E15's report row for row). The
+writer of v2 and E15 is already the Qwen3-VL-2B **Thinking** checkpoint, made to answer at once with an empty think
+block; the Instruct checkpoint is not in the machine's cache, and nothing was downloaded. So "thinking" is the same
+checkpoint let to reason first (up to 2048 tokens, greedily or sampled at Qwen's 0.6 / top-p 0.95 / top-k 20 for
+thinking, reasoning in batches of 16 instructions; only the program after `</think>` is held to the grammar). LoRA is
+the same model with low-rank adapters (rank 16, alpha 32, on q, k, v, o, gate, up and down of the 28 language-model
+layers, 17.4M parameters, the base frozen; `writer_tune.py`) trained on program writing alone, with the same prompt as
+at test time: 2191 instructions written from templates and synonyms of every situation's training tasks (prune, the
+three orders, ties of each colour and any tie, sick and healthy, with and without a bud, in both polarities: "keep the
+healthy shoots and trim every other shoot"), the first set of compositions said in other words (never recombined), and
+v2's training tasks in its frames and training paraphrases. Kept out, and tested (`check_excluded`,
+`test_writer_tune.py`): every held-out instruction of v3 and v2, every word that only held-out instructions use (45,
+from "snip", "branch", "spare", "unhealthy" to "to", "of", "each", "only") and every two-word sequence that only they
+use, and every program equivalent to a held-out composition's (v3's eight and v2's five). Two epochs, learning rate
+1e-4, batches of 8, 548 steps in 41 minutes on a shared GPU; the loss is on the program and the end of the turn only.
+
+Meaning of 100 tasks (resolved on the plant drawn in brackets where it differs):
+
+| Writer | training (of 700) | held-out frames (of 400) | held-out compositions | order train / held out | ties held out | sick train / held out | buds train / held out | compositions, first set | seconds per instruction |
+|---|---|---|---|---|---|---|---|---|---|
+| E15: as downloaded, no thinking | 580 (610) | 215 | 56 (77) | 68 (88) / 88 | 78 | 66 / 0 | 67 / 49 | 79 (89) | 0.7 |
+| thinking first, greedy | 566 (586) | 181 (239) | 60 (75) | 77 (85) / 58 (73) | 72 | 66 / 0 (28) | 67 / 51 (66) | 56 (68) | 15.6 |
+| thinking first, sampled | 386 (432) | 212 (238) | 67 (79) | 58 (84) / 89 (91) | 72 | 100 / 0 (9) | 68 (76) / 51 (66) | 60 (72) | 22.3 |
+| **LoRA on program writing** | **700** | **382 (392)** | **64 (86)** | 100 / 82 (92) | **100** | **100 / 100** | **100 / 100** | 100 | 0.5 |
+
+v2's test of its own writer (25 tasks per kind and split, v2's prompt with eight examples, v2's grammar): 100 and 92
+of 100 as downloaded, **100 and 100 with the adapters** (the misses were "keep the middle one" in new wordings and an
+"unless" read backwards). Nothing of v2 regressed.
+
+- **Thinking does not fix polarity.** Greedy, 82 of 106 instructions ran out of 2048 tokens in a loop of "wait, no";
+  sampled, 66 did, and the one prune instruction was written `Cut(Except(All(),ReadLabel()))`, so every `prune` and
+  `nothing_to_do` task was lost. On held-out `sick` frames both still write `sick,no`. It costs 20 to 30 times the
+  time and is not used.
+- **The adapters fix polarity and the situations' held-out wordings**: every training task, and of the held-out frames
+  `ties`, `sick` and `buds` 100 of 100 each (78, 0, 49 before), so "the unhealthy shoots have to go" and "spare the
+  budding branches and snip the rest" are read right with none of their words or word pairs seen. What is left: one
+  held-out order frame of two ("remove the middle branch before the lowest branch", 12 of 30 pair tasks against 18
+  as downloaded: "before" is a word it never saw, and it writes one cut or `CutFrom`), and held-out compositions at 64
+  (P4 asks 75): "two of the shoots have to go, whichever" is `Cut(All())`, "begin at the bottom and remove each branch
+  that has no bud" loses its order, an "unless" and a "should" lose their condition. The training loss is near zero
+  within the first epoch; these are what templates of other tasks cannot teach.
+- **A verifier was not built.** The gap left on rungs 1 to 4 is one sentence frame; the compositions' gap is rung 5's,
+  which no closed loop runs yet (step 9). A verifier that reads the program back in words would ask the same 2B model
+  to judge the polarity it got wrong before.
+
+**v3 on the eyes with the written program** (the rollout eyes `eyes_v3_fwp_roll_3m`, the fast level fine-tuned on
+ties, evaluation layouts, 200 a cell, `order` 100 a mode; the adapters' writer against the writer as downloaded, run
+again on these eyes where it writes any wrong program, and the task's program of step 7):
+
+| Situation | the task's program (step 7) | as downloaded | **LoRA writer** | written right: as downloaded / LoRA | wrong shoots cut: as downloaded / LoRA |
+|---|---|---|---|---|---|
+| `prune` | 157 | (157) | **166** | 200 / 200 | 0 / 0 |
+| `order`, of 300 | 242 | 224 | **257** | 226 / 300 | 4 / 0 |
+| `order`: from the top down | 78 | 61 | 86 | 43 / 100 | 0 / 0 |
+| `order`: from the bottom up | 79 | 75 | 84 | 100 / 100 | 0 / 0 |
+| `order`: a pair | 85 | 88 | 87 | 83 / 100 | 4 / 0 |
+| `nothing_to_do` | 198 | (198) | **198** | 200 / 200 | 0 / 0 |
+| `ties` | 179 | (179) | **173** | 200 / 200 | (3) / 5 |
+| `sick` | 172 | 130 | **168** | 149 / 200 | 30 / 3 |
+| `buds` | 180 | 125 | **177** | 136 / 200 | 38 / 3 |
+| held-out frames: `order`, of 300 | (242) | 230 | **213** | 283 / 253 | 15 / 19 |
+| held-out frames: `order`, a pair | (85) | 72 | 62 | 83 / 53 | 14 / 18 |
+| held-out frames: `ties` | (179) | 152 | **173** | 146 / 200 | 33 / 7 |
+| held-out frames: `sick` | (172) | 3 | **171** | 0 / 200 | 128 / 2 |
+| held-out frames: `buds` | (180) | 80 | **175** | 98 / 200 | 72 / 2 |
+
+In brackets: cells where the writer as downloaded writes the task's program on every task, whose runs are the task
+program's.
+
+- **With the adapters the written program costs nothing measurable on rungs 1 to 4**: every cell is within 7 of the
+  task's program, in training frames and in held-out ones, except the held-out pair frame. `sick` goes from 130 to 168
+  and `buds` from 125 to 177; in held-out frames `sick` from 3 to 171, `buds` from 80 to 175 and `ties` from 152 to
+  173. The wrong cuts that a wrong polarity made (30 and 38; 128 and 72 held out) are gone.
+- **The held-out pair frame** costs 10 episodes against the writer as downloaded (62 against 72), the one place where
+  it is worse: "remove the X branch before the Y branch" is half the time written as one cut.
+- **These adapters are v3's writer from here on** (`--writer_lora`, `PICKUP_WRITER_LORA`).
+
+**The fast level on the frozen DINOv2 encoder.** The recipe of the seed-43 sub-goal fast level
+(`dp_vit_lang_reactive_subgoal_reason8k_20m`: one frame per camera, the sub-goal, 20M samples from the start, peak
+learning rate 5e-4) with the frozen DINOv2-B (registers) patch tokens at 224 pixels in place of its own ViT
+(`dp_dinov2_lang_reactive_subgoal`; the 1 s configuration of step 8 needs data preprocessed with the frames a second
+back, which the reasoning data is not), on `reason_mix_8k_rs_tail10` and `ties_1500_rs_tail10` at 0.7 and 0.3 of each
+batch as the ties fine-tune mixed them, the old normalisation; seeds 43 and 42
+(`dp_dinov2_lang_reactive_subgoal_reason8k_ties_20m_seed43`, `_seed42`; final averaged weights). 690 samples a second
+alone on an L40S, 440 beside the writer's runs: 9 hours each. Against the ViT fast level fine-tuned on ties (seed 43,
+E13b and step 7), the task's program, every run as step 7's:
+
+| | ViT, fine-tuned on ties | **DINOv2, seed 43** | DINOv2, seed 42 |
+|---|---|---|---|
+| validation layouts, the simulator's scene, of 650 | 572 | **611** | 574 |
+| `prune` / `order` of 150 / `nothing_to_do` / `ties` / `sick` / `buds` (validation) | 79 / 118 / 100 / 94 / 87 / 94 | 91 / 135 / 100 / 98 / 93 / 94 | 82 / 121 / 100 / 94 / 84 / 93 |
+| cut, across the shoot: median (90th percentile), validation | 8.3 (14.9) mm | 7.9 (13.8) mm | 8.6 (16.6) mm |
+| episodes lost, and of them with more than a full turn (validation) | 78, 26 | 39, 7 | 76, 20 |
+| **evaluation, the simulator's scene**: `prune` | 161 | **180** | 177 |
+| `order`, of 300 | 241 | **281** | 259 |
+| `nothing_to_do` | 200 | 200 | 200 |
+| `ties` | 177 | **190** | 187 |
+| `sick` | 176 | 172 | 161 |
+| `buds` | 182 | **192** | 184 |
+| v2's `reason_mix` (v2's slow level, clear starts) | 182 | 180 | 174 |
+| cut: median, all situations | 8.2 mm (`prune`, step 6) | 8.3 mm | 8.8 mm |
+| lost, of 1300; with more than a full turn | 163; 44 | 85; 19 | 132; 30 |
+| **evaluation, the rollout eyes**: `prune` | 157 | **181** | 170 |
+| `order`, of 300 | 242 | **262** | 249 |
+| `nothing_to_do` | 198 | 198 | 198 |
+| `ties` | 179 | **194** | 190 |
+| `sick` | 172 | 169 | 156 |
+| `buds` | 180 | **190** | 174 |
+| v2's `reason_mix` | 177 | **193** | 180 |
+| cut: median | 8.3 mm | 8.5 mm | 8.6 mm |
+| lost, of 1300; with more than a full turn | 172; 54 | 106; 21 | 163; 37 |
+
+v2 in its headline configuration (the eyes `eyes_vit_fwp_2m`, v2's written program, the memory's two options, up to two
+resets; `reason_mix` in training and held-out wordings, 200 evaluation layouts), run in this code over each fast level:
+v2's own fast level (the seed-43 ViT, not fine-tuned on ties) 182 and 153 (the published run: 180 and 165; over 5
+and 7 repeats in both codes 179 and 160 on average, see "The headline, reproduced" in v2's section), DINOv2 seed 43
+175 and 164, seed 42 169 and 156.
+
+- **The cut is no closer.** The jaws close 7.9 to 8.8 mm from the shoot's axis on every set of layouts, as the ViT
+  fast level's 8.2 to 8.3, against the expert's 5.9. Neither a pretrained encoder nor the takeover data of step 7 moves
+  it, so it is not set by what the encoder lets the policy see; where it is set (the action head, the demonstrations'
+  own spread of placements, the control rate) is not separated here.
+- **Over-turning falls by half or more.** Episodes lost with the plate turned more than a full turn: 7 and 20 against
+  26 on validation layouts, 19 and 30 against 44 of 1300 on the simulator's scene, 21 and 37 against 54 on the eyes.
+  Seed 43 loses half as many episodes as the ViT fast level in all (85 against 163 on the scene).
+- **Seed 43 is better on every rung but `sick`, seed 42 is close to the ViT's.** On the rollout eyes seed 43 solves
+  1194 of 1300 situation episodes against 1128 (seed 42: 1137); `sick` is the one situation where both seeds are
+  below the ViT's (169 and 156 against 172), with more lost turning. The two seeds differ by 57 episodes, as much as
+  seed 43 differs from the ViT: the gain is not yet a property of the encoder alone.
+- **v2's headline does not move** (175 and 164 against 182 and 153 in the same code): on `reason_mix` from v2's own
+  starts the fast levels are within the seeds' spread; from v3's clear starts with v3's eyes seed 43 solves 193
+  against 177.
+- **The seed-43 DINOv2 fast level is v3's fast level from here on**, chosen on validation layouts (611 against 572 and
+  574). Whether it keeps step 8's robustness to light on the reasoning tasks is not measured here.
+
+**v3 whole, with both changes** (the adapters' writer, the rollout eyes, the seed-43 DINOv2 fast level; evaluation
+layouts, 200 a cell, `order` 100 a mode), against step 5's written-program run (the writer as downloaded, step 6's
+eyes, the ViT fast level fine-tuned on ties) and the task's program on the rollout eyes over the ViT (step 7):
+
+| Situation | step 5: written | step 7: the task's program | **written, adapters, DINOv2** | written right | wrong shoots cut | lost with more than a full turn |
+|---|---|---|---|---|---|---|
+| `prune` | 160 | 157 | **186** | 200 | 0 | 1 |
+| `order`, of 300 | 215 | 242 | **276** | 300 | 1 | 10 |
+| `nothing_to_do` | 199 | 198 | **197** | 200 | 0 | 1 |
+| `ties` | 168 | 179 | **194** | 200 | 1 | 0 |
+| `sick` | 125 | 172 | **172** | 200 | 2 | 4 |
+| `buds` | 121 | 180 | **189** | 200 | 1 | 4 |
+| held-out frames: `order`, of 300 | 220 | (242) | **245** | 253 | 15 | 10 |
+| held-out frames: `ties` | 147 | (179) | **195** | 200 | 0 | 0 |
+| held-out frames: `sick` | 2 | (172) | **175** | 200 | 0 | 4 |
+| held-out frames: `buds` | 94 | (180) | **187** | 200 | 3 | 0 |
+
+- **v3 with a written program now beats the task's program of step 7 on every situation but `nothing_to_do` (197
+  against 198) and `sick` (level)**, in training and in held-out frames: of 2600 episodes 2016 solved against 1451 with
+  step 5's writer. All but one held-out frame are read right; what is left is that frame (the held-out pair, 66 of
+  100, 14 wrong shoots) and the fast level's own losses.
+- The cut is where it was (median 8.4 mm over 3098 cuts).
+
+Runs: two fast levels (20M samples each, 9 hours each), one adapter training (41 minutes), the writer alone in four
+configurations (v3) and two (v2), 2 validation and 4 evaluation grids of the fast levels (7,300 episodes), 6 v2
+headline runs (1200), and 39 closed-loop runs with written programs (6,800 episodes), in
+`results/pickup/v3fix/`. GPUs 6 and 7 of an L40S machine were held for 11.5 and 11.7 hours of wall time (23.2
+GPU-hours), 18.1 of them training the two fast levels beside the rest.
+
+### The cut, diagnosed: where the fast level's 8 mm come from
+
+Every fast level tried closes its jaws 7.9 to 8.8 mm from the shoot's axis, the expert 5.9 mm, and neither a
+pretrained encoder nor takeover data moved it. Diagnosed first, cheaply, with the DINOv2 seed-43 fast level
+(`sim/pickup/cut_diag.py`: the simulator and the fast level in one process, `prune` on validation layouts from clear
+starts; the scripted expert chooses the shoot and turns the plate; each cut measured as `cut_places` measures it, and
+the offset also split in the hand's frame: along the closing jaws, which close vertically, and across them).
+
+**(c) The expert's own cut is a consistent target.** Its set-point is always on the shoot's axis (0.2 to 0.7 mm in its
+commands over the last 5 cm), at a point drawn from 31 to 39 mm out along it. Where its hand really is when the shoot
+is cut (200 episodes, 488 cuts): 5.8 mm median, 6.2 mean, 9.8 at the 90th percentile, almost all of it along the
+closing jaws (standard deviation 4.1 mm; 0.8 mm across them): the hand still settling toward the set-point when the
+jaws shut (it closes once within 12 mm of it, and the cut comes 3 control steps later). Two runs of the expert agree
+to 0.1 mm. So 5.9 mm is the floor this expert's demonstrations teach, and the right thing to compare with.
+
+**(a) Perception or control: the expert drives, then hands the arm to the fast level** at a distance from the middle
+of the shoot's cut zone, with the jaws open and the sub-goal of that shoot (`--mode handover`, 150 episodes each, the
+first cut of each episode):
+
+| Handed over | cuts | across the shoot: median | mean | 90th percentile | spread along the jaws (sd) | across the jaws (sd) |
+|---|---|---|---|---|---|---|
+| the expert alone | 488 | 5.8 mm | 6.2 | 9.8 | 4.1 | 0.8 |
+| at 1.5 cm | 148 | 5.7 mm | 6.0 | 9.5 | 4.1 | 1.0 |
+| at 3 cm | 147 | 5.8 mm | 6.1 | 9.5 | 4.0 | 1.5 |
+| at 6 cm | 149 | 6.0 mm | 6.3 | 9.7 | 4.4 | 1.3 |
+| at 10 cm | 149 | 6.4 mm | 6.7 | 10.4 | 4.8 | 1.4 |
+| as soon as the shoot is chosen and in reach (two runs) | 147, 143 | 8.1, 7.4 mm | 8.3, 7.5 | 14.5, 13.6 | 7.2, 6.3 | 2.9, 2.5 |
+
+- **From the expert's state 6 cm out the fast level cuts as well as the expert** (6.0 mm against 5.8), from 10 cm
+  nearly (6.4). The last centimetres, the closing and what the 224-pixel cameras show there are not the limit.
+- **The error is made on the fast level's own way in, before 10 cm, and never corrected.** Where its hand passes 6 cm
+  from the cut zone, on its own approach: along the jaws (height) a standard deviation of 6.8 mm against the expert's
+  4.2, across them 5.4 against 0.7, and its pointing 3.1 degrees from square across the shoot on average, 11.7 at the
+  90th percentile, against 0.0. From there to the cut it keeps the height error (correlation 0.93, slope 0.93 between
+  the offset at 6 cm and at the cut) and the angle, and takes out only a third of the sideways error. The expert's
+  demonstrations never show a correction there: its line of approach is set 13 to 15 cm out and followed straight.
+- **Open loop, at the expert's own states** (60 episodes), the fast level's chunks are where the expert's commands are
+  to 2.5 to 3.5 mm over the 8 actions executed within 5 cm of the cut zone (4.1 from 5 to 8 cm), and the hand they lead
+  to is 2.2 to 2.8 mm from the axis (the expert's 0.2 to 0.7); 8 chunks drawn at the same state lie 1.8 to 2.1 mm
+  apart. Small next to the 6 to 7 mm the
+  closed loop adds: the gap is compounding error on states the demonstrations do not cover.
+
+**(b) Inference settings near the cut** (handed over as soon as the shoot is chosen, 150 episodes each): 8 actions
+executed per chunk 8.1 and 7.4 mm (two runs; the noise between runs is about 0.7 mm); 4 actions 7.7; 2 actions 8.4 (4
+episodes damaged); 8 chunks drawn per look and averaged 7.7; 4 actions and 8 chunks averaged 7.8; 30 flow steps instead
+of 10 breaks the policy (13.4 mm, 68 of 150 episodes damaged; it was trained and always run with 10). No setting moves
+the cut beyond the noise: the error is not in how the chunks are sampled or executed.
+
+**(d) Resolution: the encoder sees the error; the policy does not act on it.** The expert approached along its line
+moved by up to 10 mm up or down and sideways (300 `prune` episodes, 2191 frames where its hand passed 10, 6 and 3 cm
+from the cut zone; `sim/pickup/cut_probe.py`), and a ridge regression on the frozen DINOv2-B patch tokens of one image,
+fitted on four fifths of the episodes, read the offset of the shoot's axis in the hand's frame on the rest:
+
+| View (224 pixels to the encoder) | along the jaws (height), sd 6.6 mm | across them, sd 2.5 mm | along the shoot, sd 6.3 mm |
+|---|---|---|---|
+| wrist | 1.6 mm at 10, 6 and 3 cm | 0.7 to 0.8 | 1.9 to 2.2 |
+| wrist rendered at 448, its middle kept (twice the pixels) | 1.2 to 1.3 | 0.5 to 0.6 | 1.7 to 2.2 |
+| front | 4.4 to 4.6 | 2.1 to 2.2 | 3.9 to 4.0 |
+
+  The wrist image at 224 pixels already tells the height of the jaws against the shoot to 1.6 mm from 10 cm out, a
+  quarter of the fast level's 6.8 mm error there; twice the pixels takes 0.3 to 0.4 mm off that. And handed the arm at
+  10 cm on a line moved 6 mm up or down (150 episodes), the fast level keeps 93% of the offset to the cut (the slope
+  of the offset at the cut on the offset at the handover; 0.94 when handed over at 1 cm, where no correction is
+  possible): it does not correct an error its encoder can read. So no high-resolution crop was trained: the limit is
+  what the policy learned to do with what it sees (its demonstrations never correct the line), not the pixels.
+
+**The fix tried: demonstrations that show the correction (DART-style, quiet near the cut).** `collect.py
+--action_noise 0.02 --action_noise_quiet_cm 3`: the expert's executed joint targets get a smooth random offset
+(standard deviation 0.02 rad, correlation 0.9 a step), its own commands are recorded as the actions, and no fresh noise
+is added within 3 cm of an uncut shoot's cut zone or with the jaws commanded shut (`ActionNoise.calm`), so the offset
+dies away and the demonstrations show the hand brought back onto the line before the cut. The size was chosen with the
+expert alone (80 `prune` episodes each):
+
+| Expert with noise | solved | damaged | at 6 cm: sd along the jaws | pointing (mean, 90th pct) | its cut: median |
+|---|---|---|---|---|---|
+| none | 196 of 200 | 0 | 4.2 mm | 0.0, 0.0 degrees | 5.8 mm |
+| 0.01 rad, everywhere | 63 | 17 | 6.4 | 0.7, 1.5 | 8.1 |
+| 0.01 rad, quiet within 3 cm | 70 | 5 | 6.1 | 0.7, 1.4 | 6.3 |
+| **0.02 rad, quiet within 3 cm** | 53 | 13 | **10.1** | 1.3, 2.5 | 6.9 |
+| 0.02 rad, everywhere | 21 | 42 | 10.0 | 1.4, 2.7 | 8.7 |
+| 0.03 rad, quiet within 3 cm | 37 | 20 | 14.4 | 2.0, 4.1 | 6.7 |
+| 0.03 rad, everywhere | 2 | 58 | 14.5 | 1.9, 3.7 | 9.6 |
+
+Noise of 0.02 rad pushes the hand off its line of approach by more than the fast level's own errors (10.1 mm at 6 cm
+against 6.8), and quiet near the cut the expert still cuts at 6.9 mm: only successful episodes are kept, with the clean
+commands as labels. 3000 `reason_mix` demonstrations from random starts (seeds from 400,000, 4758 attempted, 867,122
+frames: `reason_mix_3k_rs_tail10_dart02q3`). The DINOv2 seed-43 fast level fine-tuned from its averaged weights for 3M
+samples at a peak learning rate of 2e-4 on `reason_mix_8k_rs_tail10`, `ties_1500_rs_tail10` and these (0.45, 0.2,
+0.35 of each batch, the old normalisation: `dp_dinov2_lang_reactive_subgoal_reason8k_ties_dart_ft3m_seed43`), and as
+the control the same fine-tune without them (0.7, 0.3: `..._ctrl_ft3m_seed43`), which step 7 lacked.
+
+**Result** (the DART fine-tune against the fast level as it is and the control fine-tune):
+
+| | DINOv2 seed 43 | control fine-tune | **DART fine-tune** |
+|---|---|---|---|
+| handed over as soon as the shoot is chosen (150): cut, median (mean, 90th pct) | 8.1, 7.4 (8.3, 7.5; 14.5, 13.6) mm | 7.3 (7.7, 12.3) | 7.3 (7.4, 11.6) |
+| a 6 mm height error handed over at 10 cm: kept at the cut | 93% | | 75% |
+| validation layouts, the simulator's scene, of 650 | 611 | 614 | 608 |
+| cut on validation: median (mean, 90th pct) | 7.9 (8.4, 13.8) mm | 7.8 (8.2, 13.6) | 7.6 (7.8, 12.6) |
+| v3 whole (LoRA writer, rollout eyes, written programs; evaluation layouts, the 14 cells above), of 2600 | 2016 | | 1990 |
+| ... cut over all its cuts: median (mean, 90th pct) | 8.4 (8.7, 14.2) mm | | 8.0 (8.1, 12.4) |
+| v2's `reason_mix` (v2's slow level, clear starts): the simulator's scene / the rollout eyes | 180 / 193 | | 189 / 189 |
+
+v3 whole, cell by cell for the DART fine-tune (against DINOv2 seed 43): `prune` 181 (186), `order` 264 of 300 (276),
+`nothing_to_do` 198 (197), `ties` 195 (194), `sick` 171 (172), `buds` 184 (189); held-out frames `order` 251 (245),
+`ties` 195 (195), `sick` 164 (175), `buds` 187 (187).
+
+- **The demonstrations of the correction help a little and not enough.** The fine-tune now takes out a quarter of a
+  height error from 10 cm (75% kept against 93%) and narrows the spread: the mean cut 0.4 to 0.6 mm nearer and the 90th
+  percentile 1.2 to 1.8 mm nearer, on validation layouts and on all 3060 cuts of v3 whole. The median moves 0.3 to 0.4
+  mm, the same as the control fine-tune moves it in the handover test, and stays 8.0 against the expert's 5.9.
+- **No success is gained** (608 against 611 on validation, 1990 against 2016 of 2600 in v3 whole, within noise of
+  14 cells; `reason_mix` level). By the rule set for this change (kept only if the cut is clearly closer and nothing is
+  lost) **the DART fine-tune is not adopted**: v3's fast level stays the DINOv2 seed-43 one.
+- **Inference settings and resolution are ruled out, and so is the encoder**: what the cut needs is a policy that
+  corrects its line from what the wrist camera shows, which these demonstrations teach weakly at 35% of the batches for
+  3M samples. A stronger dose (DART demonstrations as most of the data, noise that reaches nearer the cut, a 20M run
+  from the start) is the next step; a scripted correction from the simulator's truth would only hide it.
+
+Runs: 29 diagnosis runs (`cut_diag.py`: 3840 episodes; `cut_probe.py`: 300), one DART collection (3000 kept of 4758,
+11 minutes on 48 processes), two fine-tunes (3M samples each, 84 and 79 minutes beside the rest), two validation
+grids (1300 episodes), v3 whole over the DART fine-tune (2600) and `reason_mix` (400), in `results/pickup/cutdiag/`,
+`results/pickup/v3fix/fast/` and `results/pickup/v3fix/writer_loop/lora_dart43/`; with the v2 reproduction below
+(10 runs, 1800 episodes), GPUs 6 and 7 of an L40S machine were held for 3.4 hours of wall time each (6.8
+GPU-hours).
 
 ## Throughput
 

@@ -37,13 +37,13 @@ export function ResetMove() {
   return (
     <AnimationFrame
       title="Back to the start, then choose again"
-      description="Seen from above, the sub-goal is to cut the highest shoot, which faces away, out of reach. In about one try in ten the arm goes for it without turning the plant, jaws set to cut. The reset sends the arm back to its start pose; choosing again, it turns the plant first and then cuts. Over 200 tries, the reset raised the score from 169 to 180 with training instructions and from 148 to 165 with new instructions."
+      description="Seen from above, the sub-goal is to cut the highest shoot, which faces away, out of reach. In about one try in ten the arm goes for it without turning the plant, jaws set to cut. The reset sends the arm back to its start pose; choosing again, it turns the plant first and then cuts. Over 200 tries, the reset raised the score from 169 to 179 with training instructions and from 148 to 160 with new instructions (the reset's numbers are averages over repeated runs)."
       steps={[
         "Sub-goal: cut the highest shoot. It faces away, out of reach.",
         "About one try in ten, the arm goes for it anyway, without turning the plant.",
         "The reset: the arm goes back to its start pose.",
         "Choosing again, it turns the plant first, then cuts.",
-        "With the reset: 180 of 200, and 165 of 200 with new instructions.",
+        "With the reset: 179 of 200, and 160 of 200 with new instructions (averaged over repeated runs).",
       ]}
       size={[480, 330]}
       hold={[2600, 2800, 2400, 3600, 4200]}
@@ -100,7 +100,7 @@ export function ResetMove() {
             </Label>
             {[
               { name: "no reset", values: ["169", "148"], y: 126, tone: "ink" as const },
-              { name: "reset", values: ["180", "165"], y: 156, tone: "accent" as const },
+              { name: "reset", values: ["179", "160"], y: 156, tone: "accent" as const },
             ].map((row, i) => (
               <g key={row.name}>
                 <Label x={256} y={row.y} tone="ink" size={14} anchor="start" opacity={step === 4 ? 1 : 0} delay={i * 150}>

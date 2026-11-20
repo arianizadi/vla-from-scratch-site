@@ -52,7 +52,7 @@ export default defineLesson({
     "Test each level alone. Give the arm perfect sub-goals, and give the planner the true scene. The gap shows which level to fix.",
     "Grade a model on what it must see, not only on what it writes. A count learned from words alone may never be learned.",
     "Try a language model as it comes, with a few worked examples, before training it on a narrow format.",
-    "Repeat a result with a second training run before trusting it. A second fast policy gave 175 and 157, close to 180 and 165.",
+    "Repeat a result with a second training run before trusting it. A second fast policy gave 175 and 157, close to the first's average of 179 and 160. Single runs vary by about 6.",
     "Watch the first move. Many lost tries began with the arm heading for a shoot it could not reach.",
   ],
   takeaway: "When the answer has to be seen, counted or remembered, work it out first in a form you can check, then hand the arm one small, clear step.",

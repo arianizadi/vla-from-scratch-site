@@ -83,7 +83,7 @@ export function LabGlance() {
       name: reason.v2.film.name,
       size: [1280, 720],
       title: "Eyes, memory and a written program",
-      caption: `The program it writes and what it remembers are shown as it works, including an instruction it never saw in training, a label it reads, turns away from, and still remembers, and a reset after which it turns the plant and cuts. This final version, with the reset, solved ${reason.v2.filmed.successes} of ${reason.v2.filmed.episodes} with training instructions and ${reason.v2.filmedHeldout.successes} of ${reason.v2.filmedHeldout.episodes} with new instructions.`,
+      caption: `The program it writes and what it remembers are shown as it works, including an instruction it never saw in training, a label it reads, turns away from, and still remembers, and a reset after which it turns the plant and cuts. In the run filmed, this final version with the reset solved ${reason.v2.filmed.successes} of ${reason.v2.filmed.episodes} with training instructions and ${reason.v2.filmedHeldout.successes} of ${reason.v2.filmedHeldout.episodes} with new instructions; averaged over repeated runs, ${reason.v2.trained.successes} and ${reason.v2.heldout.successes}.`,
     },
     {
       name: reason.film.name,

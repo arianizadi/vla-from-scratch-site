@@ -59,8 +59,9 @@ export function V2PipelineWithFilm() {
       <Film name="reasoning-v2" title="Watch version two work it out" size={[1280, 720]}>
         The program it wrote and what its memory holds are shown as it works, including an instruction it never saw in
         training, a label it reads, turns away from and still remembers, and a reset after which it turns the plant and
-        cuts. This is the final version, with the reset of the next step: 180 of 200 tries with training instructions,
-        165 of 200 with new instructions. The reset and the pull-back after the last cut are scripted.
+        cuts. This is the final version, with the reset of the next step. In the run filmed it solved 180 of 200 tries with
+        training instructions and 165 of 200 with new ones; averaged over repeated runs, 179 and 160. The reset and the
+        pull-back after the last cut are scripted.
       </Film>
     </div>
   );

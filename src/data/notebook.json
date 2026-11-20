@@ -1707,8 +1707,8 @@
         "film": { "name": "reasoning-two-level" },
         "v2": {
           "section": "Architecture v2: eyes, a written program, and memory (Phase 7, stage 2)",
-          "trained": [180, 200],
-          "heldout": [165, 200],
+          "trained": [179, 200],
+          "heldout": [160, 200],
           "filmed": [180, 200],
           "filmedHeldout": [165, 200],
           "stage1": [133, 200],
@@ -1716,7 +1716,8 @@
           "quotes": [
             "| **v2, the eyes' scene, written program, memory options on** (`--slow_unseen --slow_revoke 3 --slow_give_up 80`) | **169/200** | **148/200** |",
             "| Stage 1: Qwen reasoner writes notes from pixels | 133/200 | 66/200 |",
-            "**180/200 and\n  165/200 held out** with the seed-43 fast level (169 and 148 without)"
+            "**180/200 and\n  165/200 held out** with the seed-43 fast level (169 and 148 without)",
+            "| both, every run | **179** on average (175 to 182) | **160** on average (153 to 165) |"
           ],
           "film": { "name": "reasoning-v2" }
         }
